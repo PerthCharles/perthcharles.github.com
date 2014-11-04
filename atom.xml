@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-11-04T08:47:02.757Z</updated>
+  <updated>2014-11-04T09:11:56.611Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://perthcharles.github.com/2014/11/04/change-to-hexo/"/>
     <id>http://perthcharles.github.com/2014/11/04/change-to-hexo/</id>
     <published>2014-11-04T06:55:07.000Z</published>
-    <updated>2014-11-04T08:43:45.000Z</updated>
+    <updated>2014-11-04T09:07:01.000Z</updated>
     <content type="html"><![CDATA[<p>本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。  </p>
 <a id="more"></a>
 
@@ -46,6 +46,7 @@
 </code></pre><p>如果任何一步遇到问题，可自行Google。当然看看<a href="http://hexo.io/docs/index.html" target="_blank" rel="external">官网的文档</a>也是必要的。<br>参考资料中一些博主的博文也是很好的guide。  </p>
 <h3 id="常用的技巧">常用的技巧</h3>
 <p>markdown语法还是有必要学一学的，不过很简单请放心。  </p>
+<p>向Google提交sitemap：<a href="http://fionat.github.io/blog/2013/10/23/sitemap/" target="_blank" rel="external">如何向google提交sitemap</a>  </p>
 <p>hexo的作者提示过，使用四个空格的方式标志的代码块是没有行号的，需要行号的请使用三个反引号的形式。  </p>
 <p>添加RSS和sitemap  </p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"># npm <span class="operator"><span class="keyword">install</span> hexo-generator-feed <span class="comment">--save</span></span></div><div class="line"># vim _config.yml</div><div class="line">    Plugins:</div><div class="line">    - hexo-generator-feed</div><div class="line">    - hexo-generator-sitemap</div><div class="line">    sitemap:</div><div class="line">      path: sitemap.<span class="keyword">xml</span></div><div class="line">    feed:</div><div class="line">      type: atom</div><div class="line">      path: atom.<span class="keyword">xml</span></div><div class="line">      <span class="keyword">limit</span>: <span class="number">20</span></div></pre></td></tr></table></figure>
@@ -66,6 +67,7 @@
 
 
 
+<hr>
 <h3 id="未完成">未完成</h3>
 <p>使用图床加速带图片的网页，比如七牛，又拍云。  </p>
 <p>添加友情链接widget  </p>

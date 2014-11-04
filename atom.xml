@@ -1,0 +1,1380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title><![CDATA[天赋，无与伦比的坚持]]></title>
+  
+  <link href="/atom.xml" rel="self"/>
+  <link href="http://perthcharles.github.com/"/>
+  <updated>2014-11-04T06:48:47.666Z</updated>
+  <id>http://perthcharles.github.com/</id>
+  
+  <author>
+    <name><![CDATA[Perth Charles]]></name>
+    <email><![CDATA[zhongbincharles@gmail.com]]></email>
+  </author>
+  
+  <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Hello World]]></title>
+    <link href="http://perthcharles.github.com/2014/11/03/hello-world/"/>
+    <id>http://perthcharles.github.com/2014/11/03/hello-world/</id>
+    <published>2014-11-03T09:22:53.000Z</published>
+    <updated>2014-11-03T09:22:53.000Z</updated>
+    <content type="html"><![CDATA[<p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="http://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">trobuleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
+<h2 id="Quick_Start">Quick Start</h2>
+<h3 id="Create_a_new_post">Create a new post</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
+<h3 id="Run_server">Run server</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
+<h3 id="Generate_static_files">Generate static files</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
+<h3 id="Deploy_to_remote_sites">Deploy to remote sites</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io]]>
+    </summary>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[TCP ADI in Linux(3): Implementation of Sockets]]></title>
+    <link href="http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/"/>
+    <id>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/</id>
+    <published>2014-10-23T14:29:08.000Z</published>
+    <updated>2014-11-03T14:34:43.000Z</updated>
+    <content type="html"><![CDATA[<p>这章主要从socket()系统调用入手，介绍socket建立时初始化的一些重要数据结构。熟练掌握这些数据结构和他们之间的关系能够有效的帮助理解代码，所以这部分随着理解的加深，随时需要补充和完善。  </p>
+<a id="more"></a>
+
+<p>首先是，sock结构体，是network layer对于socket的表示。结构体定义在include/net/sock.h中，主要需要理解的结构元素如下：  </p>
+<pre><code>// sock_common是第一个内嵌的结构体，是于inet_timewait_sock共享的layout  
+struct    sock_common        __sk_common;  
+<span class="keyword">...</span>  
+struct    sk_buff_head    sk_receive_queue;    // 接收队列，注意是skb head的队列  
+<span class="keyword">...</span>  
+int                        sk_forward_alloc;    // 预分配的空间  
+<span class="keyword">...</span>  
+int                        sk_rcvbuf;            // 接收buf的大小（Bytes）  
+<span class="keyword">...</span>  
+atomic_t                sk_wmem_alloc;        // 传输队列中已committed的字节数
+atomic_t                sk_omem_alloc;        // <span class="string">'o'</span> 表示 other
+int                        sk_sndbuf;            // 发送buf的大小（Bytes）  
+struct    sk_buff_head    sk_write_queue;        // 数据包的发送队列  
+<span class="keyword">...</span>  
+int                        sk_wmem_queue;        // persistent 队列大小
+gfp_t                    sk_allocation;        // allocation mode
+u32                        sk_pacing_rate;        // pacing rate(Bps，<span class="keyword">if</span> supported by transport/packet scheduler)  
+<span class="keyword">...</span>  
+struct    sk_buff_head    sk_error_queue;        // queue of defactive packets  
+<span class="keyword">...</span>  
+long                    sk_rcvtimeo;        // 判断接收超时的上限  
+long                    sk_sndtimeo;        // 判断发送超时的上限  
+<span class="keyword">...</span>  
+struct                    *sk_send_head;        // 指向下一个应该发送的skb
+int                     sk_write_pending;    // a write to stream socket waits to start  
+<span class="keyword">...</span>  
+</code></pre><p>然后是inet_sock。sock结构体是inet_sock的第一个元素，然后inet_sock中包含了一些TTL，IP和Port等信息。结构体的定义在include/net/inet_sock.h中。  </p>
+<p>再接着就是inet_connection_sock。inet_sock是inet_connection_sock的第一个元素，然后从字面理解也可以看出inet_connection_sock相比于inet_sock添加了一些面向connection的信息。主要元素如下：  </p>
+<pre><code>struct    inet_sock        icsk_inet;
+<span class="keyword">...</span>  
+struct    timer_list        icsk_retransmit_timer;    // resend (no ack)  
+__u32                    icsk_rto;                  // retransmit timeout  
+<span class="keyword">...</span>  
+const    struct tcp_congestion_ops    *icsk_ca_ops; // 拥塞控制算法hook  
+__u8                    icsk_ca_state;              // 拥塞控制的状态  
+</code></pre><p>最后就是TCP最相关的，tcp_sock结构体。类似的，inet_connection_sock是tcp_sock的第一个元素。主要元素如下：  </p>
+<pre><code><span class="keyword">struct</span>    inet_connection_sock    inet_conn;  
+...  
+<span class="comment">/* RFC793 and RFC1122 are the best references for this */</span>
+<span class="keyword">u32</span>        rcv_nxt;                <span class="comment">// what we want to receive next  </span>
+<span class="keyword">u32</span>        copied_seq;                <span class="comment">// Head of yet unread data  </span>
+<span class="keyword">u32</span>        snd_nxt;                <span class="comment">// next sequence we send  </span>
+<span class="keyword">u32</span>        snd_una;                <span class="comment">// first byte we want an ack for  </span>
+...  
+<span class="keyword">u32</span>        rcv_tstamp;                <span class="comment">// timestamp of last rcv ack (for keepalives)  </span>
+<span class="keyword">u32</span>        lsndtime;                <span class="comment">// timestamp of last snd pkt (for restart window)  </span>
+...  
+<span class="keyword">u32</span>        snd_wnd;                <span class="comment">// the window we expect to receive  </span>
+<span class="keyword">u32</span>        max_window;                <span class="comment">// maximal window ever seen from peer  </span>
+<span class="keyword">u32</span>        window_clamp;            <span class="comment">// maximal window to advertise  </span>
+<span class="keyword">u32</span>        rcv_ssthresh;            <span class="comment">// current window clamp  </span>
+u16        advmss;                    <span class="comment">// advertised MSS  </span>
+
+<span class="comment">/* RTT measurement */</span>
+<span class="keyword">u32</span>        srtt;                    <span class="comment">// smoothed RTT &lt;&lt; 3  </span>
+<span class="keyword">u32</span>        mdev;                    <span class="comment">// medium deviation  </span>
+<span class="keyword">u32</span>        mdev_max;                <span class="comment">// maximal mdev for the last rtt period  </span>
+<span class="keyword">u32</span>        rttvar;                    <span class="comment">// smoothed mdev_max  </span>
+<span class="keyword">u32</span>        rtt_seq;                <span class="comment">// sequence number to update rttvar  </span>
+
+<span class="keyword">u32</span>        packets_out;            <span class="comment">// packets which are "in_flight"  </span>
+<span class="keyword">u32</span>        retrans_out;            <span class="comment">// retransmitted packets out  </span>
+...  
+
+<span class="comment">/* Slow start and congestion control */</span>
+<span class="keyword">u32</span>        snd_ssthresh;            <span class="comment">// slow start size threshold  </span>
+<span class="keyword">u32</span>        snd_cwnd;                <span class="comment">// sending congestion window, 注意与snd_wnd区分开  </span>
+<span class="keyword">u32</span>        snd_cwnd_cnt;            <span class="comment">// linear increase counter  </span>
+<span class="keyword">u32</span>        snd_cwnd_clamp;            <span class="comment">// snd_cwnd的上限  </span>
+<span class="keyword">u32</span>        snd_cwnd_used;
+<span class="keyword">u32</span>        snd_cwnd_stamp;
+<span class="keyword">u32</span>        prior_cwnd;                <span class="comment">// Recovery 开始时的cwnd值  </span>
+<span class="keyword">u32</span>        prr_delivered;            <span class="comment">// # of newly delivered pkts in Recovery  </span>
+<span class="keyword">u32</span>        prr_out;                <span class="comment">// # of total sent pkts during Recovery  </span>
+
+<span class="keyword">u32</span>        rcv_wnd;                <span class="comment">// current receiver window, 表示的是自己作为receiver时的window大小，用于通知对方  </span>
+
+<span class="keyword">struct</span> sk_buff *highest_sack;    <span class="comment">// skb just after the highest skb with SACKed bit set  </span>
+...  
+<span class="keyword">u32</span>        retransmit_high;
+<span class="keyword">u32</span>        lost_retrans_low;
+<span class="keyword">u32</span>        prior_ssthresh;            <span class="comment">// ssthresh saved at Recovery start  </span>
+<span class="keyword">u32</span>        high_seq;  
+<span class="keyword">u32</span>        retrans_stamp;            <span class="comment">// timestamp of the last retransmit  </span>
+<span class="keyword">u32</span>        uodo_marker;            <span class="comment">// tracking retrans started here  </span>
+<span class="keyword">int</span>     undo_retrans;            <span class="comment">// number of undoable retransmissions  </span>
+<span class="keyword">u32</span>        total_retrans;            <span class="comment">// total retransmits for entire connection  </span>
+</code></pre><h3 id="总结">总结</h3>
+<p>可以看出来，这些结构体是一个嵌套一个的形式被定义，个人感觉很像C++中类继承时的内存分布状况。下面是书中总结的一段，觉得很好，就直接摘录了。  </p>
+<pre><code>There are <span class="constant">two</span> levels <span class="operator">of</span> <span class="built_in">socket</span> abstraction. At <span class="operator">the</span> top is <span class="operator">the</span> BSD  
+<span class="built_in">socket</span> layer defined <span class="keyword">as</span> struct <span class="built_in">socket</span> <span class="operator">and</span> <span class="keyword">then</span> protocol-specific  
+<span class="built_in">socket</span> defined <span class="keyword">as</span> sturct sock.  
+    <span class="number">1.</span> sock_register() is <span class="operator">an</span> interface <span class="built_in">to</span> register BSD sockets <span class="keyword">for</span>
+    different net families. For INET family, inet_family_ops <span class="operator">of</span>  
+    type net_proto_family is registered.  
+    <span class="number">2.</span> net_families is <span class="operator">a</span> <span class="built_in">global</span> array <span class="built_in">to</span> indexed <span class="command"><span class="keyword">on</span> <span class="title">net</span> <span class="title">family</span></span>
+    <span class="built_in">number</span>. Net family sockets are registered <span class="operator">with</span> this table.  
+    <span class="number">3.</span> inet_register_protose() is <span class="operator">an</span> interface <span class="built_in">to</span> register  
+    protocol supported <span class="keyword">by</span> <span class="operator">the</span> INET family. These protocols  
+    are TCP, UDP <span class="operator">and</span> RAW.  
+    <span class="number">4.</span> inetsw_array is <span class="operator">a</span> <span class="built_in">global</span> table that registers <span class="operator">the</span>  
+    INET family protocols, object <span class="operator">of</span> type inet_protosw.  
+    <span class="number">5.</span> inet_stream_ops is <span class="built_in">set</span> <span class="operator">of</span> operation <span class="keyword">for</span> INET stream BSD  
+    <span class="built_in">socket</span>, <span class="operator">and</span> tcp_prot is <span class="operator">a</span> protocol-specific <span class="built_in">set</span> <span class="operator">of</span> operations  
+    TCP sockets.  
+</code></pre><p>最后结合Linux v3.10的代码梳理一下，sys-socket()中暂时感兴趣的major rountines.  </p>
+<pre><code>socket() [User Space] 等价于 sys_socket() [Kernel Space]
+__________________________________________________________________<span class="function">
+=&gt;</span> sock_create<span class="function"><span class="params">()</span> 
+    =&gt;</span> net_families[family]<span class="function">-&gt;</span>create<span class="function"><span class="params">()</span> = <span class="title">inet_create</span><span class="params">()</span>
+        =&gt;</span> sock_init_data()  <span class="regexp">//</span> 完成sock结构体的初始化<span class="function">
+        =&gt;</span> sk-&gt;sk_prot-&gt;init<span class="function"><span class="params">()</span> = <span class="title">tcp_v4_init_sock</span><span class="params">()</span>    
+            =&gt;</span> tcp_init_sock()  <span class="regexp">//</span> 完成tcp_sock结构体的初始化
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>这章主要从socket()系统调用入手，介绍socket建立时初始化的一些重要数据结构。熟练掌握这些数据结构和他们之间的关系能够有效的帮助理解代码，所以这部分随着理解的加深，随时需要补充和完善。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[TCP ADI in Linux(2): Protocol Fundamentals]]></title>
+    <link href="http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-2/"/>
+    <id>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-2/</id>
+    <published>2014-10-23T09:29:08.000Z</published>
+    <updated>2014-11-03T14:33:30.000Z</updated>
+    <content type="html"><![CDATA[<p>这章主要还是基础知识的介绍，更加详细的介绍TCP/IP相关协议。  </p>
+<a id="more"></a>
+
+<p>经典的TCP header构成剖析。需要注意的就是header len只有4bits，因此最长支持60B（15*4B）  </p>
+<pre><code>Src port: 16<span class="built_in">bits</span>      Dst port: 16<span class="built_in">bits</span>  
+Seq num: 32<span class="built_in">bits</span>  
+Ack num: 32<span class="built_in">bits</span>  
+Header len: 4<span class="built_in">bits</span>     Unused: 6<span class="built_in">bits</span>    Flags: 6<span class="built_in">bits</span>  
+<span class="label">Rwnd:</span> 16<span class="built_in">bits</span>  
+Check sum: 16<span class="built_in">bits</span>    Urgent pointers: 16<span class="built_in">bits</span>  
+</code></pre><p>TCP Options (RFC 1323)  </p>
+<pre><code>标准的option格式：  Kind(<span class="number">1</span>B) | Len(<span class="number">1</span>B) | Value(Variable length)  
+常见option:  
+<span class="number">1</span>. End of Option List:   | <span class="variable">kind =</span> <span class="number">0</span> |  
+<span class="number">2</span>. No operation:         | <span class="variable">kind =</span> <span class="number">1</span> |  &lt;== 用于内存对齐  
+<span class="number">3</span>. MSS:                  | <span class="variable">kind =</span> <span class="number">2</span> | <span class="variable">length =</span> <span class="number">4</span> | <span class="variable">mss =</span> <span class="number">2</span>B |  
+<span class="number">4</span>. Window-Scaling:       | <span class="variable">kind =</span> <span class="number">3</span> | <span class="variable">length =</span> <span class="number">3</span> | left shift <span class="variable">count =</span> <span class="number">1</span>B |  
+<span class="number">5</span>. SACK-permit:          | <span class="variable">kind =</span> <span class="number">4</span> | <span class="variable">lenght =</span> <span class="number">2</span> |
+<span class="number">6</span>. SACK:                 | <span class="variable">kind =</span> <span class="number">5</span> | <span class="variable">length =</span> variable | <span class="variable">Start =</span> <span class="number">4</span>B | <span class="variable">End =</span> <span class="number">4</span>B | ...  
+<span class="number">7</span>. Timestamp:            | <span class="variable">kind =</span> <span class="number">8</span> | <span class="variable">length =</span> <span class="number">10</span>| <span class="variable">TS =</span> <span class="number">4</span>B | TS <span class="variable">echo =</span> <span class="number">4</span>B |  
+</code></pre><p>书中较大的篇幅介绍了TCP的ACK机制，这里正常的ACK就不展开了，而是更关注书中提到的Delayed ACK和Nagle算法.前者通过在ACK包中携带数据避免small ack packet，后者是为了进一步避免发送数据太少导致small packet。  </p>
+<pre><code>Nagle<span class="attribute">'s</span> algorithm: <span class="keyword">all</span> the data that need <span class="keyword">to</span> be sent <span class="keyword">out</span> are  
+collected <span class="keyword">until</span> the <span class="typename">time</span> we receive an ACK <span class="keyword">for</span> the last sent data.  
+</code></pre><p>Sliding Window 机制就是rwnd的限制导致的，rwnd的存在是为了做flow control。另外cwnd的存在则是为了做congestion control。  </p>
+<p>TCP Timers是一个很重要的部分，常见的计时器有一下几种：  </p>
+<pre><code><span class="number">1.</span> Retransmission <span class="built_in">Timer</span>: 如果一个包在该计时器超时之前都没有收到ACK，则触发超时重传  
+<span class="number">2.</span> Persistent <span class="built_in">Timer</span>: 为了应对rwnd=<span class="number">0</span>后，接收方发送通知rwnd&gt;<span class="number">0</span>的包丢失的情况。  
+    具体就是发送发使用指数规避的方式增加persistent <span class="built_in">timer</span>，  
+    每次<span class="built_in">timer</span>结束的时候发送一个不带数据的包试探对方的rwnd.  
+<span class="number">3.</span> Keepalive <span class="built_in">Timer</span>: 看名字就理解了，不解释  
+<span class="number">4.</span> TIME_WAIT <span class="built_in">Timer</span>: TCP状态转换机制中的一个重要结束状态  
+</code></pre><p>FACK如果启用，则认为SACK数据块之间空隙的包都丢失了，默认开启；DSACK是SACK的一个扩展。  </p>
+<pre><code>DSACK is generated when both <span class="operator">the</span> original <span class="operator">and</span> retransmission   
+reach <span class="operator">the</span> receiver. This gives us <span class="operator">an</span> indication that we have   
+falsely entered <span class="keyword">into</span> <span class="operator">the</span> fast retransmission <span class="operator">and</span> fast recovery   
+phase because <span class="operator">the</span> packet got delayed <span class="operator">in</span> <span class="operator">the</span> network <span class="operator">or</span> because   
+<span class="operator">of</span> excessive reordering.  
+</code></pre><p>IP及以下层相关的内容暂忽略。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>这章主要还是基础知识的介绍，更加详细的介绍TCP/IP相关协议。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[TCP ADI in Linux(1): Introduction]]></title>
+    <link href="http://perthcharles.github.com/2014/10/22/tcp-design-and-implementation/"/>
+    <id>http://perthcharles.github.com/2014/10/22/tcp-design-and-implementation/</id>
+    <published>2014-10-22T09:29:08.000Z</published>
+    <updated>2014-11-03T14:36:37.000Z</updated>
+    <content type="html"><![CDATA[<p>今天开始好好研究TCP/IP的Linux实现，结合书和代码希望自己能对TCP这块更加的熟悉。读Kernel代码还是功利性强一点比较好，比如这次我是由于毕设相关才来仔细研究TCP这块的具体实现的。没有目的性的看这种大块头项目，效率比较难保障。Anyway，这个系列也是看到那块记录哪块，用以加强自己的理解。题目中的ADI分别是Architecture, Design, Implementation。书就是下面这一本了，英文的比较带劲，:)  </p>
+<pre><code>《TCP/IP ARCHITECTURE, DESIGN, <span class="keyword">AND</span> <span class="keyword">IMPLEMENTATION</span> <span class="keyword">IN</span> LINUX》 <span class="keyword">by</span> Sameer Seth   
+</code></pre><a id="more"></a>
+
+<h2 id="Introduction">Introduction</h2>
+<hr>
+<p>读这种大块头的项目时，首先应该首先熟悉代码的框架，而不是立马dive into source code。这方面有许多优秀的工具能帮助我们了解代码的框架，这里推荐<a href="https://scitools.com/" target="_blank" rel="external">understand</a>. 顺带吐槽一下，个人觉得这款软件远没有<a href="http://www.sourceinsight.com/" target="_blank" rel="external">source insight</a>闻名的主要原因就是这软件的名字。  </p>
+<pre><code>Once we know how <span class="operator">the</span> code is distributed, <span class="keyword">it</span> becomes  
+easier <span class="built_in">to</span> find out <span class="operator">the</span> relevant code <span class="operator">in</span> which we are interested.  
+</code></pre><p>几乎所有的网络应用都是基于基础的client-server框架的，后续的优化主要是为了做到更好地安全性，负载均衡等。  </p>
+<p>在Linux中，sk_buff结构体包含一个packet的所有相关信息，把sk_buff理解为TCP packet在Linux中的表示也不为过。  </p>
+<p>1.1.1 Moving Down the Stack是一个很好了解TCP/IP栈发包过程的简要描述  </p>
+<p>1.1.2 Moving Up the Stack则是收包过程的简要描述  </p>
+<p>Linux的设计上，user-space is preemptible, kernel is non-preemptible.  </p>
+<p>关于Linux基础知识的介绍，这里就不再解释了。比如system_call, process &amp; thread, user space &amp; kernel space，以及各种锁。  </p>
+<p>1.7给出了一个典型的client-server程序例子，主要就是需要了解那几个重要函数的用法：socket(), bind(), listen(), accept(), connect() 以及setsockopt()和getsockopt()。这里有一个不错的资料：<a href="http://man.chinaunix.net/develop/c&amp;c++/linux_c/default.htm" target="_blank" rel="external">Linux C function参考手册</a>。  </p>
+<p>socket I/O有blocking和non-blocking之分，I/O复用有select(), poll(), epoll()之分，不熟悉的请移步Google.  </p>
+<p>TCP状态转换机制可以看TCP/IP详解的卷一中的插图，正常流程没什么好说的。关键在于一些特殊情况的分析，比如TIME_WAIT。  </p>
+<pre><code>设置TIME_WAIT状态的原因：  
+<span class="bullet">1. </span>如果最后一个ACK丢失了，需要接受对方重新发送的FIN包并确认；  
+<span class="bullet">2. </span>防止两个完全一样的流overlap。  
+</code></pre><h4 id="总结">总结</h4>
+<p>这章主要介绍一些理解与TCP相关的一些Linux机制和基础知识，读下来还是比较顺利的。OK，what’s next ?  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>今天开始好好研究TCP/IP的Linux实现，结合书和代码希望自己能对TCP这块更加的熟悉。读Kernel代码还是功利性强一点比较好，比如这次我是由于毕设相关才来仔细研究TCP这块的具体实现的。没有目的性的看这种大块头项目，效率比较难保障。Anyway，这个系列也是看到那块记录哪块，用以加强自己的理解。题目中的ADI分别是Architecture, Design, Implementation。书就是下面这一本了，英文的比较带劲，:)  </p>
+<pre><code>《TCP/IP ARCHITECTURE, DESIGN, <span class="keyword">AND</span> <span class="keyword">IMPLEMENTATION</span> <span class="keyword">IN</span> LINUX》 <span class="keyword">by</span> Sameer Seth   
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Install windows 7 into a ubuntu server]]></title>
+    <link href="http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/"/>
+    <id>http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/</id>
+    <published>2014-06-18T04:00:00.000Z</published>
+    <updated>2014-11-04T06:47:15.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="Backgrounds">Backgrounds</h2>
+<p>As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.<br>This post is mainly a remainder for the encountered problems while I was installing win7.  </p>
+<a id="more"></a>
+
+<h2 id="Problems">Problems</h2>
+<ul>
+<li><a href="#nic">[win7]Unrecognized NIC</a>  </li>
+<li><a href="#net">[win7]Network connection</a>  </li>
+<li><a href="#cygwin">[win7]Cygwin and ssh</a>  </li>
+<li><a href="#lvm">[ubuntu]LVM</a>  </li>
+<li><a href="#grub">restore grub2</a>  </li>
+<li><a href="#setup">grub setup</a>  </li>
+</ul>
+<hr>
+<p><h3 id="nic">[win7]Unrecognized NIC</h3><br>The unrecognized NICs are mainly caused by missed drivers.<br>So this problem can easily fixed via installations of missed drivers.<br>If you needs to find out the info for the NICs, the following commands are what you are looking for.  </p>
+<pre><code><span class="variable">$ethtool</span> eth<span class="number">0</span>
+<span class="variable">$lspci</span> |<span class="keyword">grep</span> -i ether
+<span class="variable">$dmesg</span> |<span class="keyword">grep</span> -i eth
+</code></pre><p><h3 id="net">Network  connection</h3><br>As four NICs are used in my server, some for internets and some for inter-connections, DNS and IPs need to be configured manually.<br>The related info can be found in the following files:  </p>
+<pre><code>$vim <span class="regexp">/etc/</span>resolv.conf   <span class="comment">//DNS server</span>
+$vim <span class="regexp">/etc/</span>sysconfig<span class="regexp">/network-scripts/i</span>fcfg-eth0  <span class="comment">//CentOS</span>
+$vim <span class="regexp">/etc/</span>network<span class="regexp">/interfaces /</span><span class="regexp">/Ubuntu</span>
+</code></pre><p><h3 id="cygwin">Cygwin and ssh</h3><br>In my testbed, all the tasks supposed to be executed automaticly. Therefore a command-line workspace is required in win7 and I choose Cygwin in here.<br>Here are some excellent tutorials which helps me a lot.  </p>
+<ul>
+<li><a href="https://cygwin.com/install.html" target="_blank" rel="external">Cygwin Homepage</a>  </li>
+<li><a href="https://code.google.com/p/apt-cyg/" target="_blank" rel="external">apt-cyg: A command-line software installer for Cygwin</a>  </li>
+<li><a href="http://www.howtogeek.com/howto/41382/" target="_blank" rel="external">How to use linux commands in windows with Cygwin</a>  </li>
+<li><p><a href="http://www.howtogeek.com/howto/41560/" target="_blank" rel="external">How to get ssh command-line access to windows 7 using Cygwin</a><br>Because the ssh key in Cygwin is different with the original key in ubuntu, I choose to disable the host key checking for my server.  </p>
+<p>  $vim ~/.ssh/config  // if this file doesn’t exist, create it<br>  $cat ~/.ssh/config<br>  Host ip-of-my-server</p>
+<pre><code>  <span class="title">StrictHostKeyChecking</span> <span class="built_in">no</span>
+</code></pre></li>
+</ul>
+<p><h3 id="lvm">LVM</h3><br>When trying to restore grub after the win7 installed,<br>There are several methods mentioned in this <a href="https://help.ubuntu.com/community/Grub2/Installing#Reinstalling_GRUB_2" target="_blank" rel="external">document</a> from ubuntu community. But I still cann’t restore the grub until I find this <a href="http://typethinker.blogspot.com/2009/12/reinstalling-grub-with-lvm-from-ubuntu.html" target="_blank" rel="external">post</a>. The main reason is that my ubuntu is install inside a <a href="http://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux\" target="_blank" rel="external">LVM</a>) partition.<br>Here are some relative commands.  </p>
+<pre><code><span class="variable">$lvdisplay</span>  // <span class="literal">show</span> logical volumes
+<span class="variable">$vgdisplay</span>  // <span class="literal">show</span> volume groups
+<span class="variable">$pvdisplay</span>  // <span class="literal">show</span> physical volumes
+</code></pre><p><h3 id="grub">Restore grub2</h3><br>Here is my steps to restore grub2:  </p>
+<pre><code>1. Boot the ubuntu LiveCD, <span class="operator"><span class="keyword">select</span> <span class="string">"Try it"</span>, <span class="keyword">and</span> <span class="keyword">open</span> a terminal  
+<span class="number">2.</span> <span class="keyword">Use</span> fdisk <span class="keyword">to</span> <span class="keyword">help</span> determine the <span class="keyword">partition</span> <span class="keyword">on</span> which ubuntu <span class="keyword">is</span> installed  
+    #fdisk -l
+<span class="number">3.</span> <span class="keyword">Install</span> LVM
+    $apt-<span class="keyword">get</span> <span class="keyword">install</span> lvm2
+    $vgdisplay                // find name <span class="keyword">of</span> volume <span class="keyword">group</span>
+    $vgchange -ay name-<span class="keyword">of</span>-vg  // make volume <span class="keyword">group</span> available
+<span class="number">4.</span> Mount root <span class="keyword">and</span> boot file systems
+    $mount /dev/name-<span class="keyword">of</span>-vg/name-<span class="keyword">of</span>-root-lv /mnt
+    $mount /dev/name-<span class="keyword">of</span>-boot-<span class="keyword">partition</span> /mnt/boot
+<span class="number">5.</span> <span class="keyword">Install</span> grub2
+    $grub-<span class="keyword">install</span> <span class="comment">--boot-directory=/mnt/boot /dev/name-of-root-device</span>
+<span class="number">6.</span> Reboot <span class="keyword">and</span> <span class="keyword">update</span>-grub
+    $reboot
+    $<span class="keyword">update</span>-grub</span>
+</code></pre><p>Until now the grub for ubuntu is restore.  </p>
+<p><h3 id="setup">Grub setup</h3><br>Q: How to boot into into win7 from ubuntu for only once ?<br>A: grub-reboot is the tool you are looking for. <a href="http://askubuntu.com/questions/18170/how-to-reboot-into-windows-from-ubuntu" target="_blank" rel="external">This post</a> is a related question in askubuntu.com. Here are the configuration steps:  </p>
+<pre><code>$vim /etc/default/grub
+    modify GRUB_DEFAULT=0 to GRUB_DEFAULT=saved
+$<span class="operator"><span class="keyword">update</span>-grub
+$grub-reboot X
+    X <span class="keyword">is</span> the menuentry <span class="keyword">position</span> <span class="keyword">of</span> the OS you want <span class="keyword">to</span> boot <span class="keyword">into</span> <span class="keyword">for</span> the <span class="keyword">next</span> <span class="keyword">time</span> <span class="keyword">and</span> the <span class="keyword">next</span> <span class="keyword">time</span> <span class="keyword">only</span>.
+$reboot</span>
+</code></pre><p>There is a little bug in my grub that the timeout isn’t working properly.<br>My solution is modify the grub.cfg file according to <a href="http://askubuntu.com/questions/202309/cannot-get-grub-menu-to-timeout-or-go-away" target="_blank" rel="external">this-post</a> and <a href="http://dietrichschroff.blogspot.com/2014/03/ubuntu-upgrade-to-1204-grub-timeout.html" target="_blank" rel="external">this-post</a>.  </p>
+<p>Until now, the server has become a perfect double-boot server. Cheers! :)  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="Backgrounds">Backgrounds</h2>
+<p>As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.<br>This post is mainly a remainder for the encountered problems while I was installing win7.  </p>
+]]>
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="ubuntu" scheme="http://perthcharles.github.com/tags/ubuntu/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Analysis tools for network traces]]></title>
+    <link href="http://perthcharles.github.com/2014/06/16/tcpdump-tcptrace-tshark/"/>
+    <id>http://perthcharles.github.com/2014/06/16/tcpdump-tcptrace-tshark/</id>
+    <published>2014-06-16T04:00:00.000Z</published>
+    <updated>2014-11-04T06:48:02.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="Overview">Overview</h2>
+<p><a href="http://www.tcpdump.org/" target="_blank" rel="external">tcpdump</a>: capture network packets by specific filters<br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>: a tool for analysis of tcp dump files, like <a href="http://www.tcpdump.org/manpages/pcap.3pcap.html" target="_blank" rel="external">pcap</a><br><a href="http://tcptrace.org/jPlot/" target="_blank" rel="external">jplot</a>: a java version of <a href="http://www.xplot.org/" target="_blank" rel="external">xplot</a><br>补充一下tshark也是一个不错的工具，是wireshark的terminal版本，功能同样强大。  </p>
+<a id="more"></a>
+
+<h2 id="Install_&amp;_Usage">Install &amp; Usage</h2>
+<h3 id="TCPDUMP">TCPDUMP</h3>
+<pre><code><span class="variable">$yum</span> install tcpdump  <span class="comment">// My OS is CentOS 6.5</span>
+<span class="variable">$tcpdump</span> -w example.pcap -i eth0 -n  
+</code></pre><p><a href="http://www.tcpdump.org/manpages/tcpdump.1.html" target="_blank" rel="external">Here</a> is the manpage of tcpdump with lots of examples.  </p>
+<h3 id="TCPTRACE">TCPTRACE</h3>
+<pre><code><span class="variable">$yum</span> install tcptrace
+<span class="variable">$tcptrace</span> -R example.pcap  // produce data <span class="keyword">for</span> RTT graph
+</code></pre><p><a href="http://www.tcptrace.org/manual/index.html" target="_blank" rel="external">Here</a> is the manpage of tcptrace.  </p>
+<h3 id="JPLOT">JPLOT</h3>
+<p>Install  </p>
+<pre><code><span class="variable">$wget</span> http:<span class="comment">//www.tcptrace.org/jPlot/download/jPlot-1.0.2.tar.gz</span>
+<span class="variable">$tar</span> zxvf jPlot-<span class="number">1.0</span><span class="number">.2</span>.tar.gz
+<span class="variable">$cd</span> jPlot-<span class="number">1.0</span><span class="number">.2</span>
+<span class="variable">$yum</span> install java-devel   <span class="comment">// install javac</span>
+<span class="variable">$.</span>/configure
+<span class="variable">$make</span>
+</code></pre><p>Usage  </p>
+<pre><code><span class="variable">$java</span> jPlot a2b_rtt.xpl
+</code></pre><p><a href="http://tcptrace.org/jPlot/" target="_blank" rel="external">Here</a> is the manpage of jPlot.  </p>
+<h2 id="Others">Others</h2>
+<p>If you are familiar with <a href="http://www.gnuplot.info/" target="_blank" rel="external">gnuplot</a>, I think <a href="http://tcptrace.org/xpl2gpl/" target="_blank" rel="external">xpl2gpt</a> is a good shell scripts for you.  </p>
+<h3 id="Examples">Examples</h3>
+<pre><code><span class="variable">$tcpdump</span> -w example.pcap -i eth0 -n
+<span class="variable">$tcptrace</span> -R example.pcap
+<span class="variable">$xpl2gpl</span> a2b_rtt.xpl
+<span class="variable">$gnuplot</span> a2b_rtt.gpl
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="Overview">Overview</h2>
+<p><a href="http://www.tcpdump.org/" target="_blank" rel="external">tcpdump</a>: capture network packets by specific filters<br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>: a tool for analysis of tcp dump files, like <a href="http://www.tcpdump.org/manpages/pcap.3pcap.html" target="_blank" rel="external">pcap</a><br><a href="http://tcptrace.org/jPlot/" target="_blank" rel="external">jplot</a>: a java version of <a href="http://www.xplot.org/" target="_blank" rel="external">xplot</a><br>补充一下tshark也是一个不错的工具，是wireshark的terminal版本，功能同样强大。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="tshark" scheme="http://perthcharles.github.com/tags/tshark/"/>
+    
+      <category term="tcpdump" scheme="http://perthcharles.github.com/tags/tcpdump/"/>
+    
+      <category term="tcptrace" scheme="http://perthcharles.github.com/tags/tcptrace/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Setup Nginx server in linux]]></title>
+    <link href="http://perthcharles.github.com/2014/06/05/setup-nginx-sever/"/>
+    <id>http://perthcharles.github.com/2014/06/05/setup-nginx-sever/</id>
+    <published>2014-06-05T05:00:00.000Z</published>
+    <updated>2014-11-04T06:41:45.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="Installation">Installation</h3>
+<p>By default, Nginx will be installed in /usr/local/nginx.  </p>
+<pre><code>./configure  
+<span class="keyword">make</span>  
+<span class="keyword">make</span> install  
+</code></pre><h3 id="Configuration">Configuration</h3>
+<p>The configuration file is /usr/local/nginx/conf/nginx.conf.<br><a href="http://blog.martinfjordvald.com/2010/07/nginx-primer/" target="_blank" rel="external">Here</a> is an<br>excellent simple tutorial, and <a href="http://wiki.nginx.org/FullExample" target="_blank" rel="external">here</a><br>is a full example.<br>If you want to show all the files in the root directory, you can turn<br>on autoindex like this:  </p>
+<pre><code><span class="title">location</span> / {  
+    <span class="title">autoindex</span> <span class="built_in">on</span>;  
+    <span class="title">root</span> /home;  
+}  
+</code></pre><h3 id="Running_Nginx">Running Nginx</h3>
+<pre><code>/usr/<span class="built_in">local</span>/nginx/sbin/nginx         <span class="comment"> //start nginx  </span>
+/usr/<span class="built_in">local</span>/nginx/sbin/nginx -q quit <span class="comment"> //stop nginx  </span>
+</code></pre><h3 id="References">References</h3>
+<p><a href="http://wiki.nginx.org/Install" target="_blank" rel="external">Install - Nginx Community</a><br><a href="http://blog.martinfjordvald.com/2010/07/nginx-primer/" target="_blank" rel="external">Nginx Configuration Primer</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="Installation">Installation</h3>
+<p>By default, Nginx will be installed in /usr/local/nginx.  </p>
+<pre><code>./configure  
+<span cla]]>
+    </summary>
+    
+      <category term="nginx" scheme="http://perthcharles.github.com/tags/nginx/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[知识积累]]></title>
+    <link href="http://perthcharles.github.com/2014/04/26/make-progress-everyday/"/>
+    <id>http://perthcharles.github.com/2014/04/26/make-progress-everyday/</id>
+    <published>2014-04-26T04:00:00.000Z</published>
+    <updated>2014-11-04T06:39:13.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#blogger">优秀博主</a>  </li>
+<li><a href="#views">百家争鸣</a>  </li>
+<li><a href="#coding">编程与算法</a>  </li>
+<li><a href="#network">网络</a>  </li>
+<li><a href="#tools">实用工具</a>  </li>
+<li><a href="#bigdata">大数据</a>  </li>
+<li><a href="#linux">UNIX/Linux相关</a>  </li>
+<li><a href="#projects">优秀项目主页</a>  </li>
+<li><a href="#reference">参考手册</a>  </li>
+<li><a href="#online-books">在线图书</a>  </li>
+<li><a href="#others">其它</a>  </li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">注：此文所有链接均是外链</div></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<hr>
+<p><h3 id="blogger">优秀博主</h3></p>
+<ul>
+<li><a href="http://www.vimer.cn/" target="_blank" rel="external">Vimer的程序世界</a>  </li>
+<li><a href="http://blog.csdn.net/caopengcs" target="_blank" rel="external">曹鹏博士</a>  </li>
+<li><a href="http://blog.csdn.net/v_july_v" target="_blank" rel="external">July</a>  </li>
+<li><a href="http://www.matrix67.com/blog/" target="_blank" rel="external">matrix67</a>  </li>
+<li><a href="http://blog.chinaunix.net/uid-20940095-id-373614.html" target="_blank" rel="external">少帅的天空</a>  </li>
+<li><a href="http://blog.csdn.net/aimingoo/" target="_blank" rel="external">周爱民CSDN专栏</a>  </li>
+<li><a href="http://blog.csdn.net/dgq8211" target="_blank" rel="external">nyist_xiaod</a>  </li>
+<li><a href="http://hawstein.com/" target="_blank" rel="external">Hawstein</a>  </li>
+<li><a href="http://coolshell.cn/" target="_blank" rel="external">CoolShell</a>  </li>
+<li><a href="http://zhedahht.blog.163.com/" target="_blank" rel="external">何海涛</a>  </li>
+<li><a href="http://blog.csdn.net/hackbuteer1" target="_blank" rel="external">Hackbuterr1</a>  </li>
+<li><a href="http://blog.csdn.net/Solstice" target="_blank" rel="external">陈硕的Blog</a>  </li>
+<li><a href="http://www.cnblogs.com/graphics/" target="_blank" rel="external">Graphics:关注DirectX</a>  </li>
+<li><a href="http://www.cnblogs.com/promise6522/" target="_blank" rel="external">One Step Further</a>  </li>
+<li><a href="https://www.centos.bz/" target="_blank" rel="external">LINUX服务器运维日志</a>  </li>
+<li><a href="http://zh.lucida.me/" target="_blank" rel="external">Lucida: Life Love Tech</a>  </li>
+</ul>
+<hr>
+<p><h3 id="views">百家争鸣</h3></p>
+<ul>
+<li><a href="http://blog.jobbole.com/821/" target="_blank" rel="external">程序员的本质</a>  </li>
+</ul>
+<hr>
+<p><h3 id="coding">编程与算法</h3></p>
+<ul>
+<li><a href="http://cloud.github.com/downloads/chenshuo/documents/LearningNetworkProgramming.pdf" target="_blank" rel="external">谈一谈网络编程学习经验</a>  </li>
+<li><a href="http://blog.jobbole.com/28219/" target="_blank" rel="external">为什么转置512<em>512矩阵，会比513</em>513慢很多</a>  </li>
+<li><a href="http://zh.lucida.me/blog/on-learning-algorithms/" target="_blank" rel="external">Lucida:我的算法学习之路</a>  </li>
+<li><a href="http://www.m5sim.org/Coding_Style" target="_blank" rel="external">Coding Style for gem5</a>  </li>
+<li><a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml" target="_blank" rel="external">Google C++ Style Guide</a>  </li>
+<li><a href="http://coolshell.cn/articles/27.html" target="_blank" rel="external">如何自己写一个网络爬虫</a>  </li>
+<li><a href="http://blog.csdn.net/zhl1224/article/details/5735747" target="_blank" rel="external">段间跳转指令jmpi和实模式寻址</a>  </li>
+<li><a href="http://www.cnblogs.com/jffifa/archive/2011/12/17/2291072.html" target="_blank" rel="external">n个骰子得到点数和的概率分布</a>  </li>
+<li><a href="http://hrinterviews.blogspot.com/" target="_blank" rel="external">HR Interviews</a>  </li>
+<li><a href="http://www.felix021.com/blog/read.php?2040" target="_blank" rel="external">Manacher算法：O(n)时间求字符串的最长回文子串</a>  </li>
+<li><a href="http://blog.csdn.net/superdiablo/article/details/6173001" target="_blank" rel="external">Prim算法与Dijkstra算法的区别</a>  </li>
+<li><a href="http://www.cnblogs.com/skynet/archive/2010/10/30/1865267.html" target="_blank" rel="external">Linux多线程编程举例</a>  </li>
+<li><a href="http://www.topcoder.com/" target="_blank" rel="external">TopCoder</a>  </li>
+<li><a href="http://www.codechef.com/" target="_blank" rel="external">CodeChef</a>  </li>
+<li><a href="https://codility.com/train/" target="_blank" rel="external">Codility</a>  </li>
+<li><a href="http://www.nocow.cn/index.php/%E9%A6%96%E9%A1%B5" target="_blank" rel="external">NOCOW: A Nest Of Coding Wisdom</a>  </li>
+<li><a href="http://leetcode.com/" target="_blank" rel="external">LeetCode</a>  </li>
+<li><a href="http://www.cs.cmu.edu/~gilpin/tutorial/" target="_blank" rel="external">Debugging Under Unix: gdb Tutorial</a>    </li>
+<li><a href="http://www.cnblogs.com/promise6522/archive/2012/03/03/2377935.html" target="_blank" rel="external">浅谈TCP/IP网络编程中socket的行为</a>  </li>
+<li><a href="http://publib.boulder.ibm.com/infocenter/macxhelp/v6v81/index.jsp?topic=%2Fcom.ibm.vacpp6m.doc%2Fproguide%2Fref%2Ftvopi_o.htm" target="_blank" rel="external">Coding Your Application to Improve Performance</a>  </li>
+<li><a href="http://nlp.stanford.edu/IR-book/html/htmledition/web-crawling-and-indexes-1.html" target="_blank" rel="external">Web crawling and indexes</a>  </li>
+<li><a href="http://dingdongsheng.cool.blog.163.com/blog/static/1186187552009431405995/" target="_blank" rel="external">二分匹配总结:匈牙利算法+最大权+最小权</a>  </li>
+<li><a href="http://dongxicheng.org/knowledges-carding/" target="_blank" rel="external">面试基础知识整理</a>  </li>
+</ul>
+<hr>
+<p><h3 id="network">网络</h3></p>
+<ul>
+<li><a href="http://www.beej.us/guide/bgnet/output/html/multipage/index.html" target="_blank" rel="external">Guide to Network Programming Using Internet Sockets</a>  </li>
+<li><a href="http://www.cnblogs.com/aixingfou/archive/2011/07/29/2120956.html" target="_blank" rel="external">关于send(),recv()函数的理解</a>  </li>
+<li><a href="http://blog.csdn.net/shanshanpt/article/category/1926563" target="_blank" rel="external">Linux 内核之网络协议栈</a> </li>
+</ul>
+<hr>
+<p><h3 id="tools">实用工具</h3></p>
+<ul>
+<li><a href="http://daringfireball.net/projects/markdown/syntax#precode" target="_blank" rel="external">Markdown: syntax</a>  </li>
+<li><a href="http://www.upanok.com/" target="_blank" rel="external">U盘装系统工具</a>  </li>
+<li><a href="http://www.upanok.com/help.html" target="_blank" rel="external">U盘装系统教程</a>  </li>
+<li><a href="http://www.vimer.cn/2010/06/%E6%9C%AC%E5%8D%9A%E4%BD%BF%E7%94%A8%E7%9A%84vimgvim%E7%9B%B8%E5%85%B3%E6%8F%92%E4%BB%B6%E6%95%B4%E7%90%86.html" target="_blank" rel="external">Vim 插件</a>  </li>
+<li><a href="https://github.com/wklken/k-vim" target="_blank" rel="external">Vim 插件2</a>  </li>
+<li><a href="https://github.com/gmarik/Vundle.vim" target="_blank" rel="external">Vim插件管理:Vundle</a>  </li>
+<li><a href="http://blog.sina.com.cn/s/blog_4cbfbaa30100ioy2.html" target="_blank" rel="external">Matlab中plot用法</a>  </li>
+<li><a href="http://blog.csdn.net/ww2000e/article/details/6609657" target="_blank" rel="external">让source insight支持AT&amp;T汇编语法高亮</a>  </li>
+<li><a href="http://www.atmos.albany.edu/deas/atmclasses/atm350/vi_cheat_sheet.pdf" target="_blank" rel="external">vi Editor Cheat Sheet</a>  </li>
+<li><a href="http://wgkgood.blog.51cto.com/1192594/917632" target="_blank" rel="external">GCC升级</a>  </li>
+</ul>
+<hr>
+<p><h3 id="bigdata">大数据</h3></p>
+<ul>
+<li><a href="http://hadooptutorial.wikispaces.com/Hadoop" target="_blank" rel="external">Hadoop tutorial</a>  </li>
+</ul>
+<hr>
+<p><h3 id="linux">UNIX/Linux相关</h3></p>
+<ul>
+<li><a href="http://www.pixelbeat.org/cmdline_zh_CN.html" target="_blank" rel="external">linux常见命令的列表</a>  </li>
+<li><a href="http://www.linux-tutorial.info/" target="_blank" rel="external">Linux Knowledge Base and Tutorial</a>  </li>
+<li><a href="http://www.92csz.com/study/linux/11.htm" target="_blank" rel="external">安装RPM包或者安装源码包</a>  </li>
+<li><a href="http://linux-mm.org/LinuxMM" target="_blank" rel="external">Linux Memory Management</a>  </li>
+<li><a href="http://blog.csdn.net/emtribe/article/details/8915884" target="_blank" rel="external">git获取linux内核源码及分支管理</a>  </li>
+<li><a href="http://www.linux-tutorial.info/index.php" target="_blank" rel="external">Linux Knowledge Base and Tutorial</a>  </li>
+<li><a href="http://linux.die.net/man/" target="_blank" rel="external">Linux Man pages:可查询命令、函数或文件</a>  </li>
+<li><a href="http://www.linuxjournal.com/article/6345?page=0,0" target="_blank" rel="external">Zero Copy I: User-Mode Perspective</a>  </li>
+<li><a href="http://baruch.siach.name/blog/posts/linux_kernel_module_parameters/" target="_blank" rel="external">Setting Linux kernel module parameters</a>  </li>
+<li><a href="http://www.cyberciti.biz/howto/question/linux/linux-rpm-cheat-sheet.php" target="_blank" rel="external">rpm command examples</a>  </li>
+<li><a href="http://blog.csdn.net/hansel/article/details/5097262" target="_blank" rel="external">Linux下二进制文件的查看和编辑</a>  </li>
+<li><a href="http://www.cnblogs.com/killkill/archive/2010/06/23/1763785.html" target="_blank" rel="external">在Linux下使用vim配合xxd查看并编辑二进制文件</a>  </li>
+<li><a href="http://www.qycn.com/news/11669.html" target="_blank" rel="external">CentOS 6安装JDK及系统配置</a>  </li>
+<li><a href="http://noops.me/?p=271" target="_blank" rel="external">centos kvm部署和常用命令</a>  </li>
+<li><a href="http://dbanotes.net/tech-memo/shell_shortcut.html" target="_blank" rel="external">Bash Shell 快捷键的学习使用</a>  </li>
+<li><a href="http://www.lishiming.net/thread-3624-1-1.html" target="_blank" rel="external">iptables 实现centos内网机器访问外网</a>  </li>
+<li><a href="http://wiki.centos.org/zh/HowTos/JavaOnCentOS" target="_blank" rel="external">如何在 CentOS 4 及 CentOS 5 上安装 Java</a>  </li>
+<li><a href="http://ohyeahbbs.blog.51cto.com/1775490/865107" target="_blank" rel="external">CentOS 6.2 挂载 NTFS格式的硬盘</a>  </li>
+<li><a href="http://blog.csdn.net/yayong/article/details/139983" target="_blank" rel="external">Linux AT&amp;T 汇编语言开发指南</a>  </li>
+<li><a href="http://iso.linuxquestions.org/" target="_blank" rel="external">Linux ISO 镜像列表</a>  </li>
+<li><a href="http://www.rpmfind.net/" target="_blank" rel="external">查找RPM包1</a>  </li>
+<li><a href="http://rpm.pbone.net/" target="_blank" rel="external">查找RPM包2：推荐</a>  </li>
+<li><a href="http://tldp.org/LDP/tlk/tlk.html" target="_blank" rel="external">在线文档：The linux kernel</a>  </li>
+</ul>
+<hr>
+<p><h3 id="projects">优秀项目主页</h3></p>
+<ul>
+<li><a href="http://www.gnu.org/software/wget/" target="_blank" rel="external">GNU Wget</a>  </li>
+<li><a href="http://www.latex-project.org/" target="_blank" rel="external">Latex</a>  </li>
+<li><a href="http://www.tldp.org/" target="_blank" rel="external">The Linux Documentation Project</a>  </li>
+<li><a href="http://www.linux-kvm.org/page/Main_Page" target="_blank" rel="external">KVM</a>  </li>
+</ul>
+<hr>
+<p><h3 id="reference">参考手册</h3></p>
+<ul>
+<li><a href="http://man.chinaunix.net/develop/c&amp;c++/linux_c/default.htm" target="_blank" rel="external">Linux 常用C函数</a>  </li>
+<li><a href="http://man.chinaunix.net/" target="_blank" rel="external">ChinaUnix.net 手册中心</a>  </li>
+<li><a href="http://www.x.org/releases/X11R7.5/doc/man/man3/" target="_blank" rel="external">X11R7.5 Manual Pages: Section 3: Library Functions</a>  </li>
+<li><a href="http://people.cs.nctu.edu.tw/~yslin/library/linuxc/main.htm" target="_blank" rel="external">Linux 常用C函数</a>  </li>
+<li><a href="http://www.cplusplus.com/reference/" target="_blank" rel="external">C++ Reference</a>  </li>
+<li><a href="http://clc-wiki.net/wiki/C_standard_library" target="_blank" rel="external">C standard library</a>  </li>
+<li><a href="http://www.gnu.org/software/libc/manual/html_mono/libc.html" target="_blank" rel="external">The GNU C Library</a>  </li>
+<li><a href="http://cursuri.cs.pub.ro/~apc/2003/resources/pthreads/uguide/document.htm" target="_blank" rel="external">Pthreads APIs</a>  </li>
+<li><a href="http://vimcdoc.sourceforge.net/doc/usr_toc.html#usr_toc.txt" target="_blank" rel="external">VIM User Manual</a>  </li>
+<li><a href="http://blog.51yip.com/manual/shell/" target="_blank" rel="external">Shell在线手册</a>  </li>
+<li><a href="https://computing.llnl.gov/tutorials/pthreads/" target="_blank" rel="external">POSIX Threads Programming</a>  </li>
+<li><a href="http://tldp.org/HOWTO/Program-Library-HOWTO/" target="_blank" rel="external">Program Library HOWTO</a>  </li>
+<li><a href="http://capone.mtsu.edu/csdept/FacilitiesAndResources/make.htm" target="_blank" rel="external">An Introduction to the UNIX Make Utility</a>  </li>
+<li><a href="http://fanqiang.chinaunix.net/a4/b8/20010601/170400310_b.html" target="_blank" rel="external">X Window 程式設計入門</a>  </li>
+</ul>
+<hr>
+<p><h3 id="online-books">在线图书</h3></p>
+<ul>
+<li><a href="http://www.ibiblio.org/g2swap/byteofpython/read/index.html" target="_blank" rel="external">A Byte of Python</a>  </li>
+<li><a href="http://www.diveintopython.net/toc/index.html" target="_blank" rel="external">Dive Into Python</a>  </li>
+<li><a href="http://idns.blog.163.com/blog/static/2004533772011111945928615/" target="_blank" rel="external">C++ Primer, Fourth Edition</a>  </li>
+<li><a href="http://www.makelinux.net/ldd3/" target="_blank" rel="external">Linux Device Drivers, 3th Edition</a>  </li>
+</ul>
+<hr>
+<p><h3 id="others">其它</h3></p>
+<ul>
+<li><a href="http://archive.org/web/web.php" target="_blank" rel="external">Internet Archive</a>  </li>
+</ul>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="目录">目录</h2>
+<ul>
+<li><a href="#blogger">优秀博主</a>  </li>
+<li><a href="#views">百家争鸣</a>  </li>
+<li><a href="#coding">编程与算法</a>  </li>
+<li><a href="#network">网络</a>  </li>
+<li><a href="#tools">实用工具</a>  </li>
+<li><a href="#bigdata">大数据</a>  </li>
+<li><a href="#linux">UNIX/Linux相关</a>  </li>
+<li><a href="#projects">优秀项目主页</a>  </li>
+<li><a href="#reference">参考手册</a>  </li>
+<li><a href="#online-books">在线图书</a>  </li>
+<li><a href="#others">其它</a>  </li>
+</ul>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">注：此文所有链接均是外链</div></pre></td></tr></table></figure>
+
+]]>
+    
+    </summary>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[The Art of Readable Code]]></title>
+    <link href="http://perthcharles.github.com/2014/04/20/the-art-of-readable-code/"/>
+    <id>http://perthcharles.github.com/2014/04/20/the-art-of-readable-code/</id>
+    <published>2014-04-20T04:00:00.000Z</published>
+    <updated>2014-11-04T06:31:20.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="简介">简介</h2>
+<p>短小精悍的编程建议，常读常新。  </p>
+<h3 id="第一章：代码应当易于理解">第一章：代码应当易于理解</h3>
+<p>1.代码的写法应当使别人理解它所需的时间最小化<br>理解的要求就是别人看完你的代码后，能够动手改动或优化你的代码。<br>写代码的时候应该以能够像自然语言一样易于理解为目标。  </p>
+<p>2.代码并不是行数越少就越容易理解  </p>
+<a id="more"></a>
+
+<h2 id="第一部分：表面层次的改进">第一部分：表面层次的改进</h2>
+<h3 id="第二章：把信息装到名字里">第二章：把信息装到名字里</h3>
+<p>1.选择专业的词<br>举例：<br>    int size()     =&gt;  int Height()/NumNodes()/MemoryBytes()<br>简单的使用size不能直接反应出返回值使什么的size。<br>如果可以的话选用更具体、更符合情景的专业词汇对于可读性有较大的帮助。  </p>
+<p>2.避免使用tmp和retval这样泛泛的变量/函数名<br>除非有十分好的理由，比如常见的swap函数中的tmp。  </p>
+<p>3.用具体的名字代替抽象的名字<br>书中有一个插图很好的阐释了这点：动物和危险动物  </p>
+<p>4.给变量带上重要的细节<br>比如添加单位等，可以参考微软的“匈牙利表示法”  </p>
+<h3 id="第三章：不要误解的名字">第三章：不要误解的名字</h3>
+<p>1.推荐用min和max来表示（包含）极限<br>2.推荐用first和last来表示包含的范围<br>3.推荐用begin和end来表示包含／排除范围<br>4.要小心用户对特定词的期望。例如，用户会期望get（）<br>或者size（）是轻量的方法。  </p>
+<p>这章讲的内容感觉需要有较多的实践应验才能区分哪些名字会产生误解<br>所以这里仅列出了书中强调的几条经验  </p>
+<h3 id="第四章：审美">第四章：审美</h3>
+<p>1.三条大原则：<br><em>使用一致的布局，让读者很快就习惯这种风格  
+</em>让相似的代码看上去相似<br>*把相关的代码行分组，形成代码块  </p>
+<p>2.如果代码中存在大量的重复代码，或许该考虑添加一个函数了。<br>一个合适的小函数能有效提高代码的视觉美感  </p>
+<p>3.在需要时使用列对齐  </p>
+<p>4.选一个有意思的顺序，始终一致地使用它<br>常见的顺序：重要性、字母序  </p>
+<p>5.把声明按块组织起来<br>这点对于类或者较大的结构体尤为重要  </p>
+<p>6.个人风格与一致性<br>一个人的代码风格如果能够保持一致，这比“正确”的风格更重要。<br>最好的学习代码风格的资料就是Linux源码！<br>推荐一些我了解的一些代码风格的资料：<br><a href="http://www.m5sim.org/Coding_Style" target="_blank" rel="external">Gem5 Coding Style</a><br><a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml" target="_blank" rel="external">Google C++ Style Guide</a>  </p>
+<h3 id="第五章：该写什么样的注释">第五章：该写什么样的注释</h3>
+<p>1.关键思想：注释的目的时尽量帮助读者了解得和作者一样多  </p>
+<p>2.最好的注释就是代码本身，不要为了注释而注释<br>自解释的代码比任何的注释都要好，好代码&gt;坏代码＋好注释  </p>
+<p>3.不要给不好的名字加注释—应该把名字改好  </p>
+<p>4.为代码的瑕疵写注释<br>如果阅读过Linux源码会发现里面有很多’TODO’的注释，这点很值得学习<br>很多时候第一版的代码是想尽快的完成某个功能，在实现过程中想到的一些可能<br>的优化如果暂时不便实现，加上一个’TODO’的注释或许是一个不错的选择。<br>书中列出了一些流行的标记类的注释。  </p>
+<p>5.给常量加注释<br>常量的值往往不是重点，而为什么常量被设置为这个值才是重点。<br>添加合适的注释解释这些信息，对代码的可读性有较大的帮助。  </p>
+<p>6.站在读者的角度<br>这点比较有意思，这类注释更像是对于某个问题的解答。<br>对于一些意料之中的问题，添加注释进行回答能节省许多不必要的时间  </p>
+<p>7.公布可能的陷阱<br>这点的出发点与第6条类似  </p>
+<p>8.全局观的注释：用注释来总结代码块，使读者不致迷失在细节中。<br>注释的目的是帮助读者更好更快的理解你的代码，<br>给出一些总结性的注释能够省去读者很多的时间。<br>对于一个较复杂的函数，如果能一针见血的指出函数完成的功能、输入和输出，<br>读者就可以根据需要要选择性的阅读你的代码。这点对于复杂的大项目尤为重要。  </p>
+<h3 id="第6章：写出言简意赅的注释">第6章：写出言简意赅的注释</h3>
+<p>这章的内容看下章首的插图就能一目了然，就不多解释了。  </p>
+<h2 id="第二部分：简化循环和逻辑">第二部分：简化循环和逻辑</h2>
+<p>用更加清晰的方式来实现代码的逻辑至关重要，<br>对于一段时候后重新来阅读或调试这段代码尤其重要。  </p>
+<h3 id="第7章：把控制流变得易读">第7章：把控制流变得易读</h3>
+<p>关键思想：把条件、循环以及其他对控制流的改变做的越自然越好。<br>运用一种方式使读者不用停下来重读你的代码。  </p>
+<p>1.条件语句中参数的顺序<br>代码同样需要符合人阅读的习惯<br>指导原则：<br><em>比较的左侧：“被问询的”表达式，它的值更倾向于不断变化  
+</em>比较的右侧：用来做比较的表达式，它的值更倾向于常量  </p>
+<p>2.if/else的顺序<br><em>首先处理正逻辑而不是负逻辑的情况，例如：用if(debug)而不用if(!debug)  
+</em>先处理掉简单的情况。这种方式可能还会使得if和else在屏幕之内都可见，这很好<br>*先处理有趣或者是可以的情况  </p>
+<p>3.代码行数越少不一定越好，更好的度量方法是最小化人们理解它所需要的时间  </p>
+<p>4.尽量减少代码的嵌套层数<br>嵌套的层次越多，之后代码的优化和修改就越复杂。<br>书中提到了一些有效的方法避免过多的嵌套，如提前从函数中返回或使用break  </p>
+<h3 id="第8章：拆分超长的表达式">第8章：拆分超长的表达式</h3>
+<p>关键思想：把你的超长表达式拆分成更容易理解的小块<br>人脑能同时处理的信息量有限，就好比巨星乌贼一次吃多了就容易伤到大脑  </p>
+<p>1.拆分表达式最简单的方法就是引入一个额外的变量，让它来表示一个小一点<br>的子表达式。这个额外的变量有时叫做“解释变量”，因为它可以帮助解释<br>子表达式的含义。  </p>
+<p>2.使用德摩根定理对复杂的逻辑表达式简化<br>如果使用此方法简化了逻辑表达式，那么最好添加相应的注释。<br>因为转换过后的表达式理解起来没那么直接。  </p>
+<p>3.找到更优雅的方式<br>一个复杂的逻辑，如果考虑它的反面或许就没有那么复杂了。<br>书中的例子就是两个区间的重叠的判断，值得一读  </p>
+<h3 id="第9章：变量与可读性">第9章：变量与可读性</h3>
+<p>1.减少没有价值的临时变量<br>至于判断是否存在价值，这需要常年的积累。  </p>
+<p>2.减少控制流变量<br>还是那个理由：人脑同时能够处理的事情有限  </p>
+<p>3.缩小变量的作用域<br>缩小了变量的作用域，同样减少了读代码时需要记在脑海中的信息<br>同时还避免了变量冲突  </p>
+<p>4.只写一次的变量更好<br>基于的思想：操作一个变量的地方越多，越难确定它的当前值  </p>
+<h2 id="第三部分：重新组织代码">第三部分：重新组织代码</h2>
+<h3 id="第10章：抽取不相关的子问题">第10章：抽取不相关的子问题</h3>
+<p>核心思想：把一般代码和项目专有的代码分开<br>书中指出 ：大部分的代码都是一般代码。通过建立一个大组库和辅助函数来<br>解决一般问题，剩下的只是让你的程序与众不同的核心部分。    </p>
+<p>1.创建大量通用代码<br>如果字符串需要以某种格式输出，而这种格式经常被用到，那么你该考虑<br>用一个类似format_pretty()的函数专门负责将字符串转换成特定格式。  </p>
+<h3 id="第11章：一次只做一件事">第11章：一次只做一件事</h3>
+<p>关键思想：应该把代码组织得一次只做一件事  </p>
+<p>下面是用于使代码“一次只做一件事”所用到的流程：<br><em>列出代码所做的所有“任务”。这里的任务没有很严格的定义—它可以很小  
+</em>尽量把这些任务拆分到不同的函数中，或者至少是代码中不同的段落中  </p>
+<h3 id="第12章：把想法变成代码">第12章：把想法变成代码</h3>
+<p>1.清晰地描述逻辑<br>把一个想法用“自然语言”解释是一个很有价值的能力<br>代码不仅仅是写给机器执行的，更多的时候是写给人读的，所以代码的逻辑<br>能够像“自然语言”那般的描述出来，对于代码的理解有莫大的帮助  </p>
+<p>2.了解库函数很有帮助和必要<br>了解库函数避免重复造轮子，不仅能够提高效率，而且库函数的使用很大程度<br>的保障了正确性。<br>当然要想完全了解库函数每个函数的具体用法，将是一个十分巨大的工程。<br>我们能够做的就是常常翻翻主要库的文档，在实现某项功能的时候能够想到<br>库函数中好像有类似的实现就可以了  </p>
+<p>3.在动手写代码之前，先尝试用自然语言描述解决方法是一个很好的习惯  </p>
+<h3 id="第13章：少写代码">第13章：少写代码</h3>
+<p>1.在项目开始时写的代码只有很少的代码留到最终版本中  </p>
+<p>2.写代码前，需要反复考虑和质疑的你需求<br>很多时候你认为需要的功能，到最后都没有实现的必要  </p>
+<p>3.用最合适的方式实现你的需求<br>书中有一个关于缓存的例子。如果数据的重复访问只处在一行，那么没有必要<br>实现一个复杂的LRU策略。  </p>
+<p>4.使用UNIX工具而非编写代码<br>这点我的体会最深。跑实验的时候处理数据，如果每次都要写代码的话，<br>就不用跑实验了。使用一些常用的文本处理命令能有效地提高效率，<br>比如cat、awk、cut等。  </p>
+<h2 id="第四部分：精选话题">第四部分：精选话题</h2>
+<p>这部分主要是一些关于测试和一个小功能的具体实现举例，具体还是看书比较好。  </p>
+<h2 id="总结">总结</h2>
+<p>本书很多的内容都需要通过大量的实践才能透彻的领悟，常读常新。<br>本书的可读性也很强，书中又有许多有趣的插图，<br>能够让你一下子就体会到整个一章的精髓。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="简介">简介</h2>
+<p>短小精悍的编程建议，常读常新。  </p>
+<h3 id="第一章：代码应当易于理解">第一章：代码应当易于理解</h3>
+<p>1.代码的写法应当使别人理解它所需的时间最小化<br>理解的要求就是别人看完你的代码后，能够动手改动或优化你的代码。<br>写代码的时候应该以能够像自然语言一样易于理解为目标。  </p>
+<p>2.代码并不是行数越少就越容易理解  </p>
+]]>
+    
+    </summary>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Markdown中插入Latex代码]]></title>
+    <link href="http://perthcharles.github.com/2013/12/22/insert-latex-to-markdown/"/>
+    <id>http://perthcharles.github.com/2013/12/22/insert-latex-to-markdown/</id>
+    <published>2013-12-22T04:00:01.000Z</published>
+    <updated>2014-11-04T06:29:45.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="配置">配置</h2>
+<p>Markdown解析器：rdiscount  </p>
+<h2 id="举例">举例</h2>
+<p>1.行内代码<br>效果:<code>$W_{i}$</code>在行内。  </p>
+<p>2.独占一行代码<br>效果:<code>$$W_{i}$$</code>独占一行。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="配置">配置</h2>
+<p>Markdown解析器：rdiscount  </p>
+<h2 id="举例">举例</h2>
+<p>1.行内代码<br>效果:<code>$W_{i}$</code>在行内。  </p>
+<p>2.独占一行代码<br>效果:<cod]]>
+    </summary>
+    
+      <category term="markdown" scheme="http://perthcharles.github.com/tags/markdown/"/>
+    
+      <category term="latex" scheme="http://perthcharles.github.com/tags/latex/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[数学之美[吴军 著]]]></title>
+    <link href="http://perthcharles.github.com/2013/12/14/beauty-of-mathematics/"/>
+    <id>http://perthcharles.github.com/2013/12/14/beauty-of-mathematics/</id>
+    <published>2013-12-14T04:00:00.000Z</published>
+    <updated>2014-11-04T06:27:28.000Z</updated>
+    <content type="html"><![CDATA[<h1 id="作者寄语">作者寄语</h1>
+<p>愿科学之精神在国民中得到普及，愿中国年轻的一代涌现更多的杰出专业人才。  </p>
+<a id="more"></a>
+
+<h1 id="名人语录">名人语录</h1>
+<p>除那些真实而已足够说明其现象者外，不必去寻找自然界事物的其他原因。<br>—牛顿  </p>
+<p>简单性和模块化是软件工程的基石；分布式和容错性是互联网的声明。<br>—蒂姆 伯纳斯 李  </p>
+<p>纯数学使我们能够发现概念和联系这些概念的规律，这些概念和规律给了我们了解自然<br>现象的钥匙。<br>—爱因斯坦  </p>
+<h1 id="相关读物">相关读物</h1>
+<p>《从一到无穷大》  — 乔治 伽莫夫 (George Gamow)  </p>
+<h2 id="第一章：文字和语言_vs_数字的信息">第一章：文字和语言 vs 数字的信息</h2>
+<p>1.信息的冗余是信息安全的保障。罗塞塔石碑上的内容是同一信息重复三次  </p>
+<p>2.阿拉伯数字的发明人是古印度人，只不过这种计数方式是由阿拉伯人传入欧洲的  </p>
+<p>3.关于古文与白话文的信息论解释：<br>如果信道较宽，信息不必压缩就可以直接传递；如果信道很窄，信息在传递前需要尽可<br>能的压缩，然后在接收端解压缩。<br>在古代，两个人讲话说得快，是一个宽信道，无需压缩；书写则是一个慢而代价昂贵的<br>窄信道，需要压缩。  </p>
+<p>4.这章主要是帮助读者感受语言和数学天然、内在的联系。  </p>
+<h2 id="第二章：自然语言处理_—_从规律到统计">第二章：自然语言处理 — 从规律到统计</h2>
+<p>1.今天，机器翻译和语音识别已经做得不错，并且有上亿人使用过，但是大部分这个领<br>域之外的人依然错误地认为这两个应用是靠计算机理解自然语言完成的。事实上，他们<br>全部都都靠的是数学，更准确的说是靠统计。  </p>
+<p>2.描述自然语言的文法和计算机高级程序语言的文法不同。自然语言在演变的过程中，<br>产生了词义和上下文相关的特性。因此，它的文法是比较复杂的上下文有关文法，而程<br>序语言是我们认为设计的，为了便于计算机解码的上下文无关文法，相比自然语言而言<br>简单的多。对于上下文无关文法，算法的复杂度基本上是语句长度的二次方，而对于上<br>下文有关文法，计算复杂度基本上是语句长度的六次方。  </p>
+<p>3.基于统计的自然语言处理方法，在数学模型上和通信是相通的，甚至就是相通的。因<br>此，在数学意义上自然语言处理又和语言的初衷 — 通信联系在一起了。但是，科学家<br>们认识到这个联系却花了几十年的时间。  </p>
+<h2 id="第三章：统计语言模型">第三章：统计语言模型</h2>
+<p>1.19世纪到20世纪初，俄罗斯有个数学家叫马尔科夫，他给了个偷懒但还颇为有效的方<br>法，也就是每当遇到这种情况时，就假设任意一个词<code>$W_{i}$</code>出现的概率只同它前面的<br>词<code>$W_{i-1}$</code>有关，于是问题就变简单了。这种假设在数学上成为马尔科夫假设。  </p>
+<p>2.也可以假设一个词由前面N-1个词决定，对应的模型稍微复杂些，被称为N元模型。  </p>
+<p>3.在实际工程中，还需要考虑零概率问题和平滑的方法，细节可参考原书。  </p>
+<h2 id="第四章：谈谈中文分词">第四章：谈谈中文分词</h2>
+<p>1.利用统计语言模型进行自然语言处理是建立在<em>词</em>的基础上的，因为词是表达语义的<br>最小单位。对于西方拼音语言来讲，词之间有明确的分界符(Delimit)，统计和使用语言<br>模型非常直接。而对于中、日、韩、泰等语言，需要首先对句子进行分词，才能做进一<br>步的自然语言处理。  </p>
+<p>2.最容易想到的分词方法，也是最简单的办法，就是查字典(最早由北航的梁南元教授提<br>出)。”查字典”的办法，其实就是把一个句子扫描一遍，遇到字典里有的词就标识出来，<br>遇到复合词就找最长的词匹配，遇到不认识的字串就分割成单字词。  </p>
+<p>3.利用统计语言模型分词的方法，基本的想法就是：最好的一种分词方法应该保证分完词<br>后这个句子出现的概率最大。  </p>
+<p>4.中文分词以统计语言模型为基础，通过几十年的发展和完善，今天基本可以看做是一个<br>已经解决的问题。当然不同的人做的分词器有好有坏，这里面的差别主要在于数据的使用<br>和工程实现的精度。  </p>
+<h2 id="第五章：隐含马尔科夫模型">第五章：隐含马尔科夫模型</h2>
+<p>1.马尔科夫假设：随机过程中各个状态<code>$S_{t}$</code>的概率分布，只与它的前一个状态<code>$S_{t-1}$</code><br>有关。  </p>
+<p>2.隐含马尔科夫模型是上述马尔科夫链的一个扩展：任一时刻t的状态<code>$S_{t}$</code>是不可见<br>的。所以观察者无法通过观察到一个状态序列<code>$S_{1}, S_{2}, S_{3}, ..., S_{T}$</code>来<br>推测转移概率等参数。但是隐含马尔科夫模型在每个时刻t会输出一个符号<code>$O_{t}$</code>，而<br>且<code>$O_{t}$</code>和<code>$S_{t}$</code>相关且仅和<code>$S_{t}$</code>相关。这个被称为独立输出假设。其中隐<br>含的状态是一个典型的马尔科夫链。  </p>
+<p>3.围绕着隐含马尔科夫模型有三个基本问题：<br>a.给定一个模型，如何计算某个特定的输出序列的概率；<br>Forward-Backward算法<br>b.给定一个模型和某个特定的输出序列，如何找到最可能产生这个输出的状态序列；<br>解码算法：维特比算法<br>c.给定足够的观测数据，如何估计隐含马尔科夫模型的参数。<br>训练算法：鲍姆-韦尔奇算法  </p>
+<h2 id="第六章：信息的度量和作用">第六章：信息的度量和作用</h2>
+<p>1.信息量就等于不确定性的多少。  </p>
+<p>2.<a href="http://zh.wikipedia.org/wiki/%E4%BF%A1%E6%81%AF%E7%86%B5" target="_blank" rel="external">WIKI：信息熵</a>  </p>
+<p>3.变量的不确定越大，熵也就越大，把它搞清楚所需要的信息量也就越大。  </p>
+<p>4.合理利用信息，而不是玩弄什么公式和机器学习算法，是做好搜索的关键。  </p>
+<h2 id="第七章：贾里尼克和现代语言处理">第七章：贾里尼克和现代语言处理</h2>
+<p>1.每当弗莱德和我谈起我们各自少年时的教育，我们都同意这样几个观点(博主也很同意)：  </p>
+<p>a.小学生和中学生其实没有必要花那么多时间读书，而他们的社会经验、生活能力以及在<br>那时树立起的志向将帮助他们一生。<br>b.中学阶段化很多时间比同伴多读的课程，在大学以后用非常短的时间就可以读完，因为<br>在大学阶段，人的理解力要强的多。<br>c.学习和教育是一个人一辈子的过程，很多中学成绩好的亚裔学生进入名校后表现明显不<br>如那些因为兴趣而读书的美国同伴，因为前者不断读书的动力不足。<br>d.书本的内容可以早学，也可以晚学，但是错过了成长阶段却是无法补回来的。  </p>
+<p>2.贾里尼克最初的理想在他十来岁时就建立起来了，他原本想成为一个律师，为他父亲那<br>样的冤屈者辩护，但是到美国后，他很快意识到他那弄弄的外国口音将使他在法庭上的辩<br>护很吃力。贾里尼克的第二个理想是成为医生，也算是子承父业。他想进哈弗大学医学院，<br>但他无力承担医学院8年高昂的学费。而恰恰此时麻省理工学院给了他一份为东欧一名设的<br>全额奖学金。贾里尼克决定到麻省理工学电机工程。贾里尼克的理想在不断的改变，但是<br>他通过努力走向成功的志向一直没有改变。  </p>
+<h2 id="第八章：简单之美_—_布尔代数和搜索引擎的索引">第八章：简单之美 — 布尔代数和搜索引擎的索引</h2>
+<p>1.布尔代数非常简单，但是对数学和计算机发展的意义重大，它不仅把逻辑和数学合二为<br>一，而且给了我们一个全新的视角看待世界，开创了今天数字化的时代。</p>
+<p>2.Truth is ever to be found in simplicity, and not in the multiplicity and<br>confusion of things.    —by Sir Isaac Newton(艾萨克 牛顿爵士)  </p>
+<h2 id="第九章：图论和网络爬虫">第九章：图论和网络爬虫</h2>
+<p>1.欧拉七桥问题  </p>
+<p>2.网路爬虫在工程实现上要考虑的细节非常多，其中大的方面有这样几点：<br>a.用BFS还是DFS<br>从理论上讲，这两个算法能够在大致相同的时间里，爬下整个<em>静态</em>互联网的内容。<br>但是互联网是动态更新的，所以网络爬虫问题更应该定义成：如何在有限时间里最多的爬<br>下最重要的网页。<br>显然各个网站最重要的网页是它的首页。<br>如果爬虫非常小，只能下载非常有限的网页，那么应该下载的是所有网页的首页。BFS  </p>
+<p>但是互联网又是分布式的，BFS必然导致大量的各个网站直接的跳转与跳回，效率会降低。<br>而且爬虫器基本也是分布式的，所以更好的方式是总体上选用BFS，然而针对某个网站，<br>某个爬虫服务器应该尽量一次爬完所有的页面，这样就是DFS的策略。  </p>
+<h2 id="第十章：PageRank_—_Google的民主表决式网页排名技术">第十章：PageRank — Google的民主表决式网页排名技术</h2>
+<p>1.<a href="http://en.wikipedia.org/wiki/PageRank" target="_blank" rel="external">WIKI: PageRank</a>  </p>
+<h2 id="第十一章：如何确定网页和查询的相关性">第十一章：如何确定网页和查询的相关性</h2>
+<p>1.<a href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf" target="_blank" rel="external">WIKI: TF-IDF</a>  </p>
+<p>2.TF: Term Frequency  IDF: Iverse Document Frequency  </p>
+<p>3.词的权重：如果一个关键词只在很少的网页中出现，通过它就容易确定搜索目标，它的<br>权重也就应该大。反之，如果一个词在大量网页中出现，看到它依然不清楚要找什么内容，<br>因此它的权重就应该小。  </p>
+<p>4.IDF就是一个词的权重的指标。公式：<code>$\log \left( \dfrac {D}{D_{w}}\right)$</code><br>其中D是全部网页数，关键词w在<code>$D_{w}$</code>个网页中出现过。  那么<code>$D_{w}$</code>越大，IDF<br>就会越小。  </p>
+<h2 id="第十二章：地图和本地搜索的最基本技术_—_有限状态机和动态规划">第十二章：地图和本地搜索的最基本技术 — 有限状态机和动态规划</h2>
+<p>1.地址分析用到有限状态机  </p>
+<p>2.导航路线用到动态规划  </p>
+<h2 id="第十三章：Google_AK-47的设计者_—_阿米特_辛格博士">第十三章：Google AK-47的设计者 — 阿米特 辛格博士</h2>
+<p>1.许多失败并不是因为人不优秀，而是做事情的方法不对，一开始追求大而全的解决方案，<br>之后长时间不能完成，最后不了了之。  </p>
+<p>2.在Google里，辛格一直坚持寻找简单有效的解决方案。  </p>
+<p>3.当然，辛格之所以总是能找到那些简单有效的方法，不是靠直觉，更不是撞大运，这首<br>先是靠他丰富的研究经验。辛格早年师从于搜索大师萨尔顿(Salton)教授，毕业后就职于<br>AT&amp;T实验室。  </p>
+<h2 id="第十四章：余弦定理和新闻的分类">第十四章：余弦定理和新闻的分类</h2>
+<p>1.首先找到一组来描述新闻主题的数字：对于一篇新闻中的所有诗词，计算出他们的TF-IDF<br>值，把这些值按照对应的实词在词汇表的位置一次排序，就得到一个向量。  </p>
+<p>2.余弦定理就是计算两个向量夹角的方法。运用到新闻分类问题中，就可以认为夹角越小，<br>新闻越相似，反之则越不同。  </p>
+<h2 id="第十五章：矩阵运算和文本处理中的两个分类问题">第十五章：矩阵运算和文本处理中的两个分类问题</h2>
+<p>1.<a href="http://zh.wikipedia.org/wiki/%E5%A5%87%E5%BC%82%E5%80%BC%E5%88%86%E8%A7%A3" target="_blank" rel="external">WIKI: 奇异值分解</a>  </p>
+<p>2.相比上一章介绍的利用文本特征向量余弦的举例自底向上的分类方法，奇异值分解的<br>优点是能较快地得到结果，因为它不需要一次次地迭代。但是用这种方法得到的分类结果<br>略显粗略，因此，它适合处理超大规模文本的粗分类。在实际工作中，先使用奇异值分解<br>进行粗分类，然后使用向量余弦得到比较精确的结果。  </p>
+<h2 id="第十六章：信息指纹及其应用">第十六章：信息指纹及其应用</h2>
+<p>1.产生信息指纹的关键算法：伪随机数产生器算法(Pseudo-Random Number Generator, PRNG),<br>通过它将任意很长的整数转换成特定长度的伪随机数。  </p>
+<p>2.现在常用的梅森旋转算法(Mersenne Twister)要好得多。  </p>
+<p>3.信息指纹的用途远不止网址的消重，它的孪生兄弟是密码。信息指纹的一个特征是其不<br>可逆性。  </p>
+<h2 id="第十七章：由电视剧《暗算》所想到的_—_谈谈密码学的数学原理">第十七章：由电视剧《暗算》所想到的 — 谈谈密码学的数学原理</h2>
+<p>1.类似凯撒大帝式的加密方式，使用统计学的方法能够轻松解密。  </p>
+<p>2.信息论时代的密码学，就我现在的简单理解就是倒腾大素数的过程。  </p>
+<h2 id="第十八章：闪光的不一定是金子_—_谈谈搜索引擎反作弊问题">第十八章：闪光的不一定是金子 — 谈谈搜索引擎反作弊问题</h2>
+<p>1.网页搜索反作弊对于搜索引擎公司来讲是一项长期的任务。作弊的本质是在网页排名信<br>号中加入噪音，因此反作弊的关键是去噪音。沿着这个思路可以从根本上提高搜索算法抗<br>作弊的能力，事半功倍。而如果只是根据作弊的具体特征头痛医头，脚痛医脚，则很容易<br>被作弊者牵着鼻子走。  </p>
+<h2 id="第十九章：谈谈数学模型的重要性">第十九章：谈谈数学模型的重要性</h2>
+<p>1.一个正确的数学模型应该在形式上是简单的。  </p>
+<p>2.一个正确的模型一开始可能还不如一个精雕细琢的错误模型来的准确，但是，如果我们<br>认定大方向是对的，就应该坚持下去。  </p>
+<p>3.大量准确的数据对研发很重要。  </p>
+<p>4.正确的模型也可能受噪音干扰，而显得不准确；这时不应该用一种凑合的修正方法来弥<br>补它，而是要找到噪音的根源，这也许能通往重大的发现。  </p>
+<h2 id="第二十章：不要把鸡蛋放到一个篮子里_—_谈谈最大熵模型">第二十章：不要把鸡蛋放到一个篮子里 — 谈谈最大熵模型</h2>
+<p>1.最大熵模型说白了，就是要保留全部的不确定性，将风险降到最小。  </p>
+<p>2.最大熵原理指出，需要对一个随机事件的概率分布进行预测时，我们的预测应当满足全<br>部已知的条件，而对未知的情况不要做任何主观假设。在这种情况下，概率分布最均匀，<br>预测的风险最小。因为这是概率分布的信息熵最大，所以人们称这种模型叫：最大熵模型。  </p>
+<p>3.最原始的最大熵模型的训练方法是一种称为通用迭代算法GIS(Generalized Iterative<br>Scaling)的迭代算法。GIS的原理并不复杂，大致可以概括为一下几个步骤：<br>a.假定第零次迭代的初始模型为等概率的均匀分布<br>b.通过第N次迭代的模型来估算每种信息特征在训练数据中的分布。如果超过了实际的，<br>就把相应的模型参数变小。否则，将他们变大。<br>c.重复步骤2直到收敛  </p>
+<p>4.达拉皮垂孪生兄弟在IBM对GIS算法做了两方面的改进，提出了改进迭代算法IIS(Improved<br>Iterative Scaling)。  </p>
+<h2 id="第二十一章：拼音输入法的数学原理">第二十一章：拼音输入法的数学原理</h2>
+<p>1.和任何事物的发展一样，螺旋式的回归不是简单的重复，而是一种升华。  </p>
+<p>2.香农第一定理：对于一个信息，任何编码的长度都不小于它的信息熵。  </p>
+<h2 id="第二十二章：自然语言处理的教父马库斯和他的优秀弟子们">第二十二章：自然语言处理的教父马库斯和他的优秀弟子们</h2>
+<p>1.宾夕法尼亚大学LDC语料库以及他的优秀弟子是马库斯对自然语言处理领域的重大贡献。  </p>
+<p>2.柯林斯：追求完美  </p>
+<p>3.布莱尔：简单才美  </p>
+<h2 id="第二十三章：布隆过滤器">第二十三章：布隆过滤器</h2>
+<p>1.基本流程：对于一个需要处理的元素，使用多个随机数产生器产生多个数，将各个数对<br>应的位标为1。在使用时，使用同样的随机数产生器得到多个数，然后判断响应位是否为1<br>即可。布隆过滤器的优点是快速和节省空间，确定就是有一定的误识别率。常见的补救方<br>法是再建立一个小的白名单，存储哪些可能被误判的元素。  </p>
+<p>2.布隆过滤器背后的数学原理在于两个完全随机的数字冲突的概率很小，因此，可以在很<br>小的误识别率的条件下，用很好的空间存储大量信息。  </p>
+<h2 id="第二十四章：马尔科夫链的扩展_—_贝叶斯网络">第二十四章：马尔科夫链的扩展 — 贝叶斯网络</h2>
+<p>1.假定在这个图中马尔科夫假设成立，即每个状态只和它直接相连的状态有关，而和它间<br>接相连的状态没有直接关系，那么它就是贝叶斯网络。  </p>
+<h2 id="后几章由于技术层次较高，还是看原书比较好。">后几章由于技术层次较高，还是看原书比较好。</h2>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h1 id="作者寄语">作者寄语</h1>
+<p>愿科学之精神在国民中得到普及，愿中国年轻的一代涌现更多的杰出专业人才。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[YUI 学习笔记]]></title>
+    <link href="http://perthcharles.github.com/2013/10/05/yui-learning/"/>
+    <id>http://perthcharles.github.com/2013/10/05/yui-learning/</id>
+    <published>2013-10-05T04:00:00.000Z</published>
+    <updated>2014-11-04T06:26:39.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="工具简介">工具简介</h3>
+<p>YUI是一个免费、开源的JacaScript和CSS库，能够方便的开发出交互性良好的web applications.<br>我用到的版本是YUI 3.12.0  </p>
+<h3 id="Core">Core</h3>
+<p>1.event<a href="http://perthcharles.github.io/yql_test/YUI_text.html#demo-1" target="_blank" rel="external">示例</a><br>提供API处理DOM event。当用户执行某些操作时，出发相应的event。常见的有click, close, keydown等。<br>这里是所有支持的<a href="http://yuilibrary.com/yui/docs/event/#event-whitelist" target="_blank" rel="external">Whitelisted DOM events</a>  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://yuilibrary.com/yui/docs/" target="_blank" rel="external">YUI documentation</a><br><a href="http://yuilibrary.com/yui/docs/guides/" target="_blank" rel="external">YUI User Guides</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="工具简介">工具简介</h3>
+<p>YUI是一个免费、开源的JacaScript和CSS库，能够方便的开发出交互性良好的web applications.<br>我用到的版本是YUI 3.12.0  </p>
+<h3 id="Core">Core</h3>
+<p]]>
+    </summary>
+    
+      <category term="YUI" scheme="http://perthcharles.github.com/tags/YUI/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[YQL学习笔记]]></title>
+    <link href="http://perthcharles.github.com/2013/09/28/yahoo-yql/"/>
+    <id>http://perthcharles.github.com/2013/09/28/yahoo-yql/</id>
+    <published>2013-09-28T04:00:00.000Z</published>
+    <updated>2014-11-04T06:25:46.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="简介">简介</h3>
+<p>YQL是雅虎提供的一种类似SQL的数据查询服务。<br>设计出发点是把整个Web当成一个巨大的数据库供开发者使用。  </p>
+<a id="more"></a>
+
+<h3 id="YQL语法">YQL语法</h3>
+<p>1.select语句<br>select 字段名 from 表名 where 过滤条件 [| 方法]<br>    字段名：对应于后台服务返回结果中的XML元素或是JSON对象中的属性。<br>            “*”表示选择全部的字段；多个字段名用逗号分隔<br>    表名：后台服务的名称<br>    过滤条件：声明结果中的记录应该满足的条件<br>    方法：用来对结果进行附加的处理，如排序和去重等</p>
+<p>关于select的上限：<br>最大返回数量上限为5000，最长执行时间为30秒<br>对于大部分表格，默认的返回数量为10，除非在select语句中指定limit  </p>
+<p>2.子select语句<br>举例：<br>    select * from flickr.photos.info<br>        where photo_id in (select id from flickr.photos.recent)</p>
+<p>3.分页<br>YQL服务的返回结果的记录总数往往比较大。为了提高性能，YQL服务提供了分页功能<br>可以限制每次查询返回的记录数<br>举例：<br>    //仅获取前20个结果<br>    SELECT <em> FROM flickr.photos.search(0, 20) WHERE text=”beijing”<br>    //返回整个结果集的第11到20条记录<br>    SELECT </em> FROM flickr.photos.search WHERE text=”bei” LIMIT 10 OFFSET 10</p>
+<p>4.排序和其它方法<br>可以用类似linux管道的思路来理解这些方法<br>    //sort title<br>    SELECT * FROM flickr.photos.search WHERE text=”bei” | sort(field=”title”)<br>其它方法可以查看手册  </p>
+<p>5.使用功能：抽取HTML文件<br>虽然YQL服务访问的后台Web服务返回的一般是XML和JSON等结构化数据<br>YQL服务也可以用来从HTML文档中抽取数据。<br>只需要指定 HTML 页面的URL以及抽取数据所用的XPath语句YQL服务就可以完成抽取。<br>这其实就相当于能完成网页抽取的工作，不用自己写代码去获取了。 Cheers!<br>如果需要抽取的html5网页文件，则加入兼容选项，如：<br>    select * from html where url=”<a href="http://groups.yahoo.com/search?query=surfing&amp;sort=relevance" target="_blank" rel="external">http://groups.yahoo.com/search?query=surfing&amp;sort=relevance</a>“ and compat=”html5”</p>
+<h3 id="使用YQL访问开方数据表格">使用YQL访问开方数据表格</h3>
+<p>YQL 服务已经提供了许多内置的开放数据表格，可以直接使用。<br>通过在 YQL 控制台输入 show tables就可以查看所有内置数据表格的列表。<br>对于其它 Web 服务，如果想在 YQL 中使用，只需要提供一个描述文件即可。<br>该描述文件用来告诉 YQL 如何对该 Web 服务进行操作。  </p>
+<h3 id="创建自己的YQL开方表格">创建自己的YQL开方表格</h3>
+<h3 id="更多YQL">更多YQL</h3>
+<p>1.使用上限<br>    YQL endpoint    /v1/public/<em>        /v1/yql/</em><br>    Hourly Cap        2,000 per IP        20,000 per IP<br>    Daily Cap        None                100,000 per day per API key</p>
+<p>2.YQL语句总结<br>    select：        //retrieves data from the specified table<br>        select <em> from social.profile where guid=xyz<br>    insert:            //insert data into specified table<br>        insert into table (key1, key2) values (‘value1’, ‘value2’)<br>    update:            //updates data in the specified table<br>        update (table) set field1=value where filter<br>    delete:            //deletes data in the specified table<br>        delete from (table) where filter<br>    show tables:    //gets a list of the tables available in YQL<br>        show tables<br>    desc:            //gets a description of the table<br>        desc social.connections<br>    use:            //maps a table name to the url of an open data table<br>        use “<a href="http://myserver.com/mytable.xml" target="_blank" rel="external">http://myserver.com/mytable.xml</a>“ as mytable; select </em> from mytable where …<br>    set:            //allows you to set up key values for use within open data tables<br>        set (name)=(value);  select * from mytable where …</p>
+<p>3.条件查询where<br>条件查询分为远端条件过滤和本地条件过滤<br>远端条件过滤指的是条件被back-end的Web-Service执行，远端条件查询支持：”=”和 IN 操作符<br>语法类似：input_key IN [list of one or more literals]<br>本地条件查询的过程是先从back-end的Wev-Service获取数据，然后执行条件匹配判断<br>语法类似：field comparison_operator literal  </p>
+<p>举例：<br>    //单条件选择<br>    select <em> from flickr.photos.info where photo_id=’2323453235’<br>    //单条件，多匹配条件<br>    select </em> from geo.palces where text in (“asss”, “dfdfd”)<br>    //多条件选择<br>    select <em> from local.search where zip=’94085’ and query=’pizza’<br>    select </em> from local.search where zip=’94085’ or query=’pizza’<br>    //模糊查询，返回以Chinese或CHINESE开头的结果<br>    select <em> from flickr.photos.interestingness where title like ‘Chinese%’<br>    //正则表达式<br>    select </em> from flickr.photos.interestingness where title matches ‘.<em>blue.</em>‘</p>
+<h3 id="xpath学习">xpath学习</h3>
+<p><a href="http://www.w3school.com.cn/xpath/xpath_intro.asp" target="_blank" rel="external">XPath是一门在XML文档中查找信息的语言。XPath用于在XML文档中通过元素和属性进行导航。</a>  </p>
+<p>1.XPath节点<br>在 XPath 中，有七种类型的节点：元素、属性、文本、命名空间、处理指令、注释以及文档（根）节点。<br>XML 文档是被作为节点树来对待的。树的根被称为文档节点或者根节点。  </p>
+<p><em>基本值</em>：无父或无子的节点<br><em>项目</em>：基本值或者节点  </p>
+<p>节点关系包括：父节点、子节点、同胞节点、先辈节点和后代节点。这些概念类似图论中的概念。  </p>
+<p>2.XPath语法<br>XPath 使用路径表达式来选取 XML 文档中的节点或节点集。节点是通过沿着路径 (path) 或者步 (steps) 来选取的。  </p>
+<p>常用路径表达式：<br>    nodename    选取此节点的所有子节点<br>    /            从根节点选取<br>    //            从匹配选择的当前节点选择文档中的节点，而不考虑它们的位置<br>    .            选取当前节点<br>    ..            选取当前节点的父节点<br>    @            选取属性</p>
+<p>谓语（Predicates）<br>    谓语用来查找某个特定的节点或者包含某个指定的值的节点。<br>    谓语被嵌套在方括号中</p>
+<p>语法支持以下通配符：  </p>
+<pre><code>*        匹配任何元素节点
+<span class="at_rule">@<span class="keyword">*</span>        匹配任何属性的节点
+<span class="function">node</span>()    匹配任何类型的节点</span>
+</code></pre><p>选取若干路径<br>通过在路径表达式中使用”|”运算符，可以选取多个路径  </p>
+<p>3.XPath轴<br>轴可以用于选取特定的节点集，具体用法可以查手册  </p>
+<h3 id="YQL练习">YQL练习</h3>
+<p><a href="http://perthcharles.github.io/yql_test/" target="_blank" rel="external">这里</a>有几个YQL使用的实例<br>建议使用chrome浏览器查看源码并调试输出结果  </p>
+<h3 id="小注：">小注：</h3>
+<p>YQL服务有时候会无法正常返回查询结果，等一会再刷新就好了  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.ibm.com/developerworks/cn/web/1011_chengfu_yql/" target="_blank" rel="external">YQL - 将 Web 作为数据库来使用的查询语言</a><br><a href="http://developer.yahoo.com/yql/console/" target="_blank" rel="external">Yahoo YQL console</a><br><a href="http://www.w3school.com.cn/xpath/index.asp" target="_blank" rel="external">XPath 教程</a><br><a href="http://www.w3school.com.cn/xpath/xpath_functions.asp#accessor" target="_blank" rel="external">XPath、XQuery 以及 XSLT 函数</a><br><a href="http://oauth.net/" target="_blank" rel="external">OAuth:如果对授权机制不熟悉</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="简介">简介</h3>
+<p>YQL是雅虎提供的一种类似SQL的数据查询服务。<br>设计出发点是把整个Web当成一个巨大的数据库供开发者使用。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="YQL" scheme="http://perthcharles.github.com/tags/YQL/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[[python学习笔记之三]lists 和 dictionaries]]></title>
+    <link href="http://perthcharles.github.com/2013/09/14/python-learning-3/"/>
+    <id>http://perthcharles.github.com/2013/09/14/python-learning-3/</id>
+    <published>2013-09-14T14:00:00.000Z</published>
+    <updated>2014-11-04T06:24:42.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="List">List</h3>
+<p>声明一个list: list_name = [item1, item2]<br>中括号对应list<br>与C中的数据较类似，但也具有重大区别：list的长度是可变的！<br>    //给list添加新元素<br>    list_name.append(item)<br>    //获取list的长度<br>    len(list_name)<br>    //取部分list，类似对字符串的操作<br>    my_list = [0, 1, 2, 3]<br>    my_slice = my_list[1:3]    //结果是my_slice = [1, 2]</p>
+<a id="more"></a>
+
+<p>1.查找list中的item<br>    a = [1, 2, 3, 4, 5]<br>    four_index = a.index(4)<br>    print four_index    //4对应的index为3<br>2.添加item至list<br>    a = [1, 3, 4]<br>    a.insert(1, 2)    //在index为1的位置插入数值2<br>    print a     //[1, 2, 3, 4]<br>3.使用for循环对list进行操作<br>语法：<br>    for variable in list_name:</p>
+<pre><code>    #<span class="operator"><span class="keyword">do</span> <span class="keyword">stuff</span></span>
+</code></pre><p>语法上跟shell的类似，但是格式上需要注意<em>冒号</em>的使用  </p>
+<p>4.对list进行排序<br>使用list_name.sort()会对list进行排序，排序原则是：按数字或字母增序排列  </p>
+<p>5.对list进行删除<br>语法：list_name.remove(item)  </p>
+<p>6.检测list中是否含有某元素  </p>
+<pre><code>&gt;&gt;&gt;x in list_name
+=&gt; <span class="keyword">False</span>    <span class="comment">//x不在list中</span>
+=&gt; <span class="keyword">True</span>     <span class="comment">//x在list中</span>
+</code></pre><h3 id="dictionary">dictionary</h3>
+<p>所谓字典就是每个item都是一对key-value对。通过key获取value<br>与list类似，dictionary同样是mutable。比如：<br>    //声明一个新dictionary<br>    dict_name = {‘a’:1, ‘b’:2}<br>    //添加新的key-value对,如果key存在，相当于重新赋值<br>    dict_name[new_key] = new_value<br>    //删除一对key-value<br>    del dict_name[key_name]</p>
+<h3 id="其他">其他</h3>
+<p>1.float():强制转换为float类型<br>    a = 1<br>    b = float(a)    //b = 1.0</p>
+<p>2.对于由数值构成的list，求和可以直接使用sum()<br>    result = sum(list)</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="List">List</h3>
+<p>声明一个list: list_name = [item1, item2]<br>中括号对应list<br>与C中的数据较类似，但也具有重大区别：list的长度是可变的！<br>    //给list添加新元素<br>    list_name.append(item)<br>    //获取list的长度<br>    len(list_name)<br>    //取部分list，类似对字符串的操作<br>    my_list = [0, 1, 2, 3]<br>    my_slice = my_list[1:3]    //结果是my_slice = [1, 2]</p>
+]]>
+    
+    </summary>
+    
+      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[[python学习笔记之二]常用模块和方法]]></title>
+    <link href="http://perthcharles.github.com/2013/09/14/python-learning-2/"/>
+    <id>http://perthcharles.github.com/2013/09/14/python-learning-2/</id>
+    <published>2013-09-14T04:01:01.000Z</published>
+    <updated>2014-11-04T06:23:32.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="模块加载方法">模块加载方法</h3>
+<p>1.generic imports<br>语法：import [module]<br>这种方式称之为generic import.在使用模块中的函数时，需要加上模块的前缀<br>如下例：<br>    import math<br>    print math.sqrt(25)</p>
+<a id="more"></a>
+
+<p>2.function imports<br>语法：form [module] import function<br>这种方式教适合仅需要使用到模块的一个函数的情形，且使用函数时无需加模块前缀<br>如下例：<br>    from math import sqrt<br>    print sqrt(25)</p>
+<p>3.universal imports<br>语法： from [module] import *<br>这种方式类似使用通配符，将模块中所有的函数和变量都导入了  </p>
+<h3 id="获取模块中可用的方法">获取模块中可用的方法</h3>
+<p>需要知道某个模块中都有哪些能用的方法，可以使用下面的方法得到<br>    import math<br>    print dir(math)</p>
+<h3 id="python_build-in_method">python build-in method</h3>
+<p>1.字符串处理的方法：在<a href="http://perthcharles.github.io/python/2013/09/04/python-learing-1" target="_blank" rel="external">python 基本入门</a>中有介绍  </p>
+<p>2.数值比较函数：max,min,abs  </p>
+<p>3.变量类型检查：type()  </p>
+<pre><code>&gt;&gt;&gt;print <span class="typedef"><span class="keyword">type</span><span class="container">(4)</span></span>
+&lt;<span class="typedef"><span class="keyword">type</span>, 'int'&gt;</span>
+&gt;&gt;&gt;<span class="typedef"><span class="keyword">type</span><span class="container">(4)</span> == int</span>
+<span class="type">True</span>
+</code></pre><h3 id="常用模块">常用模块</h3>
+<p>1.math：常用数学函数<br>2.matplotlib: 画图模块，与matlab函数接口类似  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="模块加载方法">模块加载方法</h3>
+<p>1.generic imports<br>语法：import [module]<br>这种方式称之为generic import.在使用模块中的函数时，需要加上模块的前缀<br>如下例：<br>    import math<br>    print math.sqrt(25)</p>
+]]>
+    
+    </summary>
+    
+      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[[latex]linux环境下的latex安装]]></title>
+    <link href="http://perthcharles.github.com/2013/09/14/linux-tex/"/>
+    <id>http://perthcharles.github.com/2013/09/14/linux-tex/</id>
+    <published>2013-09-14T04:00:00.000Z</published>
+    <updated>2014-11-04T05:37:42.000Z</updated>
+    <content type="html"><![CDATA[<p>本来想着使用yum安装的，结果发现没有直接的rpm包<br>网上有许多的方法，特别是对于中文的问题的解决<br>但是都过于复杂，可能是懒人有懒福吧。总算找到一种最简单的安装办法<br>详见<a href="http://blog.chinaunix.net/uid-20940095-id-66105.html" target="_blank" rel="external">这篇博客:linux下texlive 2010 简单安装教程</a>，非常感谢这位大牛的指点。让我节省了不少时间。  </p>
+<a id="more"></a>
+
+<p>下面是我的安装步骤，可喜的是竟然安装了最新的2013版，意外之喜啊。<br>    wget <a href="http://ftp.ctex.org/mirrors/CTAN/systems/texlive/tlnet/install-tl-unx.tar.gz" target="_blank" rel="external">http://ftp.ctex.org/mirrors/CTAN/systems/texlive/tlnet/install-tl-unx.tar.gz</a><br>    tar zxvf install-tl-unx.tar.gz<br>    ./install-tl —gui<br>    //环境变量是要设置的，这点与上面提到的博客有点不同<br>    PATH=path-of-your-texlive:$PATH<br>    //更加推荐的方式：把上面这条加到~/.bashrc中后，source一下</p>
+<p>随后就可以使用pdflatex命令对.tex文件进行编译了<br>    pdflatex template.tex<br>    evince template.pdf</p>
+<p>安装中文输入法<br>    yum install “@Chinese Support”</p>
+<p>虽然时间可能有点长，但是安装就是这么简单。上面那个下载的文件可能是一个在线安装的管理脚本，所以时间会比较长。  </p>
+<h3 id="参考资料">参考资料</h3>
+<p>这几个参考资料都是readme中推荐的学习网站，好像是官方的<br><a href="http://tug.org/begin.html" target="_blank" rel="external">Tex介绍性材料：for freshman</a><br><a href="http://tug.org/interest.html" target="_blank" rel="external">Tex web资源的通用列表，包括文档、系统、宏包、字体等</a><br><a href="http://tug.org/ctan.html" target="_blank" rel="external">CTAN的一个入口，CTAN是所有Tex相关内容的在线仓库</a><br><a href="http://tug.org/usergroups.html" target="_blank" rel="external">世界上Tex用户组织的列表</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>本来想着使用yum安装的，结果发现没有直接的rpm包<br>网上有许多的方法，特别是对于中文的问题的解决<br>但是都过于复杂，可能是懒人有懒福吧。总算找到一种最简单的安装办法<br>详见<a href="http://blog.chinaunix.net/uid-20940095-id-66105.html" target="_blank" rel="external">这篇博客:linux下texlive 2010 简单安装教程</a>，非常感谢这位大牛的指点。让我节省了不少时间。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="latex" scheme="http://perthcharles.github.com/tags/latex/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[C和指针[Kenneth A.Reek 著]]]></title>
+    <link href="http://perthcharles.github.com/2013/09/05/c-and-pointer/"/>
+    <id>http://perthcharles.github.com/2013/09/05/c-and-pointer/</id>
+    <published>2013-09-05T04:00:00.000Z</published>
+    <updated>2014-11-04T03:53:43.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="第一章：快速上手">第一章：快速上手</h3>
+<p>1.使用scanf函数进行用户输入的时候，需要注意：<br>使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳<br>过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都<br>会忽略重复的空白。  </p>
+<a id="more"></a>
+
+<h3 id="第二章：基本概念">第二章：基本概念</h3>
+<p>1.不良的风格和不良的文档是软件生产和维护代价高昂的两个重要原因。<br>良好的编程风格能够大大提高程序的可读性。良好的编程风格的直接结果就是程序更容<br>易正确运行，间接结果就是他们更容易维护。  </p>
+<h3 id="第三章：数据">第三章：数据</h3>
+<p>1.typedef：自定义数据类型  </p>
+<pre><code><span class="comment">//自定义字符型指针的类型名为：ptr_to_char</span>
+<span class="keyword">typedef</span> <span class="built_in">char</span> *ptr_to_char;
+<span class="comment">//使用自定义的数据类型声明变量a</span>
+ptr_to_char a;
+等价于
+<span class="built_in">char</span> *a
+</code></pre><p>应该使用typedef而不是#define来创建新的数据类型名，请看下例:  </p>
+<pre><code><span class="preprocessor">#<span class="keyword">define</span> d_ptr_to_char char *</span>
+d_ptr_to_char a, b;
+等价于
+<span class="keyword">char</span> *a, b;
+</code></pre><p>2.使用define时需要常加括号，以免优先级的变化改变代码的初衷  </p>
+<h3 id="第四章：语句">第四章：语句</h3>
+<p>1.在使用if语句时，即使对应的代码块仅有一条语句也要保持使用括号的习惯  </p>
+<p>2.在每一个switch语句中都使用default子句  </p>
+<h3 id="第六章：指针">第六章：指针</h3>
+<p>1.理解变量名与内存地址<br>名字与内存位置至今的关联并不是硬件所提供的，它是由编译器为我们实现的。所有这<br>些变量给了我们一种更方便的方法”记住地址”<br>硬件仍然通过地址访问内存位置。  </p>
+<p>2.值的类型并非值本身所固有的一种特性，而是取决于它的使用方法。<br>所以下面这段代码，能够在使用ASCII码的系统中实现字符型转为整形  </p>
+<pre><code><span class="keyword">char</span> a;
+<span class="keyword">int</span> b;
+a = <span class="string">'3'</span>;
+<span class="comment">//将a作为一个整数使用，减去'0'(整形的48)。b的值为3</span>
+b = (<span class="keyword">int</span>)a - <span class="string">'0'</span>;
+</code></pre><p>3.变量的值就是分配给该变量的内存位置所存储的数值，即使是指针变量也不例外  </p>
+<p>4.对所有的指针变量进行显示的初始化是种好做法。如果已经知道指针将被初始化为什<br>么地址，就把它初始化为该地址，否则就把它初始化为NULL<br>风格良好的程序会在解引用之前对它进行检查，这种初始化策略可以节省大量的调试时间  </p>
+<p>5.关于指针表达式<br>通过一些例子，详细解释常见的指针表达式  </p>
+<pre><code>//声明
+char <span class="number">ch</span> = <span class="string">'a'</span><span class="comment">;</span>
+char *cp = &amp;<span class="number">ch</span><span class="comment">;</span>
+char tmp, *tmp_p<span class="comment">;</span>
+
+//<span class="number">ch</span>作为左值使用，表示变量<span class="number">ch</span>的内存地址，语句的含义是将<span class="string">'b'</span>写到<span class="number">ch</span>所在的内存地址
+<span class="number">ch</span> = <span class="string">'b'</span><span class="comment">;    </span>
+//<span class="number">ch</span>作为右值使用，表示变量<span class="number">ch</span>的值，即<span class="string">'a'</span>
+tmp = <span class="number">ch</span><span class="comment">;    </span>
+
+//&amp;<span class="number">ch</span>仅能作为右值使用，表示变量<span class="number">ch</span>的内存地址
+tmp_p = &amp;<span class="number">ch</span><span class="comment">;    </span>
+
+//cp作为左值，表示cp的内存位置，语句含义是将&amp;<span class="number">ch</span>写到cp所在的内存地址
+cp = &amp;<span class="number">ch</span><span class="comment">;        </span>
+//cp作为右值，表示cp的值，即<span class="number">ch</span>的内存位置
+tmp_p = cp<span class="comment">;        </span>
+
+//*cp作为右值，表示<span class="string">'cp指向的内存位置的内容'</span>，即<span class="number">ch</span>的值
+tmp = *cp        
+//*cp作为左值，表示<span class="string">'cp指向的内存位置'</span>，即<span class="number">ch</span>的内存地址
+*cp = <span class="string">'b'</span>        
+
+*(cp + <span class="number">1</span>) 与 *cp + <span class="number">1</span>的区别：前者作为右值表示取cp所指向内存地址(即<span class="number">ch</span>的内存
+地址)的下一个地址中的内容，后者表示取<span class="number">ch</span>中的值，然后加<span class="number">1</span>
+++cp：只能作为右值使用。将cp指向的地址后移<span class="number">1</span>个单位，返回移动后cp的一个拷贝
+cp++：只能作为右值使用。先返回cp的一份拷贝，然后增加cp的值
+
+*++cp: 先对cp后移一个单位，然后解引用
+*cp++: ++操作符产生cp的一份拷贝，然后cp后移一个单位，最后对得到的拷贝进行
+解引用
+</code></pre><p>注：后缀++操作符优先级高于解引用 <em> 操作符。所以会误认为 </em>cp++ 是等同 *(cp + 1)的<br>，但实质上确实执行上述的操作。对于这种容易混淆的表达式，应减少使用  </p>
+<h3 id="第七章：函数">第七章：函数</h3>
+<p>1.在表达式内部调用一个无返回值得函数是一个严重的错误，因为这样一来在表达式的<br>求值过程中会使用一个不可预测的垃圾值。所幸的是现代编译器通常能捕捉到这类错误  </p>
+<p>2.函数声明的时候，必须指定参数的类型。但是在函数原型中加入描述性的参数名是明<br>智的，因为它可以给希望调用该函数的人员提供更多有用的信息  </p>
+<p>3.一个没有参数的函数的原型应该写成下面这个样子：  </p>
+<pre><code>int <span class="func"><span class="keyword">func</span><span class="params">( void )</span></span>
+</code></pre><p>关键字void提示没有任何参数，而不是表示它有一个类型为void的参数  </p>
+<p>4.C函数的所有参数均以“传值调用”方式进行传递  </p>
+<p>5.stdarg宏的使用<br>可变参数列表是通过宏实现的，这些宏定义在头文件stdarg.h，它是标准库的一部分。<br>这个头文件声明了一个类型va_list和三个宏—-va_start, va_arg, va_end。<br>下面是书中的例子：  </p>
+<pre><code><span class="comment">//包含相应头文件</span>
+<span class="preprocessor">#include&lt;stdarg.h&gt;    </span>
+<span class="comment">//第一个参数是必须给出的，通常使用这个参数指定剩余的参数个数</span>
+float average ( <span class="keyword">int</span> n_value, ... )    
+{
+    <span class="comment">//用于访问参数列表的未确定部分</span>
+    va_list var_arg;    
+    <span class="comment">//使用va_start函数对va_list变量进行初始化，第二个参数是省略号前最后  </span>
+    <span class="comment">//一个有名字的参数  </span>
+    va_start( var_arg, n_value );    
+    <span class="comment">//初始化过程把var_arg变量设置为指向可变参数部分的第一个参数</span>
+    <span class="keyword">for</span>(<span class="keyword">count</span> = <span class="number">0</span>; <span class="keyword">count</span> &lt; n_value; <span class="keyword">count</span>++ ){
+        <span class="comment">//使用va_arg函数访问变量，接受两个参数：va_list变量和参数列表中  </span>
+        <span class="comment">//下一个参数的类型</span>
+        <span class="keyword">sum</span> += va_arg( var_arg, <span class="keyword">int</span> );    
+    }
+    va_end( var_arg );
+    <span class="keyword">return</span> <span class="keyword">sum</span> / n_value;
+}
+</code></pre><p>6.抽象数据类型可以减少程序对模块实现细节的依赖，从而提高程序的可靠性  </p>
+<h3 id="第八章：数组">第八章：数组</h3>
+<p>1.在C中，在几乎所有使用是组名的表达式中，数组名的值是一个<em>指针常量</em>，也就是<br>数组第1个元素的地址。<br>只有在两种场合下，数组名并不用指针常量来表示：<br>a.当数组名作为sizeof操作符：sizeof返回这个数组的长度，而不是指向数组的指针的<br>长度<br>b.单目操作符&amp;的操作数：取一个数组名的地址所产生的是一个指向数组的指针，而不<br>是一个指向某个指针常量的指针  </p>
+<p>2.指针与下标：假设这两种方法都是正确的，下标绝对不会比指针更有效率，但指针有<br>时会比下标更有效率<br>试比较下面两段代码：  </p>
+<pre><code><span class="type">int</span> <span class="type">array</span>[<span class="number">10</span>], a;
+<span class="keyword">for</span> ( a = <span class="number">0</span>; a &lt; <span class="number">10</span>; a += <span class="number">1</span> ){
+    <span class="type">array</span>[a] = <span class="number">0</span>;
+}
+
+<span class="type">int</span> <span class="type">array</span>[<span class="number">10</span>], *ap;
+<span class="keyword">for</span> ( ap = <span class="type">array</span>; ap &lt; <span class="type">array</span> + <span class="number">10</span>; ap++ ){
+    *ap = <span class="number">0</span>;
+}
+</code></pre><p>第一段代码对于下标计算由于a是变量，所以求下标的时候都需要重复：取a的值，并把<br>它与整形的长度(4)相乘。<br>而第二段代码中对于ap++，每次都是加固定的值，且这个乘法（1*4）只在编译时执行一<br>次。运行时并不执行乘法。  </p>
+<p>3.当根据某个固定数目的增量在一个数组中移动时，使用指针变量将比使用下标产生效<br>率更高的代码。当这个增量是1并且机器具有地址自动增量模型时，这点表现的更为突出  </p>
+<h3 id="第九章：字符串、字符和字节">第九章：字符串、字符和字节</h3>
+<p>1.strlen返回值类型为size_t，该类型是在头文件stddef.h中定义的，是一个无符号整<br>数类型。<br>所以下面两条语句，第一条效果符合预期，第二条语句结果则恒为真  </p>
+<pre><code><span class="keyword">if</span>( strlen(x) &gt;= strlen(y) ) <span class="keyword">...</span>
+<span class="keyword">if</span>( strlen(x) - strlen(y) &gt;= <span class="number">0</span> ) <span class="keyword">...</span>
+</code></pre><p>2.不要试图自己编写功能相同的函数来取代库函数，同时使用字符分类和转换函数可以<br>提高函数的移植性  </p>
+<p>3.寻找一种更好的算法比改良一种差劲的算法更有效率，复用已经存在的软件比重新开<br>发一个效率更高  </p>
+<p>4.使用strcpy函数把一个长字符串复制到一个较短的数组中，容易导致溢出。因为strcpy<br>无法判断目标字符数据的长度  </p>
+<p>5.strtok函数将会修改它所处理的字符串，所以strtok是不可再入的。<br>不可再入是指函数在连续几次调用中，即使它们的参数相同，其结果也可能是不同的。  </p>
+<h3 id="第十章：结构和联合">第十章：结构和联合</h3>
+<p>1.结构体的声明语法：  </p>
+<pre><code><span class="class"><span class="keyword">struct</span>  <span class="title">tag</span> </span>{ member-<span class="keyword">list</span> } variable-<span class="keyword">list</span>;
+</code></pre><p>标签(tag)字段允许为成为列表提供一个名字，这样它就可以在后续的声明中使用。  </p>
+<p>2.警惕下面这个陷阱：</p>
+<pre><code><span class="keyword">typedef</span> <span class="keyword">struct</span> {
+    <span class="keyword">int</span> a;
+    SELF_REF3 *b;
+    <span class="keyword">int</span> c;
+}SELF_REF3;
+</code></pre><p>这个声明的目的是为了这个结构创建类型名SELF_REF3。但是，它失败了。类型名直到<br>声明的末尾才定义，所以在结构声明的内部它尚未定义。<br>解决方案是定义一个结构标签(tag)来声明b,如下所示：  </p>
+<pre><code><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">SELF_REF3_TAG</span> </span>{
+    int a;
+    <span class="class"><span class="keyword">struct</span> <span class="title">SELF_REF3_TAG</span> *b;
+    int c;
+}SELF_REF3;</span>
+</code></pre><p>3.箭头操作符接受两个操作数，但左操作数必须是一个指向结构的指针  </p>
+<p>4.关于结构体的内存分配<br>a.一般情况下，编译器按照成员列表的顺序一个接一个地给每个成员分配内存。只有当<br>存储成员时需要满足正确的边界对齐要求时，成员之间才可能出现用于填充的额外内存<br>空间。sizeof返回值包含了结构中浪费的内存空间<br>b.系统禁止编译器在一个结构的其实位置跳过几个字节来满足边界对齐条件<br>c.使用offsetof宏能够获取某个成员实际的存储位置相对于结构体起始位置的偏移  </p>
+<pre><code>offsetof (<span class="class"><span class="keyword">type</span>, <span class="title">member</span>)</span>
+offsetof (<span class="keyword">struct</span> ALIGN, b)
+</code></pre><p>d.使用下面的方法能够通知编译器不满足边界对齐的条件  </p>
+<pre><code><span class="preprocessor">#<span class="keyword">pragma</span> pack(push)</span>
+<span class="preprocessor">#<span class="keyword">pragma</span> pack(1)</span>
+<span class="keyword">typedef</span> <span class="keyword">struct</span> _BMP_HEAD{
+    <span class="comment">//some declarations</span>
+}BMP_HEAD;
+<span class="preprocessor">#<span class="keyword">pragma</span> pack(pop)</span>
+</code></pre><p>5.关于位段<br>a.位段成员必须声明为int, signed int, unsigned int类中<br>b.在成员名的后面是一个冒号和一个整数，这个整数指定该位段所占用的位的数目<br>c.注重可移植性的程序应该尽量避免使用位段  </p>
+<h3 id="第十一章：动态内存分配">第十一章：动态内存分配</h3>
+<p>1.通过malloc申请的内存空间并没有以任何方式进行初始化，需要程序猿手动优化。  </p>
+<p>2.动态内存分配最常见的错误就是忘记检查所请求的内存是否成功分配  </p>
+<p>3.动态内存分配第二大错误来源是操作内存时超出了分配内存的边界  </p>
+<h3 id="第十三章：高级指针话题">第十三章：高级指针话题</h3>
+<p>1.函数指针用法  </p>
+<pre><code><span class="keyword">int</span> f(<span class="keyword">int</span> a);
+<span class="keyword">int</span> (*pf)(<span class="keyword">int</span>) = &amp;f;
+</code></pre><p>初始化表达式中的&amp;操作符是可选的，因为函数名被使用时总是由编译器把它转换为函<br>数指针。&amp;操作符只是显式地说明了编译器将隐式执行的任务。  </p>
+<pre><code><span class="title">int</span> ans;
+<span class="title">ans</span> = f(<span class="number">25</span>);
+<span class="title">ans</span> = (*pf)(<span class="number">25</span>);
+<span class="title">ans</span> = pf(<span class="number">25</span>);
+</code></pre><p>第一条语句简单地使用名字调用函数f，但它的执行过程可能和你想象的不太一样。函<br>数名f首先被转换为一个函数指针，该指针指定函数在内存中的位置。然后，函数调用<br>操作符调用该函数，执行开始于这个地址的代码。  </p>
+<p>第二条语句效果与第一条完全一样。而且本质上间接访问操作是不需要的，因为编译器<br>在执行函数调用操作符之前又会把它转换回去。  </p>
+<p>第三条语句和前两条语句的效果是一样的。正如第二条解释中提到的，间接访问操作并<br>非必需。  </p>
+<p>2.函数指针用途：两个最常见的用途是把函数指针作为参数传递给函数以及用于转换表  </p>
+<h3 id="第十五章：输入/输出函数">第十五章：输入/输出函数</h3>
+<p>1.只有当一个库函数失败是，errno才会被设置。当函数成功运行时，errno的值不会被<br>修改。这意味着我们不能通过测试errno的值来判断是否有错误发生。反之，只有当被<br>调用的函数提示有错误发生时检查errno才是有意义的。  </p>
+<p>2.这章的总结部分很值得一看。  </p>
+<p>3.在任何scanf系列函数的每个非数组，非指针参数前需要加上&amp;符号。  </p>
+<h2 id="总结">总结</h2>
+<p>C语言之所以被称之为”God’s programming Language”，我想一个很重要的原因就是指针<br>这部分的功能。啃完这本书，希望能提高自己对C语言的核心部分的理解吧。最重要的当<br>然是尽量避免书中提到的陷阱，同时谨记其对编程实践的警告提示。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="第一章：快速上手">第一章：快速上手</h3>
+<p>1.使用scanf函数进行用户输入的时候，需要注意：<br>使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳<br>过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都<br>会忽略重复的空白。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[[python学习笔记之一]基本入门]]></title>
+    <link href="http://perthcharles.github.com/2013/09/04/python-learning-1/"/>
+    <id>http://perthcharles.github.com/2013/09/04/python-learning-1/</id>
+    <published>2013-09-04T04:00:12.000Z</published>
+    <updated>2014-11-04T03:52:39.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="Why_Python?">Why Python?</h3>
+<p>在linux环境下工作的时候，使用shell脚本能够完成许多有趣的工作。<br>在逐渐体会到脚本语言的强大后，日常工作中越来越离不开脚本语言了。<br>每一种编程都有各自的局限性，所以shell bash也会有许多无法顺利完成的工作。<br>在简单调查发现后，python作为一种解释型的语言，已经被广泛使用。<br>同时还能完成更多独特的功能，比如matplitlib库支持许多matlab中类似的画图函数<br>甚至还有matlab无法简单实现的功能，比如<a href="http://perthcharles.github.io/coding/2013/09/03/python-plot-bar/" target="_blank" rel="external">这篇博客中画可变宽度的条形图</a>  </p>
+<a id="more"></a>
+
+<p>说了这么多废话，该进入正题了。首先推荐我学习python的网站：<a href="http://www.codecademy.com/" target="_blank" rel="external">Codecademy</a><br>这个网站从之前学html的时候就有接触，主要需要都是偏前端开发方面的。<br>还有一个很给力的功能值得推荐：<a href="http://labs.codecademy.com/#:workspace" target="_blank" rel="external">Codecademy Labs</a><br>这个功能给你提供了一个网络上的实践端口，实在是太给力了。  </p>
+<p>其他在线手册：<br><a href="http://www.tutorialspoint.com/python/index.htm" target="_blank" rel="external">Python Tutorial</a>  </p>
+<h3 id="基本入门">基本入门</h3>
+<p>1.输出<br>    //打印字符串<br>    print “Welcome to Python”<br>    //打印浮点数，<br>    total = 54.634<br>    print(“%.2f” %total)     //结果为：54.63</p>
+<p>2.变量声明<br>有整形，浮点型,布尔型和string型，声明与使用方式跟shell类似<br>string类型单独说明<br>    my_int = 7<br>    my_float = 1.2<br>    my_bool = True    //python 是大小写敏感的语言<br>    my_int = 3  //对变量重新赋值</p>
+<p>3.string类型<br>能够像数组一样访问string类型的每个字符，同时自带许多有用的method<br>    //声明时，单双引号都可以，但必须配套使用<br>    //字符串中对于单双引号需要使用转义字符’\’<br>    my_string1 = ‘string1’<br>    my_string2 = “STRing2”<br>    //像数组一样使用string<br>    fifth_letter = “MONTY”[4]      //计数从0开始，结果是fifth_letter = Y<br>    //获取字符串长度<br>    print len(my_string1)       //结果为7<br>    //大小写转换字符串<br>    print my_string2.lower()    //结果为string2<br>    print my_string2.upper()    //结果为STRING2<br>    //类型转换<br>    pi = 3.14<br>    str(pi)        将浮点型转为字符型<br>    print “The value of pi is around:” + 3.14        //会报错<br>    print “The value of pi is around:” + str(3.14)    //正确执行<br>    //字符串拼接<br>    print “a” + “b”     //结果为ab<br>    //关于打印string类型变量<br>    //语法： print “%s” % (string_variable)<br>    string_1 = “a”<br>    string_2 = “b”<br>    pirntf “%s is diff with %s.” % (string_1, string_2)    //打印：a is diff with b.<br>    //检验字符串是否全是字母表中的字符<br>    string_1.isalpha()    //返回值是True 或 False<br>    //获取子串<br>    my_string1[0:2]    //获取[0,2)范围内的字符，结果为’st’<br>    my_string1[2:]    //获取[2,字符串末尾+1)范围内的字符，结果为’ring1’</p>
+<p>4.空格很重要<br>缩进代码的时候，需要经常使用4个空格<br>python中基本上用空格代替了大括号的作用  </p>
+<p>5.注释<br>注释方法与shell类似，使用符号’#’进行注释<br>    //注释单行</p>
+<pre><code><span class="comment">#this is a comment</span>
+//注释多行
+<span class="string">"""this
+is a multi-line
+comment"""</span>
+</code></pre><p>6.算数符号<br>    count_no = 1 + 2<br>    conut_no = 5 - 2<br>    count_no = 2 <em> 10<br>    count_no = 20 / 4       //整数除法，运算结果与C策略类似<br>    count_no = 5 % 3        //整数取模<br>    count_no = 2 <strong> 3         //幂乘，结果为8<br>    count_no = 100 </strong> 0.5     //相当于开方，结果为10.0<br>    count = count_no </em> 2     //变量引用</p>
+<p>7.显示当前时间<br>    from datetime import datetime<br>    now = datetime.now()<br>    print now    //结果类似：   2013-09-14 13:58:00.377380<br>    pirnt now.month    //9<br>    print now.day     //4<br>    print now.year     //2013<br>    print now.hour<br>    print now.minute<br>    print now.second    </p>
+<p>8.控制语句<br>比较运算: == != &lt; &gt; &lt;= &gt;=<br>含义与C中类似  </p>
+<p>逻辑运算：and or not<br>含义与C中&amp;&amp; || ! 类似  </p>
+<p>if与elif,else<br>    def greater_less_equal_5(answer):    //注意整个函数定义的缩进和冒号<br>        if (answer &gt; 5):    //注意冒号<br>            return 1<br>        elif (answer &lt; 5):<br>            return -1<br>        else:<br>            return 0</p>
+<pre><code><span class="literal">print</span> greater_less_equal_5(<span class="number">4</span>)
+</code></pre><p>9.用户交互<br>请求用户的输入：raw_input()<br>    name = raw_input(“What’s your name?”)</p>
+<p>10.关于import<br>import语句用于加载一个模块<br>一个模块根本上就是一个定义了许多变量与函数的文件，与C中的头文件类似<br>更详细的内容请查看<a href="http://perthcharles.github.io/python/2013/09/14/python-learing-2/" target="_blank" rel="external">python 常用module</a>  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://docs.python.org/2.7/" target="_blank" rel="external">Python v2.7.5 documentation</a><br><a href="Should I use Python 2 or Python 3 for my development activity?">Should I use Python 2 or Python 3 for my development activity?</a><br><a href="http://docs.python.org/3/whatsnew/3.0.html" target="_blank" rel="external">What’s New In Python 3.0</a><br><a href="http://docs.python.org/3/" target="_blank" rel="external">Python v3.3.2 documentation</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="Why_Python?">Why Python?</h3>
+<p>在linux环境下工作的时候，使用shell脚本能够完成许多有趣的工作。<br>在逐渐体会到脚本语言的强大后，日常工作中越来越离不开脚本语言了。<br>每一种编程都有各自的局限性，所以shell bash也会有许多无法顺利完成的工作。<br>在简单调查发现后，python作为一种解释型的语言，已经被广泛使用。<br>同时还能完成更多独特的功能，比如matplitlib库支持许多matlab中类似的画图函数<br>甚至还有matlab无法简单实现的功能，比如<a href="http://perthcharles.github.io/coding/2013/09/03/python-plot-bar/" target="_blank" rel="external">这篇博客中画可变宽度的条形图</a>  </p>
+]]>
+    
+    </summary>
+    
+      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[[python实践]使用matplotlib库画宽度可变的条形图]]></title>
+    <link href="http://perthcharles.github.com/2013/09/03/python-plot-bar/"/>
+    <id>http://perthcharles.github.com/2013/09/03/python-plot-bar/</id>
+    <published>2013-09-03T15:00:00.000Z</published>
+    <updated>2014-11-04T03:47:16.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="相关库安装">相关库安装</h2>
+<pre><code><span class="preprocessor">#yum list |grep numpy</span>
+<span class="preprocessor">#yum install numpy</span>
+
+<span class="preprocessor">#yum list |grep scipy</span>
+<span class="preprocessor">#yum install scipy</span>
+
+<span class="preprocessor">#yum list |grep matplotlib</span>
+<span class="preprocessor">#yum install python-matplotlib</span>
+</code></pre><a id="more"></a>
+
+<h2 id="直接上脚本">直接上脚本</h2>
+<pre><code><span class="preprocessor">#cat test.py</span>
+<span class="import"><span class="keyword">import</span> pylab <span class="keyword">as</span> pl</span>
+<span class="import"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span>
+//读取文本中的数据
+<span class="typedef"><span class="keyword">data</span> = np.loadtxt<span class="container">('<span class="title">filename'</span>)</span></span>
+<span class="preprocessor">#width = 0.5</span>
+<span class="title">width</span> = <span class="typedef"><span class="keyword">data</span>[:,1]/1000   //设置条形图中每个柱子的宽度</span>
+//以<span class="typedef"><span class="keyword">data</span>第一列为<span class="type">X</span>轴，<span class="keyword">data</span>第二列为<span class="type">Y</span>轴，每个柱子的宽度设置为第二列值的千分之一</span>
+<span class="title">pl</span>.bar(<span class="typedef"><span class="keyword">data</span>[:,0], <span class="keyword">data</span>[:,1], width)</span>
+<span class="title">pl</span>.show()
+</code></pre><h2 id="参考资料">参考资料</h2>
+<p><a href="http://docs.scipy.org/doc/numpy/reference/index.html" target="_blank" rel="external">NumPy Reference</a><br><a href="http://www.cnblogs.com/wei-li/archive/2012/05/23/2506940.html" target="_blank" rel="external">Python图表绘制：matplotlib绘图库入门</a><br><a href="http://blog.sina.com.cn/s/blog_5fef8a5a0100duzf.html" target="_blank" rel="external">MATLAB中subplot的用法</a><br><a href="http://wiki.scipy.org/Cookbook/Matplotlib/BarCharts?highlight=%28bar%29" target="_blank" rel="external">Cookbook / Matplotlib / BarCharts</a><br><a href="http://matplotlib.org/1.3.0/examples/index.html" target="_blank" rel="external">Matplotlib Examples v1.3.0</a><br><a href="http://www.loria.fr/~rougier/teaching/matplotlib/" target="_blank" rel="external">Matplotlib tutorial</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="相关库安装">相关库安装</h2>
+<pre><code><span class="preprocessor">#yum list |grep numpy</span>
+<span class="preprocessor">#yum install numpy</span>
+
+<span class="preprocessor">#yum list |grep scipy</span>
+<span class="preprocessor">#yum install scipy</span>
+
+<span class="preprocessor">#yum list |grep matplotlib</span>
+<span class="preprocessor">#yum install python-matplotlib</span>
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[linux命令学习（十）：awk]]></title>
+    <link href="http://perthcharles.github.com/2013/09/01/linux-using-10/"/>
+    <id>http://perthcharles.github.com/2013/09/01/linux-using-10/</id>
+    <published>2013-09-01T04:00:02.000Z</published>
+    <updated>2014-11-04T03:44:54.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="awk命令">awk命令</h3>
+<p>awk对比sed：awk主要针对行内数据进行操作，sed主要是以行为单位进行操作<br>命令语法格式：  </p>
+<pre><code><span class="array">#awk </span><span class="string">'条件类型1{动作1} 条件类型2{动作2} ...'</span> filename
+</code></pre><p>awk过于复杂，所以以后慢慢练习。  </p>
+<p>1.awk 计算方差  </p>
+<pre><code><span class="comment">#awk '{a[++i]=$1;} END{for(i in a)sum += a[i];ave=sum/NR;for(i in a) delta += (a[i]-ave)*(a[i]-ave);print delta/NR}' tmp</span>
+</code></pre><p>2.awk 实例一则<br><a href="http://perthcharles.github.io/%E6%96%87%E6%9C%AC%E5%A4%84%E7%90%86/2013/06/19/choose-multi-line-from-text/" target="_blank" rel="external">从文本中抽取出指定的行</a>  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://bbs.chinaunix.net/thread-3605498-1-1.html" target="_blank" rel="external">怎么样对文本进行指定行的数据提取操作？</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="awk命令">awk命令</h3>
+<p>awk对比sed：awk主要针对行内数据进行操作，sed主要是以行为单位进行操作<br>命令语法格式：  </p>
+<pre><code><span class="array">#awk </span><span clas]]>
+    </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="Shell" scheme="http://perthcharles.github.com/tags/Shell/"/>
+    
+  </entry>
+  
+</feed>

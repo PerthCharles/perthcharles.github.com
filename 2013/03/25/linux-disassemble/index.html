@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>linux 反汇编初步 | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="工具
+十六进制编辑器：hexedit还有objdump，xxd等查看工具">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux 反汇编初步">
+<meta property="og:url" content="http://perthcharles.github.com/2013/03/25/linux-disassemble/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="工具
+十六进制编辑器：hexedit还有objdump，xxd等查看工具">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="linux 反汇编初步">
+<meta name="twitter:description" content="工具
+十六进制编辑器：hexedit还有objdump，xxd等查看工具">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-linux-disassemble" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/03/25/linux-disassemble/" class="article-date">
+  <time datetime="2013-03-25T05:00:14.000Z" itemprop="datePublished">3月 25 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      linux 反汇编初步
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="工具">工具</h2>
+<p>十六进制编辑器：hexedit<br>还有objdump，xxd等查看工具  </p>
+<a id="more"></a>
+
+<hr>
+<h3 id="hexedit使用">hexedit使用</h3>
+<p>暂时只用hexedit来读二进制文件  </p>
+<pre><code><span class="array">#hexedit filename  </span><span class="comment">//查看文件  </span>
+</code></pre><p>常用操作键<br>       Ctrl-X: save and exit<br>       Ctrl-C: exit without saving<br>       tab:    在hex和ascii窗口之间切换<br>       Ctrl-U: undo all<br>       Ctrl-S: search forward  </p>
+<h3 id="objdump使用">objdump使用</h3>
+<p>编译程序的时候，gcc添加-g选项，增加调试信息  </p>
+<pre><code>#gcc <span class="keyword">test</span>.c -g -o <span class="keyword">test</span>
+</code></pre><p>常用参数<br>    -S(source):表示读取哪个文件<br>    -j:选择读出哪个section，可以通过objdump -h来查看所有的section</p>
+<hr>
+<hr>
+<h3 id="看懂AT&amp;T汇编">看懂AT&amp;T汇编</h3>
+<p>由于objdump反汇编得到的结果主要都是AT&amp;T格式的汇编(不过好像可以选择？)，而且linux内核代码也有不少AT&amp;T格式的汇编代码，所以有必要学习一下  </p>
+<h4 id="AT&amp;T汇编特点">AT&amp;T汇编特点</h4>
+<pre><code><span class="number">1</span>.寄存器前面要加%，如：<span class="keyword">mov</span> %eab,%<span class="number">ebx</span>
+    注意源寄存器和目标寄存器的顺序与intel汇编更好相反，<span class="preprocessor">at</span>&amp;t中左边是源寄存器，右边是目标寄存器。所以上面指令是将<span class="number">eax</span>的值赋给<span class="number">ebx</span>
+<span class="number">2</span>.立即数/常数前面要加‘$’,符号常数值直接用。
+    关于符号常量注意理解下面两句：
+    <span class="keyword">mov</span> A,%<span class="number">eax</span>     //将A代表的值赋给<span class="number">eax</span>,如A=<span class="number">10</span>，则<span class="number">eax</span>里面的值就是<span class="number">10</span>
+    <span class="keyword">mov</span> $A,%<span class="number">eax</span>     //将A代表的值当作地址，将对应地址的值赋给<span class="number">eax</span>，如A=<span class="number">0x10</span>,<span class="number">0x10</span>处存则<span class="number">20</span>，则把地址<span class="number">0x10</span>处对应的值<span class="number">20</span>赋给<span class="number">eax</span>
+<span class="number">3.</span>movb:<span class="number">8</span>位(<span class="preprocessor">byte</span>)    movw：<span class="number">16</span>位(<span class="preprocessor">word</span>)    movl：<span class="number">32</span>位(long)  
+<span class="label">others:</span>    s=short(<span class="number">16</span>-bit integer) <span class="keyword">or</span> single(<span class="number">32</span>-bit floating point)
+    q=quad(<span class="number">64</span> <span class="built_in">bits</span>)
+    t=ten bytes(<span class="number">80</span> <span class="built_in">bits</span> floating point)
+注：如果suffix没有指定且不是内存操作，GAS(Gnu AS)会根据目标寄存器的大小来决定
+<span class="number">4.</span><span class="keyword">call</span>/<span class="keyword">jmp</span>语句的操作数前面要加上“*”作为前缀，远跳转ljmp,远调用lcall，远返回lret
+
+<span class="number">5</span>.寻址规则：displacement(base register, offset register, scalar multiplier)
+  计算方法：(base+dis)+(offset*multiplier)
+  举例：
+    movl    -<span class="number">4</span>(%<span class="literal">ebp</span>, %<span class="number">edx</span>, <span class="number">4</span>), %<span class="number">eax</span>  # Full example: load *(<span class="literal">ebp</span> - <span class="number">4</span> + (<span class="number">edx</span> * <span class="number">4</span>)) <span class="keyword">into</span> <span class="number">eax</span>
+    movl    (%<span class="number">ecx</span>), %<span class="number">edx</span>             # No offset: copy the target of a pointer <span class="keyword">into</span> a register
+</code></pre><h4 id="C语言内嵌汇编">C语言内嵌汇编</h4>
+<p>格式：<br>    <em>asm</em>(“asm statement”:outputs:inputs:registers-modified)<br>tips:<br>    1.在嵌入汇编中，寄存器前面要加两个%，因为gcc在编译时，会去掉一个%再输出成汇编格式</p>
+<h4 id="主要寄存器及其作用">主要寄存器及其作用</h4>
+<h5 id="8086有14个16位寄存器，按照用途分为：">8086有14个16位寄存器，按照用途分为：</h5>
+<p>1.通用寄存器(8个)<br>2.指令指针(IP,1个)<br>3.标志寄存器(FR，1个)<br>4.段寄存器(4个)  </p>
+<hr>
+<p><em>通用寄存器</em>又可以分成2类：数据寄存器和指针寄存器及变址寄存器，各4个<br>    ax:常用于计算。另外所有的I/O指令都使用这一寄存器与外界设备传送数据<br>    bx:基址寄存器<br>    cx:计数寄存器<br>    dx:数据寄存器  </p>
+<pre><code><span class="label">SP:</span>堆栈指针，与<span class="literal">SS</span>配合使用，可指向目前的堆栈位置  
+<span class="label">BP:</span>基址寄存器，可作为<span class="literal">SS</span>的相对基址位置  
+<span class="label">SI:</span>source index,源变址寄存器------暂不理解  
+<span class="literal">DI</span>：destination index,目的变址寄存器  
+上面四个寄存器只能按<span class="number">16</span>位进行操作，主要用来形成操作数的地址  
+</code></pre><p><em>指令指针IP</em><br>    IP:16位专用寄存器，用来指向当前执行指令的下一条指令的地址。注意，IP指向的是指令地址的段内地址偏移量<br><em>标志寄存器FR</em><br>16位的寄存器，有意义的有9位，6位是状态位，3位是控制位<br>分布图：  </p>
+<pre><code><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">#</span>
+<span class="comment">#  #  #  #  #OF#DF#IF#TF#SF#ZF#  #AF#  #PF#  #CF#</span>
+<span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">#</span>
+<span class="comment">#15#14#13#12#11#10# 9# 8# 7# 6# 5# 4# 3# 2# 1# 0#</span>
+<span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">######</span><span class="comment">#</span>
+各个标志的含义：  
+<span class="attribute">OF</span>:overflow  
+<span class="attribute">DF</span>:direction
+<span class="attribute">IF</span>:中断允许标志，标志是否响应CPU‘外部可屏蔽‘中断，<span class="number">1</span>表示响应
+<span class="attribute">TF</span>:跟踪标志
+<span class="attribute">SF</span>:符号标志，与运算结果的最高位相同
+<span class="attribute">ZF</span>:零标志，反映运算结果是否为<span class="number">0</span>
+<span class="attribute">AF</span>:辅助进位标志
+<span class="attribute">PF</span>:奇偶标志反映运算结果中’<span class="number">1</span>‘的个数，PF=<span class="number">1</span>表示偶数个’<span class="number">1</span>‘
+<span class="attribute">CF</span>:进位标志反映运算结果是否产生进位或借位
+</code></pre><p><em>段寄存器</em><br>    CS:code segment<br>    DS:data segment<br>    SS:stack segment<br>    ES:extra segment</p>
+<hr>
+<h4 id="80386寄存器">80386寄存器</h4>
+<p>寄存器都是32位宽<br><em>通用寄存器</em><br>    EAX，EBX，ECX，EDX<br><em>特殊寄存器</em><br>    ESI：通常在内存操作中作为“源地址指针”使用，DS是默认段寄存器<br>    EDI：通常在内存操作中作为“目标地址指针”，DS是默认段寄存器<br>    EBP：通常被高级语言编译器用以建造‘堆栈帧’来保存函数或过程的局部变量，SS是默认段寄存器</p>
+<hr>
+<h3 id="主要参考资料">主要参考资料</h3>
+<p><a href="http://www.cppblog.com/tdweng/articles/120852.html" target="_blank" rel="external">汇编中各寄存器的作用-堂吉歌德</a><br><a href="http://en.wikibooks.org/wiki/X86_Assembly/GAS_Syntax" target="_blank" rel="external">X86 Assembly/GAS Syntax</a>  </p>
+<hr>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/03/25/linux-disassemble/" data-id="ujzymg4m6eqrcpco" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/03/25/linux-disassemble/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/assembly/">assembly</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/03/28/x-window/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          X window
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/03/25/gnu-as-pratice/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Gnu AS 汇编实践</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/">BFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/C-C/">C/C++</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/">DFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EasyBCD/">EasyBCD</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Git/">Git</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jekyll/">Jekyll</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/KVM/">KVM</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">23</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MST/">MST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mapreduce/">Mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Shell/">Shell</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/TCP/">TCP</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tools/">Tools</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/X11/">X11</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YQL/">YQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YUI/">YUI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/assembly/">assembly</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/chrome/">chrome</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/excel/">excel</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/latex/">latex</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapreduce/">mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/markdown/">markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/matlab/">matlab</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mount/">mount</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ntfs/">ntfs</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/papers/">papers</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ssh/">ssh</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcpdump/">tcpdump</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcptrace/">tcptrace</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tshark/">tshark</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ubuntu/">ubuntu</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/wget/">wget</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum/">yum</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 18.33px;">Shell</a><a href="/tags/TCP/" style="font-size: 13.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 10.00px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 10.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 10.00px;">matlab</a><a href="/tags/mount/" style="font-size: 10.00px;">mount</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 10.00px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 10.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 10.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 10.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 10.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 10.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 10.00px;">vim</a><a href="/tags/wget/" style="font-size: 10.00px;">wget</a><a href="/tags/yum/" style="font-size: 10.00px;">yum</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/03/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2013/03/25/linux-disassemble/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Install windows 7 into a ubuntu server | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Backgrounds
+As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.This post is mainly a remainder for the encountered problem">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Install windows 7 into a ubuntu server">
+<meta property="og:url" content="http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="Backgrounds
+As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.This post is mainly a remainder for the encountered problem">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Install windows 7 into a ubuntu server">
+<meta name="twitter:description" content="Backgrounds
+As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.This post is mainly a remainder for the encountered problem">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-double-boot-win7-and-ubuntu" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/06/18/double-boot-win7-and-ubuntu/" class="article-date">
+  <time datetime="2014-06-18T04:00:00.000Z" itemprop="datePublished">6月 18 2014</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Install windows 7 into a ubuntu server
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Backgrounds">Backgrounds</h2>
+<p>As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.<br>This post is mainly a remainder for the encountered problems while I was installing win7.  </p>
+<a id="more"></a>
+
+<h2 id="Problems">Problems</h2>
+<ul>
+<li><a href="#nic">[win7]Unrecognized NIC</a>  </li>
+<li><a href="#net">[win7]Network connection</a>  </li>
+<li><a href="#cygwin">[win7]Cygwin and ssh</a>  </li>
+<li><a href="#lvm">[ubuntu]LVM</a>  </li>
+<li><a href="#grub">restore grub2</a>  </li>
+<li><a href="#setup">grub setup</a>  </li>
+</ul>
+<hr>
+<p><h3 id="nic">[win7]Unrecognized NIC</h3><br>The unrecognized NICs are mainly caused by missed drivers.<br>So this problem can easily fixed via installations of missed drivers.<br>If you needs to find out the info for the NICs, the following commands are what you are looking for.  </p>
+<pre><code><span class="variable">$ethtool</span> eth<span class="number">0</span>
+<span class="variable">$lspci</span> |<span class="keyword">grep</span> -i ether
+<span class="variable">$dmesg</span> |<span class="keyword">grep</span> -i eth
+</code></pre><p><h3 id="net">Network  connection</h3><br>As four NICs are used in my server, some for internets and some for inter-connections, DNS and IPs need to be configured manually.<br>The related info can be found in the following files:  </p>
+<pre><code>$vim <span class="regexp">/etc/</span>resolv.conf   <span class="comment">//DNS server</span>
+$vim <span class="regexp">/etc/</span>sysconfig<span class="regexp">/network-scripts/i</span>fcfg-eth0  <span class="comment">//CentOS</span>
+$vim <span class="regexp">/etc/</span>network<span class="regexp">/interfaces /</span><span class="regexp">/Ubuntu</span>
+</code></pre><p><h3 id="cygwin">Cygwin and ssh</h3><br>In my testbed, all the tasks supposed to be executed automaticly. Therefore a command-line workspace is required in win7 and I choose Cygwin in here.<br>Here are some excellent tutorials which helps me a lot.  </p>
+<ul>
+<li><a href="https://cygwin.com/install.html" target="_blank" rel="external">Cygwin Homepage</a>  </li>
+<li><a href="https://code.google.com/p/apt-cyg/" target="_blank" rel="external">apt-cyg: A command-line software installer for Cygwin</a>  </li>
+<li><a href="http://www.howtogeek.com/howto/41382/" target="_blank" rel="external">How to use linux commands in windows with Cygwin</a>  </li>
+<li><p><a href="http://www.howtogeek.com/howto/41560/" target="_blank" rel="external">How to get ssh command-line access to windows 7 using Cygwin</a><br>Because the ssh key in Cygwin is different with the original key in ubuntu, I choose to disable the host key checking for my server.  </p>
+<p>  $vim ~/.ssh/config  // if this file doesn’t exist, create it<br>  $cat ~/.ssh/config<br>  Host ip-of-my-server</p>
+<pre><code>  <span class="title">StrictHostKeyChecking</span> <span class="built_in">no</span>
+</code></pre></li>
+</ul>
+<p><h3 id="lvm">LVM</h3><br>When trying to restore grub after the win7 installed,<br>There are several methods mentioned in this <a href="https://help.ubuntu.com/community/Grub2/Installing#Reinstalling_GRUB_2" target="_blank" rel="external">document</a> from ubuntu community. But I still cann’t restore the grub until I find this <a href="http://typethinker.blogspot.com/2009/12/reinstalling-grub-with-lvm-from-ubuntu.html" target="_blank" rel="external">post</a>. The main reason is that my ubuntu is install inside a <a href="http://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux\" target="_blank" rel="external">LVM</a>) partition.<br>Here are some relative commands.  </p>
+<pre><code><span class="variable">$lvdisplay</span>  // <span class="literal">show</span> logical volumes
+<span class="variable">$vgdisplay</span>  // <span class="literal">show</span> volume groups
+<span class="variable">$pvdisplay</span>  // <span class="literal">show</span> physical volumes
+</code></pre><p><h3 id="grub">Restore grub2</h3><br>Here is my steps to restore grub2:  </p>
+<pre><code>1. Boot the ubuntu LiveCD, <span class="operator"><span class="keyword">select</span> <span class="string">"Try it"</span>, <span class="keyword">and</span> <span class="keyword">open</span> a terminal  
+<span class="number">2.</span> <span class="keyword">Use</span> fdisk <span class="keyword">to</span> <span class="keyword">help</span> determine the <span class="keyword">partition</span> <span class="keyword">on</span> which ubuntu <span class="keyword">is</span> installed  
+    #fdisk -l
+<span class="number">3.</span> <span class="keyword">Install</span> LVM
+    $apt-<span class="keyword">get</span> <span class="keyword">install</span> lvm2
+    $vgdisplay                // find name <span class="keyword">of</span> volume <span class="keyword">group</span>
+    $vgchange -ay name-<span class="keyword">of</span>-vg  // make volume <span class="keyword">group</span> available
+<span class="number">4.</span> Mount root <span class="keyword">and</span> boot file systems
+    $mount /dev/name-<span class="keyword">of</span>-vg/name-<span class="keyword">of</span>-root-lv /mnt
+    $mount /dev/name-<span class="keyword">of</span>-boot-<span class="keyword">partition</span> /mnt/boot
+<span class="number">5.</span> <span class="keyword">Install</span> grub2
+    $grub-<span class="keyword">install</span> <span class="comment">--boot-directory=/mnt/boot /dev/name-of-root-device</span>
+<span class="number">6.</span> Reboot <span class="keyword">and</span> <span class="keyword">update</span>-grub
+    $reboot
+    $<span class="keyword">update</span>-grub</span>
+</code></pre><p>Until now the grub for ubuntu is restore.  </p>
+<p><h3 id="setup">Grub setup</h3><br>Q: How to boot into into win7 from ubuntu for only once ?<br>A: grub-reboot is the tool you are looking for. <a href="http://askubuntu.com/questions/18170/how-to-reboot-into-windows-from-ubuntu" target="_blank" rel="external">This post</a> is a related question in askubuntu.com. Here are the configuration steps:  </p>
+<pre><code>$vim /etc/default/grub
+    modify GRUB_DEFAULT=0 to GRUB_DEFAULT=saved
+$<span class="operator"><span class="keyword">update</span>-grub
+$grub-reboot X
+    X <span class="keyword">is</span> the menuentry <span class="keyword">position</span> <span class="keyword">of</span> the OS you want <span class="keyword">to</span> boot <span class="keyword">into</span> <span class="keyword">for</span> the <span class="keyword">next</span> <span class="keyword">time</span> <span class="keyword">and</span> the <span class="keyword">next</span> <span class="keyword">time</span> <span class="keyword">only</span>.
+$reboot</span>
+</code></pre><p>There is a little bug in my grub that the timeout isn’t working properly.<br>My solution is modify the grub.cfg file according to <a href="http://askubuntu.com/questions/202309/cannot-get-grub-menu-to-timeout-or-go-away" target="_blank" rel="external">this-post</a> and <a href="http://dietrichschroff.blogspot.com/2014/03/ubuntu-upgrade-to-1204-grub-timeout.html" target="_blank" rel="external">this-post</a>.  </p>
+<p>Until now, the server has become a perfect double-boot server. Cheers! :)  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/" data-id="ww44v1rf6d10r06i" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ubuntu/">ubuntu</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/10/22/tcp-design-and-implementation/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          TCP ADI in Linux(1): Introduction
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/06/16/tcpdump-tcptrace-tshark/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Analysis tools for network traces</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/">BFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/C-C/">C/C++</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/">DFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EasyBCD/">EasyBCD</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Git/">Git</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jekyll/">Jekyll</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/KVM/">KVM</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">23</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MST/">MST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mapreduce/">Mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Shell/">Shell</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/TCP/">TCP</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tools/">Tools</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/X11/">X11</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YQL/">YQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YUI/">YUI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/assembly/">assembly</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/chrome/">chrome</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/excel/">excel</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/latex/">latex</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapreduce/">mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/markdown/">markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/matlab/">matlab</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mount/">mount</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ntfs/">ntfs</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/papers/">papers</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ssh/">ssh</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcpdump/">tcpdump</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcptrace/">tcptrace</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tshark/">tshark</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ubuntu/">ubuntu</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/wget/">wget</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum/">yum</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 18.33px;">Shell</a><a href="/tags/TCP/" style="font-size: 13.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 10.00px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 10.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 10.00px;">matlab</a><a href="/tags/mount/" style="font-size: 10.00px;">mount</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 10.00px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 10.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 10.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 10.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 10.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 10.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 10.00px;">vim</a><a href="/tags/wget/" style="font-size: 10.00px;">wget</a><a href="/tags/yum/" style="font-size: 10.00px;">yum</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/03/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

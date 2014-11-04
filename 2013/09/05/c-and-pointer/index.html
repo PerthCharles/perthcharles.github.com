@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>C和指针[Kenneth A.Reek 著] | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="第一章：快速上手
+1.使用scanf函数进行用户输入的时候，需要注意：使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都会忽略重复的空白。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C和指针[Kenneth A.Reek 著]">
+<meta property="og:url" content="http://perthcharles.github.com/2013/09/05/c-and-pointer/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="第一章：快速上手
+1.使用scanf函数进行用户输入的时候，需要注意：使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都会忽略重复的空白。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C和指针[Kenneth A.Reek 著]">
+<meta name="twitter:description" content="第一章：快速上手
+1.使用scanf函数进行用户输入的时候，需要注意：使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都会忽略重复的空白。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-c-and-pointer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/09/05/c-and-pointer/" class="article-date">
+  <time datetime="2013-09-05T04:00:00.000Z" itemprop="datePublished">9月 5 2013</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      C和指针[Kenneth A.Reek 著]
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="第一章：快速上手">第一章：快速上手</h3>
+<p>1.使用scanf函数进行用户输入的时候，需要注意：<br>使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳<br>过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都<br>会忽略重复的空白。  </p>
+<a id="more"></a>
+
+<h3 id="第二章：基本概念">第二章：基本概念</h3>
+<p>1.不良的风格和不良的文档是软件生产和维护代价高昂的两个重要原因。<br>良好的编程风格能够大大提高程序的可读性。良好的编程风格的直接结果就是程序更容<br>易正确运行，间接结果就是他们更容易维护。  </p>
+<h3 id="第三章：数据">第三章：数据</h3>
+<p>1.typedef：自定义数据类型  </p>
+<pre><code><span class="comment">//自定义字符型指针的类型名为：ptr_to_char</span>
+<span class="keyword">typedef</span> <span class="built_in">char</span> *ptr_to_char;
+<span class="comment">//使用自定义的数据类型声明变量a</span>
+ptr_to_char a;
+等价于
+<span class="built_in">char</span> *a
+</code></pre><p>应该使用typedef而不是#define来创建新的数据类型名，请看下例:  </p>
+<pre><code><span class="preprocessor">#<span class="keyword">define</span> d_ptr_to_char char *</span>
+d_ptr_to_char a, b;
+等价于
+<span class="keyword">char</span> *a, b;
+</code></pre><p>2.使用define时需要常加括号，以免优先级的变化改变代码的初衷  </p>
+<h3 id="第四章：语句">第四章：语句</h3>
+<p>1.在使用if语句时，即使对应的代码块仅有一条语句也要保持使用括号的习惯  </p>
+<p>2.在每一个switch语句中都使用default子句  </p>
+<h3 id="第六章：指针">第六章：指针</h3>
+<p>1.理解变量名与内存地址<br>名字与内存位置至今的关联并不是硬件所提供的，它是由编译器为我们实现的。所有这<br>些变量给了我们一种更方便的方法”记住地址”<br>硬件仍然通过地址访问内存位置。  </p>
+<p>2.值的类型并非值本身所固有的一种特性，而是取决于它的使用方法。<br>所以下面这段代码，能够在使用ASCII码的系统中实现字符型转为整形  </p>
+<pre><code><span class="keyword">char</span> a;
+<span class="keyword">int</span> b;
+a = <span class="string">'3'</span>;
+<span class="comment">//将a作为一个整数使用，减去'0'(整形的48)。b的值为3</span>
+b = (<span class="keyword">int</span>)a - <span class="string">'0'</span>;
+</code></pre><p>3.变量的值就是分配给该变量的内存位置所存储的数值，即使是指针变量也不例外  </p>
+<p>4.对所有的指针变量进行显示的初始化是种好做法。如果已经知道指针将被初始化为什<br>么地址，就把它初始化为该地址，否则就把它初始化为NULL<br>风格良好的程序会在解引用之前对它进行检查，这种初始化策略可以节省大量的调试时间  </p>
+<p>5.关于指针表达式<br>通过一些例子，详细解释常见的指针表达式  </p>
+<pre><code>//声明
+char <span class="number">ch</span> = <span class="string">'a'</span><span class="comment">;</span>
+char *cp = &amp;<span class="number">ch</span><span class="comment">;</span>
+char tmp, *tmp_p<span class="comment">;</span>
+
+//<span class="number">ch</span>作为左值使用，表示变量<span class="number">ch</span>的内存地址，语句的含义是将<span class="string">'b'</span>写到<span class="number">ch</span>所在的内存地址
+<span class="number">ch</span> = <span class="string">'b'</span><span class="comment">;    </span>
+//<span class="number">ch</span>作为右值使用，表示变量<span class="number">ch</span>的值，即<span class="string">'a'</span>
+tmp = <span class="number">ch</span><span class="comment">;    </span>
+
+//&amp;<span class="number">ch</span>仅能作为右值使用，表示变量<span class="number">ch</span>的内存地址
+tmp_p = &amp;<span class="number">ch</span><span class="comment">;    </span>
+
+//cp作为左值，表示cp的内存位置，语句含义是将&amp;<span class="number">ch</span>写到cp所在的内存地址
+cp = &amp;<span class="number">ch</span><span class="comment">;        </span>
+//cp作为右值，表示cp的值，即<span class="number">ch</span>的内存位置
+tmp_p = cp<span class="comment">;        </span>
+
+//*cp作为右值，表示<span class="string">'cp指向的内存位置的内容'</span>，即<span class="number">ch</span>的值
+tmp = *cp        
+//*cp作为左值，表示<span class="string">'cp指向的内存位置'</span>，即<span class="number">ch</span>的内存地址
+*cp = <span class="string">'b'</span>        
+
+*(cp + <span class="number">1</span>) 与 *cp + <span class="number">1</span>的区别：前者作为右值表示取cp所指向内存地址(即<span class="number">ch</span>的内存
+地址)的下一个地址中的内容，后者表示取<span class="number">ch</span>中的值，然后加<span class="number">1</span>
+++cp：只能作为右值使用。将cp指向的地址后移<span class="number">1</span>个单位，返回移动后cp的一个拷贝
+cp++：只能作为右值使用。先返回cp的一份拷贝，然后增加cp的值
+
+*++cp: 先对cp后移一个单位，然后解引用
+*cp++: ++操作符产生cp的一份拷贝，然后cp后移一个单位，最后对得到的拷贝进行
+解引用
+</code></pre><p>注：后缀++操作符优先级高于解引用 <em> 操作符。所以会误认为 </em>cp++ 是等同 *(cp + 1)的<br>，但实质上确实执行上述的操作。对于这种容易混淆的表达式，应减少使用  </p>
+<h3 id="第七章：函数">第七章：函数</h3>
+<p>1.在表达式内部调用一个无返回值得函数是一个严重的错误，因为这样一来在表达式的<br>求值过程中会使用一个不可预测的垃圾值。所幸的是现代编译器通常能捕捉到这类错误  </p>
+<p>2.函数声明的时候，必须指定参数的类型。但是在函数原型中加入描述性的参数名是明<br>智的，因为它可以给希望调用该函数的人员提供更多有用的信息  </p>
+<p>3.一个没有参数的函数的原型应该写成下面这个样子：  </p>
+<pre><code>int <span class="func"><span class="keyword">func</span><span class="params">( void )</span></span>
+</code></pre><p>关键字void提示没有任何参数，而不是表示它有一个类型为void的参数  </p>
+<p>4.C函数的所有参数均以“传值调用”方式进行传递  </p>
+<p>5.stdarg宏的使用<br>可变参数列表是通过宏实现的，这些宏定义在头文件stdarg.h，它是标准库的一部分。<br>这个头文件声明了一个类型va_list和三个宏—-va_start, va_arg, va_end。<br>下面是书中的例子：  </p>
+<pre><code><span class="comment">//包含相应头文件</span>
+<span class="preprocessor">#include&lt;stdarg.h&gt;    </span>
+<span class="comment">//第一个参数是必须给出的，通常使用这个参数指定剩余的参数个数</span>
+float average ( <span class="keyword">int</span> n_value, ... )    
+{
+    <span class="comment">//用于访问参数列表的未确定部分</span>
+    va_list var_arg;    
+    <span class="comment">//使用va_start函数对va_list变量进行初始化，第二个参数是省略号前最后  </span>
+    <span class="comment">//一个有名字的参数  </span>
+    va_start( var_arg, n_value );    
+    <span class="comment">//初始化过程把var_arg变量设置为指向可变参数部分的第一个参数</span>
+    <span class="keyword">for</span>(<span class="keyword">count</span> = <span class="number">0</span>; <span class="keyword">count</span> &lt; n_value; <span class="keyword">count</span>++ ){
+        <span class="comment">//使用va_arg函数访问变量，接受两个参数：va_list变量和参数列表中  </span>
+        <span class="comment">//下一个参数的类型</span>
+        <span class="keyword">sum</span> += va_arg( var_arg, <span class="keyword">int</span> );    
+    }
+    va_end( var_arg );
+    <span class="keyword">return</span> <span class="keyword">sum</span> / n_value;
+}
+</code></pre><p>6.抽象数据类型可以减少程序对模块实现细节的依赖，从而提高程序的可靠性  </p>
+<h3 id="第八章：数组">第八章：数组</h3>
+<p>1.在C中，在几乎所有使用是组名的表达式中，数组名的值是一个<em>指针常量</em>，也就是<br>数组第1个元素的地址。<br>只有在两种场合下，数组名并不用指针常量来表示：<br>a.当数组名作为sizeof操作符：sizeof返回这个数组的长度，而不是指向数组的指针的<br>长度<br>b.单目操作符&amp;的操作数：取一个数组名的地址所产生的是一个指向数组的指针，而不<br>是一个指向某个指针常量的指针  </p>
+<p>2.指针与下标：假设这两种方法都是正确的，下标绝对不会比指针更有效率，但指针有<br>时会比下标更有效率<br>试比较下面两段代码：  </p>
+<pre><code><span class="type">int</span> <span class="type">array</span>[<span class="number">10</span>], a;
+<span class="keyword">for</span> ( a = <span class="number">0</span>; a &lt; <span class="number">10</span>; a += <span class="number">1</span> ){
+    <span class="type">array</span>[a] = <span class="number">0</span>;
+}
+
+<span class="type">int</span> <span class="type">array</span>[<span class="number">10</span>], *ap;
+<span class="keyword">for</span> ( ap = <span class="type">array</span>; ap &lt; <span class="type">array</span> + <span class="number">10</span>; ap++ ){
+    *ap = <span class="number">0</span>;
+}
+</code></pre><p>第一段代码对于下标计算由于a是变量，所以求下标的时候都需要重复：取a的值，并把<br>它与整形的长度(4)相乘。<br>而第二段代码中对于ap++，每次都是加固定的值，且这个乘法（1*4）只在编译时执行一<br>次。运行时并不执行乘法。  </p>
+<p>3.当根据某个固定数目的增量在一个数组中移动时，使用指针变量将比使用下标产生效<br>率更高的代码。当这个增量是1并且机器具有地址自动增量模型时，这点表现的更为突出  </p>
+<h3 id="第九章：字符串、字符和字节">第九章：字符串、字符和字节</h3>
+<p>1.strlen返回值类型为size_t，该类型是在头文件stddef.h中定义的，是一个无符号整<br>数类型。<br>所以下面两条语句，第一条效果符合预期，第二条语句结果则恒为真  </p>
+<pre><code><span class="keyword">if</span>( strlen(x) &gt;= strlen(y) ) <span class="keyword">...</span>
+<span class="keyword">if</span>( strlen(x) - strlen(y) &gt;= <span class="number">0</span> ) <span class="keyword">...</span>
+</code></pre><p>2.不要试图自己编写功能相同的函数来取代库函数，同时使用字符分类和转换函数可以<br>提高函数的移植性  </p>
+<p>3.寻找一种更好的算法比改良一种差劲的算法更有效率，复用已经存在的软件比重新开<br>发一个效率更高  </p>
+<p>4.使用strcpy函数把一个长字符串复制到一个较短的数组中，容易导致溢出。因为strcpy<br>无法判断目标字符数据的长度  </p>
+<p>5.strtok函数将会修改它所处理的字符串，所以strtok是不可再入的。<br>不可再入是指函数在连续几次调用中，即使它们的参数相同，其结果也可能是不同的。  </p>
+<h3 id="第十章：结构和联合">第十章：结构和联合</h3>
+<p>1.结构体的声明语法：  </p>
+<pre><code><span class="class"><span class="keyword">struct</span>  <span class="title">tag</span> </span>{ member-<span class="keyword">list</span> } variable-<span class="keyword">list</span>;
+</code></pre><p>标签(tag)字段允许为成为列表提供一个名字，这样它就可以在后续的声明中使用。  </p>
+<p>2.警惕下面这个陷阱：</p>
+<pre><code><span class="keyword">typedef</span> <span class="keyword">struct</span> {
+    <span class="keyword">int</span> a;
+    SELF_REF3 *b;
+    <span class="keyword">int</span> c;
+}SELF_REF3;
+</code></pre><p>这个声明的目的是为了这个结构创建类型名SELF_REF3。但是，它失败了。类型名直到<br>声明的末尾才定义，所以在结构声明的内部它尚未定义。<br>解决方案是定义一个结构标签(tag)来声明b,如下所示：  </p>
+<pre><code><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">SELF_REF3_TAG</span> </span>{
+    int a;
+    <span class="class"><span class="keyword">struct</span> <span class="title">SELF_REF3_TAG</span> *b;
+    int c;
+}SELF_REF3;</span>
+</code></pre><p>3.箭头操作符接受两个操作数，但左操作数必须是一个指向结构的指针  </p>
+<p>4.关于结构体的内存分配<br>a.一般情况下，编译器按照成员列表的顺序一个接一个地给每个成员分配内存。只有当<br>存储成员时需要满足正确的边界对齐要求时，成员之间才可能出现用于填充的额外内存<br>空间。sizeof返回值包含了结构中浪费的内存空间<br>b.系统禁止编译器在一个结构的其实位置跳过几个字节来满足边界对齐条件<br>c.使用offsetof宏能够获取某个成员实际的存储位置相对于结构体起始位置的偏移  </p>
+<pre><code>offsetof (<span class="class"><span class="keyword">type</span>, <span class="title">member</span>)</span>
+offsetof (<span class="keyword">struct</span> ALIGN, b)
+</code></pre><p>d.使用下面的方法能够通知编译器不满足边界对齐的条件  </p>
+<pre><code><span class="preprocessor">#<span class="keyword">pragma</span> pack(push)</span>
+<span class="preprocessor">#<span class="keyword">pragma</span> pack(1)</span>
+<span class="keyword">typedef</span> <span class="keyword">struct</span> _BMP_HEAD{
+    <span class="comment">//some declarations</span>
+}BMP_HEAD;
+<span class="preprocessor">#<span class="keyword">pragma</span> pack(pop)</span>
+</code></pre><p>5.关于位段<br>a.位段成员必须声明为int, signed int, unsigned int类中<br>b.在成员名的后面是一个冒号和一个整数，这个整数指定该位段所占用的位的数目<br>c.注重可移植性的程序应该尽量避免使用位段  </p>
+<h3 id="第十一章：动态内存分配">第十一章：动态内存分配</h3>
+<p>1.通过malloc申请的内存空间并没有以任何方式进行初始化，需要程序猿手动优化。  </p>
+<p>2.动态内存分配最常见的错误就是忘记检查所请求的内存是否成功分配  </p>
+<p>3.动态内存分配第二大错误来源是操作内存时超出了分配内存的边界  </p>
+<h3 id="第十三章：高级指针话题">第十三章：高级指针话题</h3>
+<p>1.函数指针用法  </p>
+<pre><code><span class="keyword">int</span> f(<span class="keyword">int</span> a);
+<span class="keyword">int</span> (*pf)(<span class="keyword">int</span>) = &amp;f;
+</code></pre><p>初始化表达式中的&amp;操作符是可选的，因为函数名被使用时总是由编译器把它转换为函<br>数指针。&amp;操作符只是显式地说明了编译器将隐式执行的任务。  </p>
+<pre><code><span class="title">int</span> ans;
+<span class="title">ans</span> = f(<span class="number">25</span>);
+<span class="title">ans</span> = (*pf)(<span class="number">25</span>);
+<span class="title">ans</span> = pf(<span class="number">25</span>);
+</code></pre><p>第一条语句简单地使用名字调用函数f，但它的执行过程可能和你想象的不太一样。函<br>数名f首先被转换为一个函数指针，该指针指定函数在内存中的位置。然后，函数调用<br>操作符调用该函数，执行开始于这个地址的代码。  </p>
+<p>第二条语句效果与第一条完全一样。而且本质上间接访问操作是不需要的，因为编译器<br>在执行函数调用操作符之前又会把它转换回去。  </p>
+<p>第三条语句和前两条语句的效果是一样的。正如第二条解释中提到的，间接访问操作并<br>非必需。  </p>
+<p>2.函数指针用途：两个最常见的用途是把函数指针作为参数传递给函数以及用于转换表  </p>
+<h3 id="第十五章：输入/输出函数">第十五章：输入/输出函数</h3>
+<p>1.只有当一个库函数失败是，errno才会被设置。当函数成功运行时，errno的值不会被<br>修改。这意味着我们不能通过测试errno的值来判断是否有错误发生。反之，只有当被<br>调用的函数提示有错误发生时检查errno才是有意义的。  </p>
+<p>2.这章的总结部分很值得一看。  </p>
+<p>3.在任何scanf系列函数的每个非数组，非指针参数前需要加上&amp;符号。  </p>
+<h2 id="总结">总结</h2>
+<p>C语言之所以被称之为”God’s programming Language”，我想一个很重要的原因就是指针<br>这部分的功能。啃完这本书，希望能提高自己对C语言的核心部分的理解吧。最重要的当<br>然是尽量避免书中提到的陷阱，同时谨记其对编程实践的警告提示。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/09/05/c-and-pointer/" data-id="1442tupup1hvyj2p" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/09/05/c-and-pointer/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/09/14/linux-tex/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          [latex]linux环境下的latex安装
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/09/04/python-learning-1/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">[python学习笔记之一]基本入门</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/">BFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/C-C/">C/C++</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/">DFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EasyBCD/">EasyBCD</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Git/">Git</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jekyll/">Jekyll</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/KVM/">KVM</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">23</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MST/">MST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mapreduce/">Mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Shell/">Shell</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/TCP/">TCP</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tools/">Tools</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/X11/">X11</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YQL/">YQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YUI/">YUI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/assembly/">assembly</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/chrome/">chrome</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/excel/">excel</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/latex/">latex</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapreduce/">mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/markdown/">markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/matlab/">matlab</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mount/">mount</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ntfs/">ntfs</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/papers/">papers</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ssh/">ssh</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcpdump/">tcpdump</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcptrace/">tcptrace</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tshark/">tshark</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ubuntu/">ubuntu</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/wget/">wget</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum/">yum</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 18.33px;">Shell</a><a href="/tags/TCP/" style="font-size: 13.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 10.00px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 10.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 10.00px;">matlab</a><a href="/tags/mount/" style="font-size: 10.00px;">mount</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 10.00px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 10.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 10.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 10.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 10.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 10.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 10.00px;">vim</a><a href="/tags/wget/" style="font-size: 10.00px;">wget</a><a href="/tags/yum/" style="font-size: 10.00px;">yum</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/03/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2013/09/05/c-and-pointer/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

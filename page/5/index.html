@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description">
+<meta property="og:type" content="website">
+<meta property="og:title" content="天赋，无与伦比的坚持">
+<meta property="og:url" content="http://perthcharles.github.com/page/5/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="天赋，无与伦比的坚持">
+<meta name="twitter:description">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-change-library-path" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/31/change-library-path/" class="article-date">
+  <time datetime="2013-08-31T04:23:22.000Z" itemprop="datePublished">8月 31 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/31/change-library-path/">linux 安装软件问题：XXX share library can not found</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="问题">问题</h3>
+<p>当跑某些软件的时候，可能会遇到下面的错误：<br>    “XXX share library” can not found<br>如果你可以确定这个库你已经安装好了，则可能是环境变量没有设置正确。主要环境变量就是LD_LIBRARY_PATH。  </p>
+<h3 id="解决方法">解决方法</h3>
+<pre><code><span class="variable">#whereis</span> XXX <span class="comment">//如果库的文件名是libXXX.so</span>
+<span class="variable">#export</span> LD_LIBRARY_PATH<span class="subst">=</span><span class="variable">$LD_LIBRARY_PATH</span>:/the<span class="attribute">-result</span><span class="attribute">-of</span><span class="attribute">-last</span><span class="attribute">-commond</span>/lib<span class="subst">/</span>
+</code></pre><p>如想免去开机重启后的重复设置，将上面的export语句写到.bashrc文件中即可。  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/31/change-library-path/" data-id="32ihrbpy4tgzce60" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/31/change-library-path/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-linux-using-9" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/31/linux-using-9/" class="article-date">
+  <time datetime="2013-08-31T03:23:42.000Z" itemprop="datePublished">8月 31 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/31/linux-using-9/">linux命令学习（九）:eval,tail,head,seq</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="eval">eval</h2>
+<p>查看系统自带的解释：  </p>
+<pre><code>#eval [arg ...]
+    The  <span class="keyword">args</span>  are <span class="keyword">read</span> <span class="built_in">and</span> concatenated together into <span class="keyword">a</span> single  
+    <span class="keyword">command</span>.  This <span class="keyword">command</span> <span class="keyword">is</span> then <span class="keyword">read</span> <span class="built_in">and</span> executed by the <span class="keyword">shell</span>,  
+    <span class="built_in">and</span> its  <span class="keyword">exit</span> status <span class="keyword">is</span> returned <span class="keyword">as</span> the value of <span class="built_in">eval</span>.   
+    If there are <span class="keyword">no</span> <span class="keyword">args</span>, <span class="built_in">or</span> <span class="keyword">only</span> null arguments, <span class="built_in">eval</span> returns <span class="number">0</span>.
+</code></pre><p>可以看出eval给shell提供了一种”根据变量的值，运行时确定所执行命令”的机制。<br>实践过程中遇到的一种情况就是”包含变量的变量名的赋值”操作。如下面这段代码：  </p>
+<pre><code>//用一个<span class="keyword">for</span>循环，给名称为test_1,test_2等变量赋值
+<span class="comment">#cat val_in_val.sh</span>
+<span class="shebang">#!/bin/bash</span>
+array=(<span class="number">11</span> <span class="number">22</span> <span class="number">33</span>)
+<span class="keyword">for</span> i <span class="keyword">in</span> $(seq <span class="number">3</span>)
+<span class="keyword">do</span>
+    <span class="comment">#下行等价于： test_1=${array[0]}   (i=0时)</span>
+    <span class="built_in">eval</span> test_<span class="variable">${i}</span>=<span class="variable">${array[$((i-1))]}</span>
+
+    <span class="comment">#下面命令原理类似。其中'\'的作用是在eval执行时，</span>
+    <span class="comment">#直接保留'$'符号而不作为求值符号处理</span>
+    <span class="comment">#执行eval后，脚本中执行的等价于</span>
+    <span class="comment">#echo "test_1=$test_1" (i=0时)</span>
+    <span class="built_in">eval</span> <span class="built_in">echo</span> <span class="string">"test_<span class="variable">${i}</span>=\$test_<span class="variable">${i}</span>"</span>
+<span class="keyword">done</span>
+<span class="comment">#sh val_in_val.sh</span>
+test_1=<span class="number">11</span>
+test_2=<span class="number">22</span>
+test_3=<span class="number">33</span>
+</code></pre><h3 id="head">head</h3>
+<p>用于输出文件的起始的部分数据  </p>
+<pre><code><span class="array">#head </span>-n <span class="number">2</span> file      <span class="comment">//输出file文件的前两行</span>
+<span class="array">#head </span>-n -<span class="number">2</span> file    <span class="comment">//显示除最后2行之外的其他行</span>
+<span class="array">#head </span>-c <span class="number">2</span> file        <span class="comment">//显示文件的头两个byte</span>
+<span class="array">#head </span>-c -<span class="number">2</span> file    <span class="comment">//显示除最后两个byte之外的所有内容</span>
+</code></pre><h3 id="tail">tail</h3>
+<p>基本用法与head类似，但是也有更多高级的用法，详细内容请查看man tail<br>单纯就输出而言，没有’-‘符号的作用，而是’+’符号的应用。注意与head区分开。  </p>
+<pre><code><span class="array">#tail </span>-n <span class="number">2</span> file        <span class="comment">//输出file文件的最后2行</span>
+<span class="array">#tail </span>-n +<span class="number">2</span> file    <span class="comment">//输出文件除其实2行之外的内容</span>
+<span class="array">#tail </span>-c <span class="number">2</span> file        <span class="comment">//输出file文件的最后2个byte</span>
+<span class="array">#tail </span>-c +<span class="number">2</span> file    <span class="comment">//输出file文件除起始2字节之外的内容</span>
+</code></pre><h3 id="seq">seq</h3>
+<p>打印一连串的数字，命令比较简单，直接上实例  </p>
+<pre><code><span class="comment">#seq 4</span>
+1
+2
+3
+4
+<span class="comment">#seq -s '#' 3 6        //替换默认的分隔符\n为'#'</span>
+3<span class="comment">#4#5#6</span>
+<span class="comment">#seq -f s%3g -s ' ' 3 0.5 4 //以步长0.5，按指定格式输出</span>
+s  3 s3.5 s  4
+<span class="comment">#seq -f %f -s ' ' 3 0.5 4 //浮点格式输出</span>
+3.000000 3.500000 4.00000
+<span class="comment">#seq -s '' 10 |sed 's/[0-9]/*/g'    //输出11个*</span>
+<span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span>
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/31/linux-using-9/" data-id="9yltzeu9y6saf442" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/31/linux-using-9/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Shell/">Shell</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-c-setbuf" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/28/c-setbuf/" class="article-date">
+  <time datetime="2013-08-28T13:02:42.000Z" itemprop="datePublished">8月 28 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/28/c-setbuf/">[C语言函数] 使用setbuf减少写文件操作I/O的操作</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="问题背景">问题背景</h2>
+<p>在日常的工作中，经常会需要使用fprint、fwrite之类的函数写文件。<br>当需要写或读的数据量较大时，使用操作系统默认的策略可能就不够高效。<br>通常的做法就是使用自定义的缓冲区减少I/O操作。下面分二进制文件和文本文件的读写进行说明。  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/08/28/c-setbuf/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/28/c-setbuf/" data-id="ozekdyn6ftqz8won" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/28/c-setbuf/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C-C/">C/C++</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-kvm-storage" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/26/kvm-storage/" class="article-date">
+  <time datetime="2013-08-26T15:00:23.000Z" itemprop="datePublished">8月 26 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/26/kvm-storage/">KVM虚拟机镜像(disk img)的共享--尝试</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="共享disk文件">共享disk文件</h2>
+<p>virt-install disk选项中有关于disk权限的参数：perms<br>默认值为：rw(read/write),还有ro(readonly)和sh(shared read/write)。<br>所以可以尝试从一个img启动多个虚拟机，但可能每个虚拟机都要有私有的根文件系统的img。<br>下面是<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Virtualization/sect-Virtualization-Shared_storage_and_virtualization-Using_iSCSI_for_storing_virtual_disk_images.html" target="_blank" rel="external">Using shared storage with virtual disk images</a>中的一些解释：<br>    The virt-install command can be used to install new guests from the command line. The —disk argument can take the name of a storage pool, followed by the name of any contained volumes. Continuing this example, the following command will begin the installation of a guest with two disks; the first disk is the root file system, the second disk can be shared between multiple guests for common data:</p>
+<pre><code><span class="comment"># virt-install --accelerate --name rhelx86_64 --ram 800 --vnc --disk \ vol=kvmguest/10.0.0.1 --disk vol=kvmguest/10.0.0.2,perms=sh --pxe</span>
+The <span class="keyword">second</span> disk has <span class="operator">the</span> &lt;shareable/&gt; flag <span class="built_in">set</span>. Critical <span class="keyword">for</span> <span class="operator">the</span> disk <span class="built_in">to</span> be safely shared between guests, this ensures that <span class="operator">the</span> SELinux labelling will be appropriate <span class="keyword">for</span> multiple guests <span class="built_in">to</span> access <span class="operator">the</span> disk <span class="operator">and</span> that all I/O caching is disabled <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">host</span>.</span>
+</code></pre><h2 id="我的设想：">我的设想：</h2>
+<p>首先尝试sh启动多个虚拟机，不行则尝试尝试ro+sh启动一个，然后多个虚拟机<br>最后实践发现将img的perms=sh的VMs可以依次起来，但是毕竟共享的是系统盘，终究还是会出现系统方面的错误，所以不推荐。  </p>
+<h2 id="perms=sh的用途">perms=sh的用途</h2>
+<p>最后可行的方式就是只共享一些纯数据盘，这样只要操作得当，基本不会出现问题。  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/26/kvm-storage/" data-id="z5odfuwhkjnf664n" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/26/kvm-storage/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KVM/">KVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-kvm-virt-install" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/25/kvm-virt-install/" class="article-date">
+  <time datetime="2013-08-25T15:00:23.000Z" itemprop="datePublished">8月 25 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/25/kvm-virt-install/">使用virt-install搭建KVM虚拟机</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="virt-install安装脚本">virt-install安装脚本</h2>
+<pre><code>virt-install \
+#虚拟机名字
+-<span class="ruby">-name test \
+</span>#客户端虚拟机的名称
+-<span class="ruby">-ram <span class="number">2048</span> \
+</span>#指定虚拟机的虚拟CPU数
+-<span class="ruby">-vcpus=<span class="number">1</span> \
+</span>#检查指定的虚拟CPU数不要超过物理CPU数
+-<span class="ruby">-check-cpu \
+</span>#指定虚拟机能够使用的物理CPU
+-<span class="ruby">-cpuset=<span class="number">0</span>,<span class="number">2</span>,<span class="number">4</span>,<span class="number">6</span>  <span class="keyword">or</span> --cpuset=<span class="number">1</span>-<span class="number">3</span>,<span class="number">5</span>,<span class="number">7</span>-<span class="number">9</span>
+</span>#指定存储配置，path指定img的存放路径，
+-<span class="ruby">-disk path=<span class="regexp">/path-to-img/test</span>.img,size=<span class="number">20</span> \
+</span>#使用光驱方法安装的镜像路径
+-<span class="ruby">-cdrom /path-to-original-iso/xp.iso \
+</span>-<span class="ruby">-import
+</span>#额外说明#若test.img存在，使用import+disk组合;若test.img不存在，使用disk+cdrom组合
+#额外说明#如果test.img不存在，则从xp.iso中安装并存储到test.img中；若test.img存在，则直接读取test.img内容安装系统。
+#启用KVM内核加速功能
+-<span class="ruby">-accelerate \
+</span>-<span class="ruby">-vnc \
+</span>-<span class="ruby">-keymap=en-us</span>
+</code></pre>
+        
+          <p class="article-more-link">
+            <a href="/2013/08/25/kvm-virt-install/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/25/kvm-virt-install/" data-id="1qtut8x5x859ol2s" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/25/kvm-virt-install/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KVM/">KVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/page/4/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><a class="extend next" rel="next" href="/page/6/">Next &raquo;</a>
+    </nav>
+  
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BFS/">BFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/C-C/">C/C++</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DFS/">DFS</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/EasyBCD/">EasyBCD</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Git/">Git</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Jekyll/">Jekyll</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/KVM/">KVM</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a><span class="tag-list-count">23</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MST/">MST</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Mapreduce/">Mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Shell/">Shell</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/TCP/">TCP</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tools/">Tools</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/X11/">X11</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YQL/">YQL</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/YUI/">YUI</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/assembly/">assembly</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/chrome/">chrome</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/excel/">excel</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/javascript/">javascript</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/latex/">latex</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapreduce/">mapreduce</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/markdown/">markdown</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/matlab/">matlab</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mount/">mount</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx/">nginx</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ntfs/">ntfs</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/papers/">papers</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/">python</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ssh/">ssh</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcpdump/">tcpdump</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcptrace/">tcptrace</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tshark/">tshark</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ubuntu/">ubuntu</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vim/">vim</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/wget/">wget</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum/">yum</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 18.33px;">Shell</a><a href="/tags/TCP/" style="font-size: 13.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 10.00px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 10.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 10.00px;">matlab</a><a href="/tags/mount/" style="font-size: 10.00px;">mount</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 10.00px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 10.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 10.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 10.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 10.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 10.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 10.00px;">vim</a><a href="/tags/wget/" style="font-size: 10.00px;">wget</a><a href="/tags/yum/" style="font-size: 10.00px;">yum</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/03/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/count.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-11-04T06:48:47.666Z</updated>
+  <updated>2014-11-04T08:47:02.757Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,33 +15,74 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
-    <title><![CDATA[Hello World]]></title>
-    <link href="http://perthcharles.github.com/2014/11/03/hello-world/"/>
-    <id>http://perthcharles.github.com/2014/11/03/hello-world/</id>
-    <published>2014-11-03T09:22:53.000Z</published>
-    <updated>2014-11-03T09:22:53.000Z</updated>
-    <content type="html"><![CDATA[<p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="http://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">trobuleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick_Start">Quick Start</h2>
-<h3 id="Create_a_new_post">Create a new post</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
+    <title><![CDATA[使用hexo搭建博客]]></title>
+    <link href="http://perthcharles.github.com/2014/11/04/change-to-hexo/"/>
+    <id>http://perthcharles.github.com/2014/11/04/change-to-hexo/</id>
+    <published>2014-11-04T06:55:07.000Z</published>
+    <updated>2014-11-04T08:43:45.000Z</updated>
+    <content type="html"><![CDATA[<p>本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。  </p>
+<a id="more"></a>
 
-<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run_server">Run server</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
+<h3 id="必备软件">必备软件</h3>
+<p>Node.js:直接打开<a href="http://nodejs.org/" target="_blank" rel="external">官网</a>，点击INSTALL即可下载安装包。官网能够识别你的电脑是不是MAC，这点还是蛮给力的。  </p>
+<p>Git: 这个不会装的可以去面壁了。  </p>
+<p>至于编辑markdown的软件的话，在MAC下当然是推荐Mou了，不过我还是喜欢直接在vim下编辑，vim重度患者没办法。  </p>
+<h3 id="hexo主要安装过程及常用命令">hexo主要安装过程及常用命令</h3>
+<pre><code><span class="preprocessor"># sudo -i                 // 先切换到root权限下</span>
+<span class="preprocessor"># npm install -g hexo</span>
+<span class="preprocessor"># cd my-blog-dir</span>
+<span class="preprocessor"># hexo init               // 在该目录下初始化</span>
+<span class="preprocessor"># hexo install            // 安装依赖包</span>
+<span class="preprocessor"># hexo new post "test"    // 新建一个空白post</span>
+<span class="preprocessor"># hexo generate           // 生成静态页面</span>
+<span class="preprocessor"># hexo server             // 启动本地预览服务</span>
 
-<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate_static_files">Generate static files</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
+<span class="preprocessor"># hexo g == hexo generate</span>
+<span class="preprocessor"># hexo d == hexo deploy   // 将仓库部署到在config文件中指定的repo中  </span>
+<span class="preprocessor"># hexo s == hexo server</span>
+<span class="preprocessor"># hexo n == hexo new</span>
+<span class="preprocessor"># hexo deploy -g          // deploy + generate</span>
+<span class="preprocessor"># hexo server -g          // server + generate</span>
+</code></pre><p>如果任何一步遇到问题，可自行Google。当然看看<a href="http://hexo.io/docs/index.html" target="_blank" rel="external">官网的文档</a>也是必要的。<br>参考资料中一些博主的博文也是很好的guide。  </p>
+<h3 id="常用的技巧">常用的技巧</h3>
+<p>markdown语法还是有必要学一学的，不过很简单请放心。  </p>
+<p>hexo的作者提示过，使用四个空格的方式标志的代码块是没有行号的，需要行号的请使用三个反引号的形式。  </p>
+<p>添加RSS和sitemap  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"># npm <span class="operator"><span class="keyword">install</span> hexo-generator-feed <span class="comment">--save</span></span></div><div class="line"># vim _config.yml</div><div class="line">    Plugins:</div><div class="line">    - hexo-generator-feed</div><div class="line">    - hexo-generator-sitemap</div><div class="line">    sitemap:</div><div class="line">      path: sitemap.<span class="keyword">xml</span></div><div class="line">    feed:</div><div class="line">      type: atom</div><div class="line">      path: atom.<span class="keyword">xml</span></div><div class="line">      <span class="keyword">limit</span>: <span class="number">20</span></div></pre></td></tr></table></figure>
 
-<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy_to_remote_sites">Deploy to remote sites</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
 
-<p>More info: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+
+<p>可以用下面这句话在markdown文件中分隔摘要  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--more--&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>更多plugins，可以查看<a href="https://github.com/hexojs/hexo/wiki/Plugins" target="_blank" rel="external">官方文档</a>。  </p>
+<p>由于我之前就用disqus管理博客的留言，所以直接在_config.yml文件中配置好disqus_shortname即可。  </p>
+<p>觉得默认主题的recent部分显示的数量较少的话，可以修改themes/landscape/layout/_widget/recent_posts.ejs文件  </p>
+<p>tag的话，直接使用tag cloud就比较好了，所以我去掉了tags的详细显示，方法就是直接注释掉landscape主题的配置文件中对应的tag行。  </p>
+<p>配置访问统计，直接将之前的统计代码写进_widget/count.ejs后，在config文件中配置好即可。  </p>
+<p>添加about页面  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># hexo new page "about"</span></div><div class="line"><span class="preprocessor"># vim source/about/index.md  // 编辑index.md页面</span></div><div class="line"><span class="preprocessor"># vim themse/landscape/_config.yml  </span></div><div class="line">    menu:</div><div class="line">      About: /about  <span class="comment">//添加该行</span></div></pre></td></tr></table></figure>
+
+
+
+<h3 id="未完成">未完成</h3>
+<p>使用图床加速带图片的网页，比如七牛，又拍云。  </p>
+<p>添加友情链接widget  </p>
+<p>购买自己的域名  </p>
+<p>设置404页面  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://ibruce.info/2013/11/22/hexo-your-blog/" target="_blank" rel="external">hexo你的博客</a><br><a href="http://www.jianshu.com/p/05289a4bc8b2" target="_blank" rel="external">如何搭建一个独立博客</a><br><a href="http://zipperary.com/categories/hexo/" target="_blank" rel="external">Zipperary的hexo系列教程</a><br><a href="http://hexo.io/docs/index.html" target="_blank" rel="external">Hexo官方文档</a>  </p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Welcome to <a href="http://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="http://hexo.io]]>
+    <![CDATA[<p>本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。  </p>
+]]>
+    
     </summary>
+    
+      <category term="hexo" scheme="http://perthcharles.github.com/tags/hexo/"/>
+    
+      <category term="博客搭建" scheme="http://perthcharles.github.com/categories/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/"/>
     
   </entry>
   
@@ -1354,7 +1395,7 @@ comment"""</span>
     <link href="http://perthcharles.github.com/2013/09/01/linux-using-10/"/>
     <id>http://perthcharles.github.com/2013/09/01/linux-using-10/</id>
     <published>2013-09-01T04:00:02.000Z</published>
-    <updated>2014-11-04T03:44:54.000Z</updated>
+    <updated>2014-11-04T06:57:55.000Z</updated>
     <content type="html"><![CDATA[<h3 id="awk命令">awk命令</h3>
 <p>awk对比sed：awk主要针对行内数据进行操作，sed主要是以行为单位进行操作<br>命令语法格式：  </p>
 <pre><code><span class="array">#awk </span><span class="string">'条件类型1{动作1} 条件类型2{动作2} ...'</span> filename
@@ -1373,7 +1414,7 @@ comment"""</span>
     
       <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
     
-      <category term="Shell" scheme="http://perthcharles.github.com/tags/Shell/"/>
+      <category term="Shell" scheme="http://perthcharles.github.com/categories/Shell/"/>
     
   </entry>
   

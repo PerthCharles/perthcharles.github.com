@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>使用hexo搭建博客 | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用hexo搭建博客">
+<meta property="og:url" content="http://perthcharles.github.com/2014/11/04/change-to-hexo/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用hexo搭建博客">
+<meta name="twitter:description" content="本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-change-to-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/11/04/change-to-hexo/" class="article-date">
+  <time datetime="2014-11-04T06:55:07.000Z" itemprop="datePublished">11月 4 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/博客搭建/">博客搭建</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      使用hexo搭建博客
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。  </p>
+<a id="more"></a>
+
+<h3 id="必备软件">必备软件</h3>
+<p>Node.js:直接打开<a href="http://nodejs.org/" target="_blank" rel="external">官网</a>，点击INSTALL即可下载安装包。官网能够识别你的电脑是不是MAC，这点还是蛮给力的。  </p>
+<p>Git: 这个不会装的可以去面壁了。  </p>
+<p>至于编辑markdown的软件的话，在MAC下当然是推荐Mou了，不过我还是喜欢直接在vim下编辑，vim重度患者没办法。  </p>
+<h3 id="hexo主要安装过程及常用命令">hexo主要安装过程及常用命令</h3>
+<pre><code><span class="preprocessor"># sudo -i                 // 先切换到root权限下</span>
+<span class="preprocessor"># npm install -g hexo</span>
+<span class="preprocessor"># cd my-blog-dir</span>
+<span class="preprocessor"># hexo init               // 在该目录下初始化</span>
+<span class="preprocessor"># hexo install            // 安装依赖包</span>
+<span class="preprocessor"># hexo new post "test"    // 新建一个空白post</span>
+<span class="preprocessor"># hexo generate           // 生成静态页面</span>
+<span class="preprocessor"># hexo server             // 启动本地预览服务</span>
+
+<span class="preprocessor"># hexo g == hexo generate</span>
+<span class="preprocessor"># hexo d == hexo deploy   // 将仓库部署到在config文件中指定的repo中  </span>
+<span class="preprocessor"># hexo s == hexo server</span>
+<span class="preprocessor"># hexo n == hexo new</span>
+<span class="preprocessor"># hexo deploy -g          // deploy + generate</span>
+<span class="preprocessor"># hexo server -g          // server + generate</span>
+</code></pre><p>如果任何一步遇到问题，可自行Google。当然看看<a href="http://hexo.io/docs/index.html" target="_blank" rel="external">官网的文档</a>也是必要的。<br>参考资料中一些博主的博文也是很好的guide。  </p>
+<h3 id="常用的技巧">常用的技巧</h3>
+<p>markdown语法还是有必要学一学的，不过很简单请放心。  </p>
+<p>hexo的作者提示过，使用四个空格的方式标志的代码块是没有行号的，需要行号的请使用三个反引号的形式。  </p>
+<p>添加RSS和sitemap  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"># npm <span class="operator"><span class="keyword">install</span> hexo-generator-feed <span class="comment">--save</span></span></div><div class="line"># vim _config.yml</div><div class="line">    Plugins:</div><div class="line">    - hexo-generator-feed</div><div class="line">    - hexo-generator-sitemap</div><div class="line">    sitemap:</div><div class="line">      path: sitemap.<span class="keyword">xml</span></div><div class="line">    feed:</div><div class="line">      type: atom</div><div class="line">      path: atom.<span class="keyword">xml</span></div><div class="line">      <span class="keyword">limit</span>: <span class="number">20</span></div></pre></td></tr></table></figure>
+
+
+
+<p>可以用下面这句话在markdown文件中分隔摘要  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--more--&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>更多plugins，可以查看<a href="https://github.com/hexojs/hexo/wiki/Plugins" target="_blank" rel="external">官方文档</a>。  </p>
+<p>由于我之前就用disqus管理博客的留言，所以直接在_config.yml文件中配置好disqus_shortname即可。  </p>
+<p>觉得默认主题的recent部分显示的数量较少的话，可以修改themes/landscape/layout/_widget/recent_posts.ejs文件  </p>
+<p>tag的话，直接使用tag cloud就比较好了，所以我去掉了tags的详细显示，方法就是直接注释掉landscape主题的配置文件中对应的tag行。  </p>
+<p>配置访问统计，直接将之前的统计代码写进_widget/count.ejs后，在config文件中配置好即可。  </p>
+<p>添加about页面  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># hexo new page "about"</span></div><div class="line"><span class="preprocessor"># vim source/about/index.md  // 编辑index.md页面</span></div><div class="line"><span class="preprocessor"># vim themse/landscape/_config.yml  </span></div><div class="line">    menu:</div><div class="line">      About: /about  <span class="comment">//添加该行</span></div></pre></td></tr></table></figure>
+
+
+
+<h3 id="未完成">未完成</h3>
+<p>使用图床加速带图片的网页，比如七牛，又拍云。  </p>
+<p>添加友情链接widget  </p>
+<p>购买自己的域名  </p>
+<p>设置404页面  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://ibruce.info/2013/11/22/hexo-your-blog/" target="_blank" rel="external">hexo你的博客</a><br><a href="http://www.jianshu.com/p/05289a4bc8b2" target="_blank" rel="external">如何搭建一个独立博客</a><br><a href="http://zipperary.com/categories/hexo/" target="_blank" rel="external">Zipperary的hexo系列教程</a><br><a href="http://hexo.io/docs/index.html" target="_blank" rel="external">Hexo官方文档</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2014/11/04/change-to-hexo/" data-id="awfdyn2sl8euxilm" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2014/11/04/change-to-hexo/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/10/23/tcp-design-and-implementation-3/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">TCP ADI in Linux(3): Implementation of Sockets</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/16/tcpdump-tcptrace-tshark/">Analysis tools for network traces</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/05/setup-nginx-sever/">Setup Nginx server in linux</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/26/make-progress-everyday/">知识积累</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/20/the-art-of-readable-code/">The Art of Readable Code</a>
+          </li>
+        
+          <li>
+            <a href="/2013/12/22/insert-latex-to-markdown/">Markdown中插入Latex代码</a>
+          </li>
+        
+          <li>
+            <a href="/2013/12/14/beauty-of-mathematics/">数学之美[吴军 著]</a>
+          </li>
+        
+          <li>
+            <a href="/2013/10/05/yui-learning/">YUI 学习笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2013/09/28/yahoo-yql/">YQL学习笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2013/09/14/python-learning-3/">[python学习笔记之三]lists 和 dictionaries</a>
+          </li>
+        
+          <li>
+            <a href="/2013/09/14/python-learning-2/">[python学习笔记之二]常用模块和方法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.33px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 16.67px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 16.67px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 15.00px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 16.67px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 11.67px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a><a href="/tags/yum/" style="font-size: 11.67px;">yum</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2014/11/04/change-to-hexo/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

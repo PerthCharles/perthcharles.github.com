@@ -68,6 +68,106 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-git-multi-user-error" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/05/31/git-multi-user-error/" class="article-date">
+  <time datetime="2013-05-31T05:00:00.000Z" itemprop="datePublished">5月 31 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/05/31/git-multi-user-error/">git multi user error</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="如果在同一台机器上尝试使用多个git帐号，可能遇到下面这个问题：">如果在同一台机器上尝试使用多个git帐号，可能遇到下面这个问题：</h2>
+<pre><code><span class="comment">#git push origin master</span>
+ERROR: Permission <span class="built_in">to</span> repo1.git denied <span class="built_in">to</span> user2.       <span class="comment"> //repo1.git 属于user1.所以出错点已经很明显。</span>
+fatal: The remote <span class="function"><span class="keyword">end</span> <span class="title">hung</span> <span class="title">up</span> <span class="title">unexpectedly</span></span>
+<span class="comment">#ssh git@github.com -v    //检测github识别的用户</span>
+Hi user2! You<span class="string">'ve successfully authenticated, but GitHub does not provide shell access.    //看到了吧，github识别的是第二个帐号</span>
+</code></pre><p>上面这种问题出现的情况可能是你的ssh key配置出现问题，尝试各种选择，最终适合我的解决方法是：<br><em>删除user2中的ssh key</em>，因为我的问题是同一个key加到了两个不同的帐号里面，这样可能github不支持，而只认识最早加上这个key的用户。  </p>
+<h2 id="参考资料">参考资料</h2>
+<p><a href="http://git-scm.com/book/en/Getting-Started-First-Time-Git-Setup" target="_blank" rel="external">Getting Started - First-Time Git Setup</a><br><a href="http://stackoverflow.com/questions/5335197/gits-famous-error-permission-to-git-denied-to-user" target="_blank" rel="external">Git’s famous “ERROR: Permission to .git denied to user”</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/05/31/git-multi-user-error/" data-id="5hde9z2bvxg4f9jy" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/05/31/git-multi-user-error/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Git/">Git</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-biggest-continuous-subsum" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/05/31/biggest-continuous-subsum/" class="article-date">
+  <time datetime="2013-05-30T16:00:00.000Z" itemprop="datePublished">5月 31 2013</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/面试题/">面试题</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/05/31/biggest-continuous-subsum/">[编程之美]求数组的连续子数组最大和</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="求连续子数组的最大和">求连续子数组的最大和</h3>
+<p>一个整型数组，数组里有正数也有负数。<br>数组中连续的一个或多个整数组成一个子数组，每个子数组都有一个和，求所有子数组的和的最大值，要求时间复杂度为O(n)。<br>例如输入的数组为1, -2, 3, 10, -4, 7, 2, -5，那么最大的子数组为3, 10, -4, 7, 2，因此输出为该子数组的和18，<br><em>说明</em>:<br>当全是负数的情况时，返回最大的那个负数  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/05/31/biggest-continuous-subsum/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/05/31/biggest-continuous-subsum/" data-id="bbzzgesmze52ddeo" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/05/31/biggest-continuous-subsum/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C-C/">C/C++</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-inverse-number" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2013/05/22/inverse-number/" class="article-date">
@@ -240,124 +340,9 @@
 
 
   
-    <article id="post-linux-using-7" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/05/09/linux-using-7/" class="article-date">
-  <time datetime="2013-05-09T15:00:00.000Z" itemprop="datePublished">5月 9 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Shell/">Shell</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/05/09/linux-using-7/">linux命令学习(七)：grep高级用法与正则表达式初步+sed</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="grep_高级用法">grep 高级用法</h2>
-<pre><code>#grep -An -Bm -n -v  [--color=auto] '搜索字符串' filename
--<span class="ruby"><span class="constant">An</span>    输出找到行之后的n行
-</span>-<span class="ruby"><span class="constant">Bm</span>    输出找到行之前的m行
-</span><span class="comment">//复习之前的用法</span>
--<span class="ruby">n    附带输出相应行号
-</span>-<span class="ruby">v     反向选择
-</span>-<span class="ruby">i     忽视大小写</span>
-</code></pre>
-        
-          <p class="article-more-link">
-            <a href="/2013/05/09/linux-using-7/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/05/09/linux-using-7/" data-id="otd0uhe02s4c9wms" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/05/09/linux-using-7/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-linux-using-6" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/05/08/linux-using-6/" class="article-date">
-  <time datetime="2013-05-08T06:32:00.000Z" itemprop="datePublished">5月 8 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Shell/">Shell</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/05/08/linux-using-6/">linux命令学习(六)：cut grep &amp;&amp; || sort wc uniq</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="命令执行时的判断依据">命令执行时的判断依据</h2>
-<p>在一行中执行多条命令可能用到的用法<br>    //不管cmd1是否执行成功，都会执行cmd2. 就是依次执行cmd1和cmd2</p>
-<pre><code><span class="preprocessor">#cmd1;cmd2</span>
-
-<span class="comment">//若cmd1执行完成并正确执行，则开始执行cmd2；若执行出错则跳过cmd2</span>
-<span class="preprocessor">#cmd1 &amp;&amp; cmd2</span>
-
-<span class="comment">//若cmd1执行完成并正确执行，则跳过cmd2；若执行出错则执行cmd2</span>
-<span class="preprocessor">#cmd1 || cmd2</span>
-</code></pre>
-        
-          <p class="article-more-link">
-            <a href="/2013/05/08/linux-using-6/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/05/08/linux-using-6/" data-id="omqsvqaqnqphv587" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/05/08/linux-using-6/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/7/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><a class="extend next" rel="next" href="/page/9/">Next &raquo;</a>
+      <a class="extend prev" rel="prev" href="/page/7/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/9/">Next &raquo;</a>
     </nav>
   
 </section>
@@ -368,7 +353,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -378,6 +363,14 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
+          </li>
         
           <li>
             <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
@@ -431,14 +424,6 @@
             <a href="/2013/09/28/yahoo-yql/">YQL学习笔记</a>
           </li>
         
-          <li>
-            <a href="/2013/09/14/python-learning-3/">[python学习笔记之三]lists 和 dictionaries</a>
-          </li>
-        
-          <li>
-            <a href="/2013/09/14/python-learning-2/">[python学习笔记之二]常用模块和方法</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -449,7 +434,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.33px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 16.67px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 16.67px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 15.00px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 16.67px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 11.67px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a><a href="/tags/yum/" style="font-size: 11.67px;">yum</a>
+      <a href="/tags/BFS/" style="font-size: 12.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.00px;">C/C++</a><a href="/tags/DFS/" style="font-size: 12.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 12.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 16.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 12.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 16.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 12.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 12.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 16.00px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.00px;">Tools</a><a href="/tags/X11/" style="font-size: 14.00px;">X11</a><a href="/tags/YQL/" style="font-size: 12.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 12.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 14.00px;">assembly</a><a href="/tags/chrome/" style="font-size: 12.00px;">chrome</a><a href="/tags/excel/" style="font-size: 14.00px;">excel</a><a href="/tags/google/" style="font-size: 12.00px;">google</a><a href="/tags/hexo/" style="font-size: 12.00px;">hexo</a><a href="/tags/javascript/" style="font-size: 12.00px;">javascript</a><a href="/tags/latex/" style="font-size: 14.00px;">latex</a><a href="/tags/mapreduce/" style="font-size: 12.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 12.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 12.00px;">matlab</a><a href="/tags/mount/" style="font-size: 12.00px;">mount</a><a href="/tags/nginx/" style="font-size: 12.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 12.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 12.00px;">papers</a><a href="/tags/python/" style="font-size: 16.00px;">python</a><a href="/tags/ssh/" style="font-size: 12.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 12.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 12.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 12.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 12.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 12.00px;">vim</a><a href="/tags/wget/" style="font-size: 12.00px;">wget</a><a href="/tags/yum/" style="font-size: 12.00px;">yum</a><a href="/tags/自学材料/" style="font-size: 12.00px;">自学材料</a>
     </div>
   </div>
 
@@ -458,7 +443,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

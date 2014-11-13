@@ -2,8 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</loc>
+    <lastmod>2014-11-13T14:32:11.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/13/guide-for-technical-development/</loc>
+    <lastmod>2014-11-13T10:16:41.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://perthcharles.github.com/2014/11/04/change-to-hexo/</loc>
-    <lastmod>2014-11-04T09:07:01.000Z</lastmod>
+    <lastmod>2014-11-04T10:22:07.000Z</lastmod>
   </url>
   
   <url>

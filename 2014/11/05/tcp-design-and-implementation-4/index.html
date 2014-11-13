@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+
+  
+  <title>TCP ADI in Linux(4): TCP Connection Setup | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP ADI in Linux(4): TCP Connection Setup">
+<meta property="og:url" content="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP ADI in Linux(4): TCP Connection Setup">
+<meta name="twitter:description" content="这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-tcp-design-and-implementation-4" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/11/05/tcp-design-and-implementation-4/" class="article-date">
+  <time datetime="2014-11-05T01:52:27.000Z" itemprop="datePublished">11月 5 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      TCP ADI in Linux(4): TCP Connection Setup
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。  </p>
+<a id="more"></a>  
+
+<h3 id="服务器端调用关键系统调用的顺序及简单说明">服务器端调用关键系统调用的顺序及简单说明</h3>
+<p>英文水平有限，没法准确的翻译出这些句子。所以直接摘录原文了，:-)  </p>
+<p>socket(): Identify correct set of socket * protocol operation and link them together with the help of sock &amp; socket structure. Hook this socket to vfs and associate this socket to the inode.  </p>
+<p>bind(): Register this socket and request kernel to associate port number and(/or) IP address with the socket. At this stage kernel will lock the port number.  </p>
+<p>listen(): request to the kernel to configure the connection baklog queue for the socket.  </p>
+<p>accept(): this is the final step to get the server application up. Server application requests the kernel to now start accepting the connection for itself. Kernel creates a new socket on behalf of the server application, associates this socket with the VFS and returns new socket fd to the server applications.  </p>
+<h3 id="Bind过程及其相关数据结构">Bind过程及其相关数据结构</h3>
+<hr>
+<p>bind完成的主要工作就是将socket与sockaddr结构体进行绑定。这点从bind的函数原型就能看出来。  </p>
+<pre><code><span class="keyword">int</span> bind(<span class="keyword">int</span> sockfd, <span class="keyword">struct</span> sockaddr *my_addr, <span class="keyword">int</span> addrlen);
+</code></pre><p>而struct sockaddr其实只是一个通用的数据结构，写实际代码的时候往往声明更加具体的结构体，比如AF_INET family的话就使用sockaddr_in结构体。然后调用bind的时候完成类型转换即可。<br>相关结构体声明如下：  </p>
+<pre><code><span class="comment">// 声明在include/linux/socket.h中</span>
+<span class="keyword">struct</span> sockaddr {
+    sa_family_t                sa_family;        <span class="comment">// 存储address family，AF_xxx</span>
+    <span class="keyword">char</span>                    sa_data[<span class="number">14</span>];    <span class="comment">// 通用内存区域</span>
+};
+
+<span class="comment">// 声明在include/uapi/linux/in.h中</span>
+<span class="keyword">struct</span> sockaddr_in {
+    __kernel_sa_family_t     sin_family;        <span class="comment">// address family， unsigined short</span>
+
+    __be16                    sin_port;        <span class="comment">// port number, __u16, 应是2Bytes</span>
+    <span class="keyword">struct</span>    in_addr            sin_addr;        <span class="comment">// internet address</span>
+
+    <span class="comment">// pad to size of `struct sockaddr`</span>
+    <span class="keyword">unsigned</span> <span class="keyword">char</span>             _padXXX;        <span class="comment">// 补齐未用完的内存，已具体声明省略</span>
+};
+
+<span class="comment">// 声明在include/uapi/linux/in.h中</span>
+<span class="keyword">struct</span> in_addr {
+    __be32                    s_addr;            <span class="comment">// __u32,应是4Bytes</span>
+};
+</code></pre><p>可以看出sockaddr_in其实只用了其中6个字节作为有效区域。需要说明的是，作为服务器端sin_addr一般设置为INADDR_ANY（0x00000000）, 意思就是说可以接受来自不同网卡（服务器一般有多个网卡，也就对应对个IP地址）的链接请求。  </p>
+<p>bind系统调用的过程  </p>
+<pre><code>sys_bind()
+    =&gt; sockfd_lookup_light() <span class="comment">// 根据fd 获取套接口指针，并返回是否需要减少文件引用计数</span>
+    =&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;bind</span>()  == inet_bind()
+        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;bind</span>() == raw_bind()  <span class="comment">// 如果是RAW sock</span>
+        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>() == inet_csk_get_port()  <span class="comment">// 如果是 TCP</span>
+        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>() == udp_v4_get_port()  <span class="comment">// 如果是 UDP    </span>
+</code></pre><p>sys_bind的实现在net/socket.c中，具体的声明如下：  </p>
+<pre><code>SYSCALL_DEFINE3(bind, <span class="keyword">int</span>, fd, <span class="keyword">struct</span> sockaddr __user *, umyaddr, <span class="keyword">int</span>, addrlen)  
+</code></pre><p>主要完成的动作就是首先根据fd找到sock结构体，然后将sockaddr从用户空间move到内核空间。之后就根据sock结构体中的ops-&gt;bind函数执行具体的调用。如果fput_needed被标记，则将sock的引用计数减一。  </p>
+<p>sock_fd_lookup_light的具体过程如下：  </p>
+<pre><code>sock_fd_lookup_light()
+<span class="output"><span class="status">    =&gt;</span> file = fget_light(fd, fput_needed);    <span class="regexp">//</span> 获取文件指针</span>
+<span class="output"><span class="status">    =&gt;</span> sock = sock_from_file(file, err);      <span class="regexp">//</span> 获取sock指针</span>
+        <span class="keyword">return</span> file-&gt;private_data;  <span class="regexp">//</span> private_data即是file结构体中的指向sock结构体的指针
+</code></pre><p>inet_bind的实现在net/ipv4/af_inet.c中，具体过程如下：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">如果是RAW sock的话，直接调用bind</div><div class="line">检查addr_len和sin_family</div><div class="line">chk_addr_ret = inet_addr_type();  <span class="comment">// 得到地址的类型，用于后续检查</span></div><div class="line">对port进行判断，用户仅能使用Port &gt;= <span class="number">1024</span>的端口。</div><div class="line">根据sk-&gt;sk_state及inet-&gt;inet_num判断socket状态，检查重复绑定的错误</div><div class="line"></div><div class="line"><span class="comment">/* rcv_saddr用于hash lookups, inet_saddr用于transmit。正常情况下它们值相同 */</span></div><div class="line">inet-&gt;inet_rcv_saddr = inet-&gt;inet_saddr = addr-&gt;sin_addr.s_addr;  </div><div class="line"></div><div class="line">调用sk-&gt;sk_prot-&gt;get_port(sk, snum);  <span class="comment">// snum就是sin_port</span></div></pre></td></tr></table></figure>
+
+
+
+<h4 id="端口管理">端口管理</h4>
+<p>在介绍具体的get_port函数之前，需要先来了解一下内核对于端口是怎么管理的。<br>Linux内核是通过一张hash表管理socket使用时的端口的，hash表存放在tcp_hashinfo中，通过sk-&gt;sk_prot-&gt;h.hashinfo引用。  </p>
+<pre><code><span class="keyword">struct</span> inet_hashinfo {
+    <span class="keyword">struct</span> inet_ehash_bucket    *ehash;        
+    spinlock_t                    *ehash_locks;
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>                ehash_mask;
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>                ehash_locks_mask;
+
+    <span class="keyword">struct</span> inet_bind_hashbucket        *bhash;    
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>                    bhash_size;
+    <span class="keyword">struct</span> kmem_cache                *bind_bucket_cachep;
+
+    <span class="comment">/* 上面的变量在bootup时确定，之后是只读的
+     * 下面的变量往往是dirty的，所以用了cacheline对齐
+     */</span>
+
+    <span class="keyword">struct</span> inet_listen_hashbucket    listening_hash[INET_LHTABLE_SIZE]
+                                    ____cacheline_aligned_in_smp;
+    atomic_t                        bsockets;
+};
+
+<span class="keyword">struct</span> inet_bind_hashbucket {
+    spinlock_t            lock;
+    <span class="keyword">struct</span> hlist_head    chain;
+};
+
+<span class="keyword">struct</span> hlist_head {
+    <span class="keyword">struct</span> hlist_node     *first;
+};
+
+<span class="keyword">struct</span> hlist_node {
+    strcut hlist_node    *next, **pprev;
+};
+</code></pre><h4 id="TCP端口绑定实现：inet_csk_get_port()">TCP端口绑定实现：inet_csk_get_port()</h4>
+<p>新版的内核中TCP的get_port函数改名为了inet_csk_get_port，这点是与书中不一样的地方。当然完成的功能是一样的，参数是sock结构体和Port，如果Port=0，则需要找到一个空闲的Port给sock。函数的实现位于net/ipv4/inet_connection_sock.c中，具体执行过程可参考<a href="http://hellojavaer.iteye.com/blog/1114726" target="_blank" rel="external">这里</a>. 主要就是找到一个可用的Port过程，然后就是判断找到的Port是否可重用，不能重用的Port在使用是还要检查绑定冲突，即调用bind_conflict().<br>bind_confict()对于TCP来说，就是inet_csk_bind_conflict，具体的实现位于net/ipv4/tcp_ipv4.c中。  </p>
+<pre><code>小技巧：对于TCP而言，sk-&gt;sk_prot结构体的初始化位于net/ipv4/tcp_ipv4.c文件中，<span class="keyword">struct</span> proto tcp_prot.  
+</code></pre><h3 id="Listen过程及其相关结构体">Listen过程及其相关结构体</h3>
+<hr>
+<p>sys_listen()是listen在内核的表示，而具体的实现是在net/socket.c中，声明为：  </p>
+<pre><code>SYSCALL_DEFINE2(<span class="keyword">listen</span>, <span class="keyword">int</span>, fd, <span class="keyword">int</span>, backlog)  
+</code></pre><p>sys_listen在获得sock结构体之后，会进一步检查backlog是否超过系统允许的上限，最后就是调用sock-&gt;ops-&gt;list。先手来看一下sys_listen关键的调用过程：  </p>
+<pre><code>sys_listen()
+=&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;listen</span>()  == inet_listen()
+    =&gt; fastopen_init_queue(sk, backlog)    <span class="comment">// 条件允许的话，简历fastopen队列</span>
+    =&gt; inet_csk_listen_start(sk, backlog)
+        =&gt; sk<span class="variable">-&gt;sk_state</span> = TCP_LISTEN
+        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>(sk, inet<span class="variable">-&gt;inet_num</span>)  <span class="comment">// re-check port是否可用，原因见下面一段原文引用。</span>
+        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;hash</span>(sk) == inet_hash(sk)     <span class="comment">// 如果一切正常，则为该socket简历hash表项</span>
+            =&gt; __inet_hash()  <span class="comment">// 为socket生成表项，并加入listen hash table</span>
+</code></pre><p>inet_listen()首先判断sock的状态，如果不是合法的状态的话就直接返回错误。随后如果不是listen状态，则需要做更多的事情将sock置于listen状态，否则直接设置sk-&gt;sk_max_ack_backlog即可。如果需要将sock置于listen状态，首先会判断一些条件看是否满足TCP_FASTOPEN（TFO）的要求，若满足则执行fastopen_init_queue()，然后执行inet_csk_listen_start(). sk-&gt;sk_prot-&gt;hash(sk)对于TCP来讲的话，具体的实现就是inet_hash(), 位于net/ipv4/inet_hashtables.c文件中。    </p>
+<p>至于为什么sys_listen还需要调用get_port确认一次，我还不是太懂。根据代码的注释和书本的讲解，大概可以理解为多线程可能存在竞争（race）。关键就是reuse标示可能被重置，详细解释摘录一段书中的解释如下：  </p>
+<blockquote>
+<p> We need to check if we are still eligible to use the same port to which we earlier bound this socket. There is a window between the bind() and listen() calls form an application when two threads can race to bind two sockets to the same port. After both the threads are bound to the same port (both the sockets are in the bind hash list, tcp_bhash), one of the sockets makes the socket port not reusable (resets sk-&gt;reuse for itself) and gets into the TCP_LISTEN state. The other thread now enters the listen() systemcall and gets into this part of the code. So, once again it needs to make sure whether it can use the same port that it requested eariler.  </p>
+</blockquote>
+<h4 id="分析调用bind和listen对socket状态的影响">分析调用bind和listen对socket状态的影响</h4>
+<pre><code><span class="number">1</span>. 一个调用了<span class="keyword">bind</span>，而没有调用<span class="keyword">listen</span>的<span class="keyword">socket</span>，是仅仅绑定了端口（或IP）的，并不能接收连接请求。  
+    此时<span class="keyword">socket</span>的状态还不是listening，如果客户端发出连接请求，服务器端会回复<span class="keyword">reset</span>包  
+<span class="number">2</span>. 为<span class="keyword">socket</span>调用了<span class="keyword">listen</span>，而没有调用<span class="keyword">accept</span>时，<span class="keyword">socket</span>的状态是listening，  
+    此时如果客户端发出连接请求，能能够看到三次握手成功的【注意！】；
+    同时客户端也能发送数据并收到ACK，但是在发完rwnd数量的数据后会收到rwnd等于<span class="number">0</span>的确认包。  
+    此后客户端就会停止发送数据。最终由于服务器端不会consume接收的数据，会导致客户端的<span class="number">0</span>窗口探测包超时后结束连接。  
+</code></pre><p>tcp_ehash结构中存储这所有状态为TCP_ESTABLISHED和TIME_WAIT状态下的TCP流。当一个新的数据包到来时，我们需要找到这个包对应的socket，具体就是使用四元组（remote IP, PORT 和 local IP, PORT）作为key在tcp_ehash查找。  </p>
+<h4 id="区分SYN_queue和Accept_queue">区分SYN queue和Accept queue</h4>
+<p>SYN queue: 当一个调用过listen函数的socket收到连接请求（第一个SYN包）后，会首先发送SYN/ACK包然后添加对应的connection request到SYN queue中去等待最后一个ACK包。  </p>
+<p>Accept queue: 一旦收到了三次握手的最后一个ACK包，一个新的socket将会为对应的connection request建立，然后将connection request从SYN queue中移除。最后connection request 将放入listening socket对应的accept queue中。  </p>
+<h4 id="Flow_control_for_handling_a_new_connection_request">Flow control for handling a new connection request</h4>
+<p>当TCP层收到一个IP包时，被调用的函数是tcp_v4_rcv()，该函数的实现是在net/ipv4/tcp_ipv4.c中。  </p>
+<pre><code>tcp_v4_rcv(struct sk_buff *skb)  
+    =&gt; sk = __inet_lookup_skb(&amp;tcp_hashinfo, skb, th<span class="variable">-&gt;source</span>, th<span class="variable">-&gt;dest</span>) <span class="comment">//根据四元组查找该IP包对应的sock结构体  </span>
+        =&gt; __inet_lookup()
+            =&gt; __inet_lookup_established()  <span class="comment">// 在tcp_ehash table中查找  </span>
+            =&gt; __inet_lookup_listener()     <span class="comment">// 上一步没找到再到hashinfo-&gt;listening-hash[]中查找  </span>
+
+    =&gt; ret = tcp_v4_do_rcv(sk, skb)  
+        =&gt; <span class="keyword">if</span> (sk<span class="variable">-&gt;sk_state</span> == TCP__ESTABLISHED)
+            =&gt; tcp_rcv_established()  <span class="comment">// 后续再分析该函数  </span>
+        =&gt; <span class="keyword">if</span> (sk<span class="variable">-&gt;sk_state</span> == TCP_LISTEN)
+            =&gt; struct sock *nsk = tcp_v4_hnd_req(sk, skb)    <span class="comment">// 找到skb对应的sock，找不到则丢弃  </span>
+            =&gt; <span class="keyword">if</span> (nsk != sk)  <span class="comment">// 如果nsk与sk不同，即说明已经为该connection request新建了sock</span>
+                =&gt; tcp_child_process(sk, nsk, skb)  <span class="comment">// 对新建立的sock结构体做更多地处理</span>
+        =&gt; tcp_rcv_state_process(sk, skb, tcp_hdr(skb), skb<span class="variable">-&gt;len</span>)    <span class="comment">// 根据不同的状态处理响应的包，此处关心listen和syn_sent状态      </span>
+            =&gt; <span class="keyword">case</span> TCP_LISTEN:  
+                =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;conn_request</span>() == tcp_v4_conn_request()
+                    =&gt; inet_csk_reqsk_queue_is_full(sk)    <span class="comment">// 判断request queue是否用满  </span>
+                    =&gt; sk_acceptq_is_full(sk)              <span class="comment">// 判断accept queue是否用满</span>
+                    =&gt; req = inet_reqsk_alloc()            <span class="comment">// 为connection request分配一个request sock</span>
+                    =&gt; tcp_parse_options()                 <span class="comment">// 解析TCP options  </span>
+                    =&gt; tcp_openreq_init()
+                    =&gt; ip_build_and_send_pkt()             <span class="comment">// add an ip header to a skbuff and send it out  </span>
+                    =&gt; inet_csk_reqsk_queue_hash_add()     <span class="comment">// add the request sock to the SYN table</span>
+            =&gt; <span class="keyword">case</span> TCP_SYN_SENT:  
+                =&gt; queue = tcp_rcv_syssent_state_process(sk, skb, th, len)    <span class="comment">// 代码里面注释较详细  </span>
+                    =&gt; tcp_finish_connect()     <span class="comment">// 完成连接，进行最后的设置  </span>
+                        =&gt; tcp_set_state(sk, TCP_ESTABLISHED)   <span class="comment">// 设置sk_state</span>
+                        =&gt; tcp_init_congestion_control(sk)      <span class="comment">// 设置congestion control algorithm，我实现的快速重传算法的初始化也是在这附近  </span>
+                        =&gt; tcp_init_buffer_space(sk)  
+</code></pre><p>4.5 to be continued…  </p>
+<h4 id="TODO">TODO</h4>
+<p>fastpath 和 slowpath的区别？  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/" data-id="pnr2q8dgbjxks4iu" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP/">TCP</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/11/13/guide-for-technical-development/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Guide for Technical Development by Google
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/11/04/change-to-hexo/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">使用hexo搭建博客</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/16/tcpdump-tcptrace-tshark/">Analysis tools for network traces</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/05/setup-nginx-sever/">Setup Nginx server in linux</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/26/make-progress-everyday/">知识积累</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/20/the-art-of-readable-code/">The Art of Readable Code</a>
+          </li>
+        
+          <li>
+            <a href="/2013/12/22/insert-latex-to-markdown/">Markdown中插入Latex代码</a>
+          </li>
+        
+          <li>
+            <a href="/2013/12/14/beauty-of-mathematics/">数学之美[吴军 著]</a>
+          </li>
+        
+          <li>
+            <a href="/2013/10/05/yui-learning/">YUI 学习笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2013/09/28/yahoo-yql/">YQL学习笔记</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 12.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.00px;">C/C++</a><a href="/tags/DFS/" style="font-size: 12.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 12.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 16.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 12.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 16.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 12.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 12.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 16.00px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.00px;">Tools</a><a href="/tags/X11/" style="font-size: 14.00px;">X11</a><a href="/tags/YQL/" style="font-size: 12.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 12.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 14.00px;">assembly</a><a href="/tags/chrome/" style="font-size: 12.00px;">chrome</a><a href="/tags/excel/" style="font-size: 14.00px;">excel</a><a href="/tags/google/" style="font-size: 12.00px;">google</a><a href="/tags/hexo/" style="font-size: 12.00px;">hexo</a><a href="/tags/javascript/" style="font-size: 12.00px;">javascript</a><a href="/tags/latex/" style="font-size: 14.00px;">latex</a><a href="/tags/mapreduce/" style="font-size: 12.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 12.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 12.00px;">matlab</a><a href="/tags/mount/" style="font-size: 12.00px;">mount</a><a href="/tags/nginx/" style="font-size: 12.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 12.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 12.00px;">papers</a><a href="/tags/python/" style="font-size: 16.00px;">python</a><a href="/tags/ssh/" style="font-size: 12.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 12.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 12.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 12.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 12.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 12.00px;">vim</a><a href="/tags/wget/" style="font-size: 12.00px;">wget</a><a href="/tags/yum/" style="font-size: 12.00px;">yum</a><a href="/tags/自学材料/" style="font-size: 12.00px;">自学材料</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

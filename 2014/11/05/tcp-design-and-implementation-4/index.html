@@ -128,7 +128,7 @@
     __be32                    s_addr;            <span class="comment">// __u32,应是4Bytes</span>
 };
 </code></pre><p>可以看出sockaddr_in其实只用了其中6个字节作为有效区域。需要说明的是，作为服务器端sin_addr一般设置为INADDR_ANY（0x00000000）, 意思就是说可以接受来自不同网卡（服务器一般有多个网卡，也就对应对个IP地址）的链接请求。  </p>
-<p>bind系统调用的过程  </p>
+<h4 id="bind系统调用的过程">bind系统调用的过程</h4>
 <pre><code>sys_bind()
     =&gt; sockfd_lookup_light() <span class="comment">// 根据fd 获取套接口指针，并返回是否需要减少文件引用计数</span>
     =&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;bind</span>()  == inet_bind()
@@ -191,11 +191,11 @@
 </code></pre><p>sys_listen在获得sock结构体之后，会进一步检查backlog是否超过系统允许的上限，最后就是调用sock-&gt;ops-&gt;list。先手来看一下sys_listen关键的调用过程：  </p>
 <pre><code>sys_listen()
 =&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;listen</span>()  == inet_listen()
-    =&gt; fastopen_init_queue(sk, backlog)    <span class="comment">// 条件允许的话，简历fastopen队列</span>
+    =&gt; fastopen_init_queue(sk, backlog)    <span class="comment">// 条件允许的话，建立fastopen队列</span>
     =&gt; inet_csk_listen_start(sk, backlog)
         =&gt; sk<span class="variable">-&gt;sk_state</span> = TCP_LISTEN
         =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>(sk, inet<span class="variable">-&gt;inet_num</span>)  <span class="comment">// re-check port是否可用，原因见下面一段原文引用。</span>
-        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;hash</span>(sk) == inet_hash(sk)     <span class="comment">// 如果一切正常，则为该socket简历hash表项</span>
+        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;hash</span>(sk) == inet_hash(sk)     <span class="comment">// 如果一切正常，则为该socket建立hash表项</span>
             =&gt; __inet_hash()  <span class="comment">// 为socket生成表项，并加入listen hash table</span>
 </code></pre><p>inet_listen()首先判断sock的状态，如果不是合法的状态的话就直接返回错误。随后如果不是listen状态，则需要做更多的事情将sock置于listen状态，否则直接设置sk-&gt;sk_max_ack_backlog即可。如果需要将sock置于listen状态，首先会判断一些条件看是否满足TCP_FASTOPEN（TFO）的要求，若满足则执行fastopen_init_queue()，然后执行inet_csk_listen_start(). sk-&gt;sk_prot-&gt;hash(sk)对于TCP来讲的话，具体的实现就是inet_hash(), 位于net/ipv4/inet_hashtables.c文件中。    </p>
 <p>至于为什么sys_listen还需要调用get_port确认一次，我还不是太懂。根据代码的注释和书本的讲解，大概可以理解为多线程可能存在竞争（race）。关键就是reuse标示可能被重置，详细解释摘录一段书中的解释如下：  </p>
@@ -244,14 +244,114 @@
                         =&gt; tcp_set_state(sk, TCP_ESTABLISHED)   <span class="comment">// 设置sk_state</span>
                         =&gt; tcp_init_congestion_control(sk)      <span class="comment">// 设置congestion control algorithm，我实现的快速重传算法的初始化也是在这附近  </span>
                         =&gt; tcp_init_buffer_space(sk)  
-</code></pre><p>4.5 to be continued…  </p>
-<h4 id="TODO">TODO</h4>
-<p>fastpath 和 slowpath的区别？  </p>
+</code></pre><h3 id="Accept过程及相关结构体">Accept过程及相关结构体</h3>
+<hr>
+<p>accept系统调用对应内核中的sys_accept()函数，具体的实现则在net/socket.c文件中。主要调用流程如下：  </p>
+<pre><code>SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr,  
+                int __user *, upeer_addrlen, int, flags)  == sys_accept4   
+    =&gt; sock = sockfd_lookup_light(fd, &amp;err, &amp;fput_needed)  <span class="comment">// 根据监听的socket fd找到其sock结构体  </span>
+    =&gt; newsock = sock_alloc()   <span class="comment">// 分配一个新的BSD socket </span>
+    =&gt; newfd = get_unused_fd_flags(flags)
+    =&gt; newfile = sock_alloc_file(newsock, flags, sock<span class="variable">-&gt;sk</span><span class="variable">-&gt;sl_prot_creator</span><span class="variable">-&gt;name</span>)
+    =&gt; err = sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;accept</span>(sock, newsock, sock<span class="variable">-&gt;file</span><span class="variable">-&gt;f_flags</span>)  == inet_accept()
+        =&gt; *sk2 = sk1<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;accept</span>()  == inet_csk_accept()
+            =&gt; <span class="keyword">if</span> accept queue is <span class="keyword">empty</span>, wait <span class="keyword">for</span> connect <span class="keyword">if</span> is blocking
+            =&gt; otherwise, get the very first request
+
+            =&gt; newsk = req<span class="variable">-&gt;sk</span>    <span class="comment">// 获取request结构体中的sock结构体指针并返回</span>
+        =&gt; sock_graft(sk2, newsock)  <span class="comment">// 将获取的sock结构体与之前新建的BSD socket关联  </span>
+        =&gt; newsock<span class="variable">-&gt;state</span> = SS_CONNECTED;
+    =&gt; fd_install(newfd, newfile);   <span class="comment">// index newfile for the socket inode in the process file table  </span>
+        =&gt; fd_install主要完成的动作就是：current<span class="variable">-&gt;files</span><span class="variable">-&gt;fd</span>[fd] = file;
+</code></pre><p>inet_accept()在net/ipv4/af_inet.c文件中，完成连接建立的最后一步：accept a pending connection. 当然这里的pending connection 其实已经完成了三次握手的过程。<br>注意这里sock_graft函数，函数实现在include/net/sock.h文件中。第一个参数是struct sock <em>sk, 这是通过获取accept queue中第一项找到的，是在三次握手阶段创建的；第二个参数是struct socket </em>parent，这是一个网络编程时看到的一个概念，与kernel中的sock有着本质的区别。<br>同时也要注意到kernel中命名的一个小规律：<br>    struct socket 结构体的实例化名字，常缩写成sock<br>    struct sock结构体的实例化名字，常缩写成sk  </p>
+<h4 id="BSD_socket与sock结构体的关系">BSD socket与sock结构体的关系</h4>
+<p>同时sock_graft函数也很直接的现实了BSD socket结构体与sock结构体的关系，源代码不长就直接贴出来了。需要注意的是，这里为了完整的展现sock_graft的功能，手动的展开了inline函数。  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">static <span class="keyword">inline</span> <span class="literal">void</span> sock_graft(struct sock <span class="subst">*</span>sk, struct socket <span class="subst">*</span><span class="keyword">parent</span>)</div><div class="line">{</div><div class="line">    write_lock_bh(<span class="subst">&</span>sk<span class="subst">-&gt;</span>sk_callback_lock);</div><div class="line">    sk<span class="subst">-&gt;</span>sk_wq <span class="subst">=</span> <span class="keyword">parent</span><span class="subst">-&gt;</span>wq;</div><div class="line">    <span class="keyword">parent</span><span class="subst">-&gt;</span>sk <span class="subst">=</span> sk;</div><div class="line"></div><div class="line">    sk<span class="subst">-&gt;</span>sk_tx_queue_mapping <span class="subst">=</span> <span class="subst">-</span><span class="number">1</span>;</div><div class="line">    sk<span class="subst">-&gt;</span>sk_socket <span class="subst">=</span> <span class="keyword">parent</span>;</div><div class="line"></div><div class="line">    write_unlock_bh(<span class="subst">&</span>sk<span class="subst">-&gt;</span>sk_callback_lock);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<p>至于file, inode 和 socket结构体的关系用文字表达比较费劲，推荐看下书中的Figure 4.21, Figure 4.22再结合代码理解。  </p>
+<h3 id="Connect过程及相关结构体">Connect过程及相关结构体</h3>
+<hr>
+<p>客户端建立一个TCP connection需要做的事情相对简单。先调用socket()新建一个BSD socket，然后调用connect函数与远端相连即可。引用一段书中的一段更详细准确的解释如下：  </p>
+<pre><code>Socket():
+    <span class="number">1.</span> Identify correct <span class="built_in">set</span> <span class="operator">of</span> <span class="built_in">socket</span> &amp; protocol operations <span class="operator">and</span>  
+    link them together <span class="operator">with</span> <span class="operator">the</span> help <span class="operator">of</span> sock &amp; <span class="built_in">socket</span> structure.  
+    <span class="number">2.</span> Initialize some <span class="operator">of</span> <span class="operator">the</span> fields <span class="operator">of</span> protocol specific data structures.  
+    <span class="number">3.</span> Hook this <span class="built_in">socket</span> <span class="built_in">to</span> <span class="operator">the</span> vfs <span class="operator">and</span> associate this <span class="built_in">socket</span> <span class="built_in">to</span> <span class="operator">the</span> inode.
+</code></pre><p>   Connect():</p>
+<pre><code>    <span class="number">1.</span> Let <span class="operator">the</span> kernel know what services (server port <span class="built_in">number</span>) you want <span class="built_in">to</span> avail <span class="operator">and</span>  
+    <span class="built_in">from</span> where (IP address).  
+    <span class="number">2.</span> Initializes protocol specific data structures, allocates resources <span class="keyword">for</span> client  
+    application, <span class="operator">and</span> sets up complete procotol stack <span class="keyword">for</span> <span class="operator">the</span> client side.  
+    <span class="number">3.</span> By default, connect blocks <span class="operator">and</span> returns <span class="built_in">to</span> <span class="operator">the</span> application once <span class="operator">the</span> connection  
+    is established <span class="operator">with</span> <span class="operator">the</span> server <span class="keyword">else</span> returns <span class="operator">an</span> error <span class="built_in">number</span>.  
+</code></pre><p>connect系统调用对应内核中的sys_connect()函数，具体的实现则在net/socket.c文件中。<br>connect主要调用流程如下：  </p>
+<pre><code>SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr,  
+                int, addrlen)  == sys_connect<span class="function"><span class="params">()</span>  
+    =&gt;</span> sock = sockfd_lookup_light<span class="function"><span class="params">()</span>  
+    =&gt;</span> err = move_addr_to_kernel<span class="function"><span class="params">()</span>  
+    =&gt;</span> err = sock-&gt;ops-&gt;connect<span class="function"><span class="params">()</span>  == <span class="title">inet_stream_connect</span><span class="params">()</span>  
+        =&gt;</span> Any state other <span class="keyword">then</span> SS_CONNECTED <span class="keyword">is</span> unacceptable <span class="keyword">for</span> processing<span class="function">  
+        =&gt;</span> err = sk-&gt;sk_prot-&gt;connect<span class="function"><span class="params">(sk, uaddr, addr_len)</span>  == <span class="title">tcp_v4_connect</span><span class="params">()</span>  
+            =&gt;</span> rt = ip_route_connect()  <span class="regexp">//</span> get the route <span class="keyword">for</span> the dst addr. All routing entries <span class="keyword">for</span> the system are hashed <span class="keyword">in</span> the <span class="built_in">global</span> table rt_hash_table[].<span class="function">    
+            =&gt;</span> tcp_set_state<span class="function"><span class="params">(sk, TCP_SYN_SEND)</span>
+            =&gt;</span> err = inet_hash_connect(&amp;tcp_death_row, sk);  <span class="regexp">//</span> 获得一个free的Port,流程与tcp_v4_get_port较类似<span class="function">  
+                =&gt;</span> inet_get_local_port_range<span class="function"><span class="params">(&amp;low, &amp;high)</span>
+                =&gt;</span> 遍历所有端口，对某个备选端口，遍历inet_bind_bucket确认是否有冲突。<span class="function">  
+                =&gt;</span> 如果没有冲突，则tb = inet_bind_bucket_create()创建bind_bucket中的hash表项<span class="function">
+
+            =&gt;</span> Until now we got the route to destination, <span class="keyword">and</span> obtained the local port number,  
+               <span class="keyword">and</span> we have initialized remote address, remote port, local address, <span class="keyword">and</span> local address fields <span class="keyword">of</span> the socket.<span class="function">  
+
+            =&gt;</span> err = tcp_connect(sk)  <span class="regexp">//</span> generate a SYN packet <span class="keyword">and</span> give it to the IP layer<span class="function">  
+                =&gt;</span> tcp_connect_init(sk)  <span class="regexp">//</span> <span class="keyword">do</span> all connect socket setups that can be done AF independent<span class="function">  
+                    =&gt;</span> tcp_select_initial_window() <span class="regexp">//</span> determine  a <span class="built_in">window</span> scaling <span class="keyword">and</span> initial <span class="built_in">window</span> to offer<span class="function">  
+                =&gt;</span> buff = alloc_skb_fclone()  <span class="regexp">//</span> allocate a sk_buff structure, 细节在下一章再写<span class="function">  
+                =&gt;</span> tcp_transmit_skb(sk, buff, <span class="number">1</span>, sk-&gt;sk_allocation)  <span class="regexp">//</span> 复制一份Buff，然后发送出去<span class="function">
+                    =&gt;</span> skb = skb_clone(skb, gfp_mask)  <span class="regexp">//</span> 复制一份buff<span class="function">  
+                    =&gt;</span> 初始化skb及TCP header<span class="function">  
+                    =&gt;</span> tcp_options_write()  <span class="regexp">//</span> write previously computed tcp options to the packet<span class="function">  
+                    =&gt;</span> icsk-&gt;icsk_af_ops-&gt;send_check(sk, skb)  == tcp_v4_send_check()  <span class="regexp">//</span> compute checksum<span class="function">
+                    =&gt;</span> err = icsk-&gt;icsk_af_ops-&gt;queue_xmit()  == ip_queue_xmit()  <span class="regexp">//</span> transmit packet to IP layer<span class="function">  
+        =&gt;</span> 至此已发送SYN包，然后等待SYN/ACK包从而完成三次握手<span class="function">  
+        =&gt;</span> timeo = sock_sndtimeo<span class="function"><span class="params">(sk, flag * O_NONBLOCK)</span>
+        =&gt;</span> inet_wait_for_connect(sk, timeo, writebias)  <span class="regexp">//</span> 完成三次握手的最后的工作  
+</code></pre><h3 id="SUMMARY">SUMMARY</h3>
+<p>摘录书中的原文如下  </p>
+<pre><code>Protocol-specific operation one the socket <span class="keyword">is</span> accessed from prot field <span class="keyword">of</span> the sock object.  
+<span class="keyword">For</span> the INET stream protocol, this field <span class="keyword">is</span> initialized <span class="keyword">to</span> tcp_prot.  
+
+The tcp_hashinfo object has pointers <span class="keyword">to</span> different hash tables <span class="keyword">for</span> bind, established, <span class="keyword">and</span> listening sockets.  
+    <span class="number">1.</span> tcp_bhash <span class="keyword">is</span> an object <span class="keyword">of</span> <span class="keyword">type</span> tcp_bind_hashbucket pointing <span class="keyword">to</span> bind hash table.  
+       This table <span class="keyword">is</span> hased based ont the <span class="keyword">port</span> number sockets are bound <span class="keyword">to</span> them.  
+    <span class="number">2.</span> ehash <span class="keyword">is</span> object <span class="keyword">of</span> <span class="keyword">type</span> tcp_ehash_bucket points <span class="keyword">to</span> established hash table. 
+       Hashed <span class="keyword">on</span> the destination <span class="keyword">and</span> source <span class="keyword">port</span>/IP.
+    <span class="number">3.</span> tcp_listenging_hash <span class="keyword">is</span> a hash table <span class="keyword">of</span> sock objects hashing <span class="keyword">all</span> the listenging sockets.  
+       Hashed <span class="keyword">on</span> the listening <span class="keyword">port</span> number.  
+
+tcp_bind_conflict() checks <span class="keyword">for</span> any conflicts related <span class="keyword">to</span> allocation <span class="keyword">of</span> <span class="keyword">port</span>.  
+tcp_port_rover stores the last allocated <span class="keyword">port</span> number.  
+tcp_listen_opt <span class="keyword">is</span> an object that keeps information about <span class="keyword">all</span> connection requests <span class="keyword">for</span> a listening socket.  
+    sys_table field <span class="keyword">of</span> tcp_lisen_opt object <span class="keyword">of</span> <span class="keyword">type</span> open_request.  
+    This hashes <span class="keyword">in</span> <span class="keyword">all</span> the connection requests <span class="keyword">for</span> the lisening socket.  
+
+Once a three-way handshake <span class="keyword">is</span> over, the connection request <span class="keyword">is</span> moved from listeners SYN queue <span class="keyword">to</span> accept queue, tp-&gt;accept_queue  
+[Important] sock <span class="keyword">and</span> tcp_opt objects are initialized <span class="keyword">for</span> the <span class="keyword">new</span> connection int the accept queue.  
+[Important] Once an application accepts a connection request int the accept queue,  
+            a BSD socket <span class="keyword">is</span> created <span class="keyword">for</span> the <span class="keyword">new</span> connection <span class="keyword">and</span> <span class="keyword">is</span> associated <span class="keyword">with</span> VFS.  
+
+__tcp_v4_lookup_established() searches <span class="keyword">for</span> established connections <span class="keyword">in</span> the ehash table.  
+tcp_v4_lookup_listener() searches <span class="keyword">for</span> listening sockets <span class="keyword">in</span> the tcp_listening_hash hash table.  
+</code></pre><h4 id="TODO">TODO</h4>
+<ol>
+<li>fastpath 和 slowpath的区别  </li>
+</ol>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/" data-id="pnr2q8dgbjxks4iu" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/" data-id="8qb03uguzwp11mkm" class="article-share-link">Share</a>
       
         <a href="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/#disqus_thread" class="article-comment-link">Comments</a>
       

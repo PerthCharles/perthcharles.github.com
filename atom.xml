@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-11-18T03:54:12.402Z</updated>
+  <updated>2014-11-18T13:45:32.657Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,85 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[TCP ADI in Linux(5): sk_buff and protocol headers]]></title>
+    <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/"/>
+    <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</id>
+    <published>2014-11-18T06:22:06.000Z</published>
+    <updated>2014-11-18T13:29:58.000Z</updated>
+    <content type="html"><![CDATA[<p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
+<a id="more"></a>  
+
+<h3 id="struct_sk_buff">struct sk_buff</h3>
+<p>sk_buff结构体的定义位于：include/linux/skbuff.h文件中。其中的主要元素及解释如下所示：  </p>
+<pre><code><span class="keyword">struct</span> sk_buff {
+    <span class="comment">/* These two members must be first */</span>
+    <span class="keyword">struct</span> sk_buff      *next;  
+    <span class="keyword">struct</span> sk_buff      *prev;
+
+    <span class="keyword">struct</span> sk_buff      tstamp;                 <span class="comment">// sk_buff发送时间/接收时间</span>
+
+    <span class="keyword">struct</span> sock         *sk;                    <span class="comment">// 标示这个sk_buff属于哪个sock  </span>
+    <span class="keyword">struct</span> net_device   *dev;                   <span class="comment">// 表示从哪个设备接收/发出  </span>
+
+    <span class="keyword">char</span>                cb[<span class="number">48</span>] __aligned(<span class="number">8</span>);    <span class="comment">// control buffer, TCP map this buffer to struct tcp_skb_cb  </span>
+    ...  
+
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>        len;                    <span class="comment">// sk_buff的总长度  = linear-data + paged-data  </span>
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>        data_len;               <span class="comment">// paged-data length</span>
+    __u16               mac_len;            
+    __u16               hdr_len;                <span class="comment">// writable header length of cloned skb</span>
+    ...  
+
+    __u32               priority;               <span class="comment">// packet queueing priority</span>
+    ...  
+    __u8                peeked:<span class="number">1</span>;               <span class="comment">// packet has been seen already, so stats have been done for it, don't do them again</span>
+    ...  
+    <span class="comment">/* 有意思的是alloc_skb时，skb-&gt;tail = skb-&gt;data - skb-&gt;head。tail其实是一个偏移量，而不是一个真正意义上的指针
+     * 同时skb-&gt;end = skb-&gt;tail + size 也是一样偏移量。
+     */</span>
+    sk_buff_data_t      tail;                   <span class="comment">// last byte of the data residing in linear area (与data指针对应)</span>
+    sk_buff_data_t      end;                    <span class="comment">// end of linear-data area (与head指针对应)</span>
+    <span class="keyword">unsigned</span> <span class="keyword">char</span>       *head;                  <span class="comment">// points to the start of the linear data area (first byte allocated)</span>
+    <span class="keyword">unsigned</span> <span class="keyword">char</span>       *data;                  <span class="comment">// start of data residing in the linear area   (first byte used)</span>
+
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>        truesize;               <span class="comment">// total memory allocated for this buffer = sizeof(sk_buff) + the size of the data block allocated for this sk_buff  </span>
+};
+
+<span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *sk_buff_data_t;
+</code></pre><h4 id="struct_skb_shared_info">struct skb_shared_info</h4>
+<p>This data is invariant(不变的) across clones and lives at the end of the header data, ie. at skb-&gt;end.<br>这个数据结构主要半酣sk_buff中的nonlinear data。所谓的nonlinear data其实就是linear-data area放不下的数据就放到nonlinear area了。<br>书中把nonlinear data area也叫做 paged-data area. The paged-data area is possible only if DMA allows scatter-gather operations on the physically scattered pages.  </p>
+<hr>
+<h3 id="Routines_operating_on_sk_buff">Routines operating on sk_buff</h3>
+<ol>
+<li><p>stuct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask, int flags, int mode)<br>该函数分配一个新的sk_buff实例，需要给定的参数是linear-data area的大小和内存分配的模式。  </p>
+</li>
+<li><p>static inline void skb_reserve(struct sk_buff *skb, int len)<br>该函数将skb的data和tail指针往后移动，移动长度为len。常见的用途是为协议头部保留空间。  </p>
+</li>
+<li><p>unsigned char <em>skb_put(struct sk_buff </em>skb, unsigned int len)<br>该函数负责将sk_buff的linear-data area的tail指针增加len。可以看到3.10的kernel里面使用了skb_tail_pointer的方式获取真正意义上的指向数据使用部分的最后一个字节的指针。进一步验证了之前分析sk_buff结构体定义时认为tail是一个offset的判断。这点与书中描述的是不一致的。可见Linux kernel中关于TCP这块的更新还是很频繁的。连sk_buff这种重要的数据结构也一直在改动。  </p>
+</li>
+<li><p>unsigned char <em>skb_push(struct sk_buff </em>skb, unsigend int len)<br>该函数负责将sk_buff的linear-data area的data指针往前移动，距离为len。不难看出，skb_put是用来构建包的数据的，而skb_push则是当一个上层包传递到下一层后，下层在添加头部数据时调用skb_push。  </p>
+</li>
+<li><p>unsigned char <em>skb_pull(struct sk_buff </em>skb, unsigned int len)<br>该函数与skb_push相对应，它将data指针往后移动，距离为len。也就意味着skb-&gt;len要减少len。当有数据包到达后，一层层解析包头的过程中往往会用到该函数。  </p>
+</li>
+</ol>
+<p>书中的5.5节描述了发送数据包时header是如何添加的，5.6节描述了收到的数据包头是如何被解析的。不过基本上熟悉了上面几个函数后，基本的惭怍方法应该都能理解了。还有不清楚的可以看下书。<br>这章主要就是讲sk_buff及其相关的一些操作函数，还算比较好理解。  </p>
+<pre><code>tcp_skb_cb结构体是TCP层对于sk_buff-&gt;<span class="keyword">cb</span>的实例化。里面主要有seq，timestamp和sacked flag  
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Guide for Technical Development by Google]]></title>
@@ -1626,51 +1705,6 @@ offsetof (<span class="keyword">struct</span> ALIGN, b)
     </summary>
     
       <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[[python学习笔记之一]基本入门]]></title>
-    <link href="http://perthcharles.github.com/2013/09/04/python-learning-1/"/>
-    <id>http://perthcharles.github.com/2013/09/04/python-learning-1/</id>
-    <published>2013-09-04T04:00:12.000Z</published>
-    <updated>2014-11-04T03:52:39.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="Why_Python?">Why Python?</h3>
-<p>在linux环境下工作的时候，使用shell脚本能够完成许多有趣的工作。<br>在逐渐体会到脚本语言的强大后，日常工作中越来越离不开脚本语言了。<br>每一种编程都有各自的局限性，所以shell bash也会有许多无法顺利完成的工作。<br>在简单调查发现后，python作为一种解释型的语言，已经被广泛使用。<br>同时还能完成更多独特的功能，比如matplitlib库支持许多matlab中类似的画图函数<br>甚至还有matlab无法简单实现的功能，比如<a href="http://perthcharles.github.io/coding/2013/09/03/python-plot-bar/" target="_blank" rel="external">这篇博客中画可变宽度的条形图</a>  </p>
-<a id="more"></a>
-
-<p>说了这么多废话，该进入正题了。首先推荐我学习python的网站：<a href="http://www.codecademy.com/" target="_blank" rel="external">Codecademy</a><br>这个网站从之前学html的时候就有接触，主要需要都是偏前端开发方面的。<br>还有一个很给力的功能值得推荐：<a href="http://labs.codecademy.com/#:workspace" target="_blank" rel="external">Codecademy Labs</a><br>这个功能给你提供了一个网络上的实践端口，实在是太给力了。  </p>
-<p>其他在线手册：<br><a href="http://www.tutorialspoint.com/python/index.htm" target="_blank" rel="external">Python Tutorial</a>  </p>
-<h3 id="基本入门">基本入门</h3>
-<p>1.输出<br>    //打印字符串<br>    print “Welcome to Python”<br>    //打印浮点数，<br>    total = 54.634<br>    print(“%.2f” %total)     //结果为：54.63</p>
-<p>2.变量声明<br>有整形，浮点型,布尔型和string型，声明与使用方式跟shell类似<br>string类型单独说明<br>    my_int = 7<br>    my_float = 1.2<br>    my_bool = True    //python 是大小写敏感的语言<br>    my_int = 3  //对变量重新赋值</p>
-<p>3.string类型<br>能够像数组一样访问string类型的每个字符，同时自带许多有用的method<br>    //声明时，单双引号都可以，但必须配套使用<br>    //字符串中对于单双引号需要使用转义字符’\’<br>    my_string1 = ‘string1’<br>    my_string2 = “STRing2”<br>    //像数组一样使用string<br>    fifth_letter = “MONTY”[4]      //计数从0开始，结果是fifth_letter = Y<br>    //获取字符串长度<br>    print len(my_string1)       //结果为7<br>    //大小写转换字符串<br>    print my_string2.lower()    //结果为string2<br>    print my_string2.upper()    //结果为STRING2<br>    //类型转换<br>    pi = 3.14<br>    str(pi)        将浮点型转为字符型<br>    print “The value of pi is around:” + 3.14        //会报错<br>    print “The value of pi is around:” + str(3.14)    //正确执行<br>    //字符串拼接<br>    print “a” + “b”     //结果为ab<br>    //关于打印string类型变量<br>    //语法： print “%s” % (string_variable)<br>    string_1 = “a”<br>    string_2 = “b”<br>    pirntf “%s is diff with %s.” % (string_1, string_2)    //打印：a is diff with b.<br>    //检验字符串是否全是字母表中的字符<br>    string_1.isalpha()    //返回值是True 或 False<br>    //获取子串<br>    my_string1[0:2]    //获取[0,2)范围内的字符，结果为’st’<br>    my_string1[2:]    //获取[2,字符串末尾+1)范围内的字符，结果为’ring1’</p>
-<p>4.空格很重要<br>缩进代码的时候，需要经常使用4个空格<br>python中基本上用空格代替了大括号的作用  </p>
-<p>5.注释<br>注释方法与shell类似，使用符号’#’进行注释<br>    //注释单行</p>
-<pre><code><span class="comment">#this is a comment</span>
-//注释多行
-<span class="string">"""this
-is a multi-line
-comment"""</span>
-</code></pre><p>6.算数符号<br>    count_no = 1 + 2<br>    conut_no = 5 - 2<br>    count_no = 2 <em> 10<br>    count_no = 20 / 4       //整数除法，运算结果与C策略类似<br>    count_no = 5 % 3        //整数取模<br>    count_no = 2 <strong> 3         //幂乘，结果为8<br>    count_no = 100 </strong> 0.5     //相当于开方，结果为10.0<br>    count = count_no </em> 2     //变量引用</p>
-<p>7.显示当前时间<br>    from datetime import datetime<br>    now = datetime.now()<br>    print now    //结果类似：   2013-09-14 13:58:00.377380<br>    pirnt now.month    //9<br>    print now.day     //4<br>    print now.year     //2013<br>    print now.hour<br>    print now.minute<br>    print now.second    </p>
-<p>8.控制语句<br>比较运算: == != &lt; &gt; &lt;= &gt;=<br>含义与C中类似  </p>
-<p>逻辑运算：and or not<br>含义与C中&amp;&amp; || ! 类似  </p>
-<p>if与elif,else<br>    def greater_less_equal_5(answer):    //注意整个函数定义的缩进和冒号<br>        if (answer &gt; 5):    //注意冒号<br>            return 1<br>        elif (answer &lt; 5):<br>            return -1<br>        else:<br>            return 0</p>
-<pre><code><span class="literal">print</span> greater_less_equal_5(<span class="number">4</span>)
-</code></pre><p>9.用户交互<br>请求用户的输入：raw_input()<br>    name = raw_input(“What’s your name?”)</p>
-<p>10.关于import<br>import语句用于加载一个模块<br>一个模块根本上就是一个定义了许多变量与函数的文件，与C中的头文件类似<br>更详细的内容请查看<a href="http://perthcharles.github.io/python/2013/09/14/python-learing-2/" target="_blank" rel="external">python 常用module</a>  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://docs.python.org/2.7/" target="_blank" rel="external">Python v2.7.5 documentation</a><br><a href="Should I use Python 2 or Python 3 for my development activity?">Should I use Python 2 or Python 3 for my development activity?</a><br><a href="http://docs.python.org/3/whatsnew/3.0.html" target="_blank" rel="external">What’s New In Python 3.0</a><br><a href="http://docs.python.org/3/" target="_blank" rel="external">Python v3.3.2 documentation</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h3 id="Why_Python?">Why Python?</h3>
-<p>在linux环境下工作的时候，使用shell脚本能够完成许多有趣的工作。<br>在逐渐体会到脚本语言的强大后，日常工作中越来越离不开脚本语言了。<br>每一种编程都有各自的局限性，所以shell bash也会有许多无法顺利完成的工作。<br>在简单调查发现后，python作为一种解释型的语言，已经被广泛使用。<br>同时还能完成更多独特的功能，比如matplitlib库支持许多matlab中类似的画图函数<br>甚至还有matlab无法简单实现的功能，比如<a href="http://perthcharles.github.io/coding/2013/09/03/python-plot-bar/" target="_blank" rel="external">这篇博客中画可变宽度的条形图</a>  </p>
-]]>
-    
-    </summary>
-    
-      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
     
   </entry>
   

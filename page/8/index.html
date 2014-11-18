@@ -68,6 +68,65 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-wget-quick-learning" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/06/08/wget-quick-learning/" class="article-date">
+  <time datetime="2013-06-08T15:00:00.000Z" itemprop="datePublished">6月 8 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/06/08/wget-quick-learning/">wget quick learning</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="基本用法">基本用法</h2>
+<p>下载一个指定网页的文件，默认存储为index.html  </p>
+<pre><code><span class="array">#wget http</span>:<span class="comment">//www.example.com/</span>
+</code></pre><p>下载ftp站点文件  </p>
+<pre><code><span class="array">#wget ftp</span>:<span class="comment">//ftp.gnu.org/pub/gnu/wget/wget-latest.tar.gz    //下载wget latest source code</span>
+</code></pre><p>下载某个<em>网站</em>目录下的所有gif文件  </p>
+<pre><code><span class="array">#wget </span>-e robots=off -r -l1 --no-parent -A.png http:<span class="comment">//static.fsf.org/dbd/</span>
+<span class="comment">//-e        执行‘.wgetrc’格式的命令，wgetrc格式参见/etc/wgetrc或~/.wgetrc</span>
+<span class="comment">//robots=off    不使用默认遵循robto exclusion standard的设置</span>
+<span class="comment">//-r -l1    r表示递归下载，l表示限制递归下载层数，尽量配套使用</span>
+<span class="comment">//--no-parent    递归时不要追溯到父目录</span>
+<span class="comment">//-A .png    匹配后缀名为png的文件</span>
+</code></pre><p>下载整个网站(慎用)  </p>
+<pre><code><span class="array">#wget </span>-r -l <span class="number">0</span> http:<span class="comment">//www.example.com</span>
+</code></pre><p>更多高级用法请查看参考资料。  </p>
+<p>注：通配符只适用于ftp站点，如可以使用如下命令批量下载某ftp网站的gif文件  </p>
+<pre><code><span class="array">#wget ftp</span>:<span class="comment">//example/*.gif</span>
+</code></pre><h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.ha97.com/153.html" target="_blank" rel="external">wget参数用法详解</a><br><a href="http://en.wikipedia.org/wiki/Wget" target="_blank" rel="external">wiki: wget</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/06/08/wget-quick-learning/" data-id="a1lcjx7a3n6esvug" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/06/08/wget-quick-learning/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/wget/">wget</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-git-multi-user-error" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2013/05/31/git-multi-user-error/" class="article-date">
@@ -287,59 +346,6 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
 
 
   
-    <article id="post-chinese-remainder-theorem" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/05/14/chinese-remainder-theorem/" class="article-date">
-  <time datetime="2013-05-14T05:32:00.000Z" itemprop="datePublished">5月 14 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/面试题/">面试题</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/05/14/chinese-remainder-theorem/">中国剩余定理</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="问题">问题</h2>
-<p>一个整数除以三余二，除以五余三，除以七余二，求最小的满足条件的整数  </p>
-<h2 id="要点">要点</h2>
-<p>各个除数之间要互质  </p>
-
-        
-          <p class="article-more-link">
-            <a href="/2013/05/14/chinese-remainder-theorem/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/05/14/chinese-remainder-theorem/" data-id="0zfx6pxwkub0hpip" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/05/14/chinese-remainder-theorem/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C-C/">C/C++</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/page/7/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/9/">Next &raquo;</a>
@@ -353,7 +359,7 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -363,6 +369,10 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-5/">TCP ADI in Linux(5): sk_buff and protocol headers</a>
+          </li>
         
           <li>
             <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
@@ -420,10 +430,6 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
             <a href="/2013/10/05/yui-learning/">YUI 学习笔记</a>
           </li>
         
-          <li>
-            <a href="/2013/09/28/yahoo-yql/">YQL学习笔记</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -434,7 +440,7 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BFS/" style="font-size: 12.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.00px;">C/C++</a><a href="/tags/DFS/" style="font-size: 12.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 12.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 16.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 12.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 16.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 12.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 12.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 16.00px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.00px;">Tools</a><a href="/tags/X11/" style="font-size: 14.00px;">X11</a><a href="/tags/YQL/" style="font-size: 12.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 12.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 14.00px;">assembly</a><a href="/tags/chrome/" style="font-size: 12.00px;">chrome</a><a href="/tags/excel/" style="font-size: 14.00px;">excel</a><a href="/tags/google/" style="font-size: 12.00px;">google</a><a href="/tags/hexo/" style="font-size: 12.00px;">hexo</a><a href="/tags/javascript/" style="font-size: 12.00px;">javascript</a><a href="/tags/latex/" style="font-size: 14.00px;">latex</a><a href="/tags/mapreduce/" style="font-size: 12.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 12.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 12.00px;">matlab</a><a href="/tags/mount/" style="font-size: 12.00px;">mount</a><a href="/tags/nginx/" style="font-size: 12.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 12.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 12.00px;">papers</a><a href="/tags/python/" style="font-size: 16.00px;">python</a><a href="/tags/ssh/" style="font-size: 12.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 12.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 12.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 12.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 12.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 12.00px;">vim</a><a href="/tags/wget/" style="font-size: 12.00px;">wget</a><a href="/tags/yum/" style="font-size: 12.00px;">yum</a><a href="/tags/自学材料/" style="font-size: 12.00px;">自学材料</a>
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.33px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 16.67px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 11.67px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a><a href="/tags/yum/" style="font-size: 11.67px;">yum</a><a href="/tags/自学材料/" style="font-size: 11.67px;">自学材料</a>
     </div>
   </div>
 
@@ -443,7 +449,7 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

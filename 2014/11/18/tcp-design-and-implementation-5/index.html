@@ -5,17 +5,17 @@
   <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
 
   
-  <title>Tag: chrome | 天赋，无与伦比的坚持</title>
+  <title>TCP ADI in Linux(5): sk_buff and protocol headers | 天赋，无与伦比的坚持</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description">
-<meta property="og:type" content="website">
-<meta property="og:title" content="天赋，无与伦比的坚持">
-<meta property="og:url" content="http://perthcharles.github.com/tags/chrome/">
+  <meta name="description" content="这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP ADI in Linux(5): sk_buff and protocol headers">
+<meta property="og:url" content="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/">
 <meta property="og:site_name" content="天赋，无与伦比的坚持">
-<meta property="og:description">
+<meta property="og:description" content="这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="天赋，无与伦比的坚持">
-<meta name="twitter:description">
+<meta name="twitter:title" content="TCP ADI in Linux(5): sk_buff and protocol headers">
+<meta name="twitter:description" content="这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。">
 
   
     <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
@@ -66,14 +66,16 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-chrome-bugs" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-tcp-design-and-implementation-5" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/04/25/chrome-bugs/" class="article-date">
-  <time datetime="2013-04-25T05:13:00.000Z" itemprop="datePublished">4月 25 2013</time>
+    <a href="/2014/11/18/tcp-design-and-implementation-5/" class="article-date">
+  <time datetime="2014-11-18T06:22:06.000Z" itemprop="datePublished">11月 18 2014</time>
 </a>
     
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
   </div>
   <div class="article-inner">
     
@@ -81,8 +83,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/04/25/chrome-bugs/">chrome bugs</a>
+    <h1 class="article-title" itemprop="name">
+      TCP ADI in Linux(5): sk_buff and protocol headers
     </h1>
   
 
@@ -90,35 +92,98 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="chrome_bug">chrome bug</h3>
-<p>不知到怎么回事，我本子(centos6.4)chrome每次打开后自动进入全屏模式，而且无法退出。尝试了一下方法：  </p>
-<pre><code><span class="preprocessor">#yum update google-chrome-stable.x86_64  //首先当然是想更新,结果无效</span>
-<span class="comment">//然后yum remove后再yum install，依然无效</span>
-<span class="comment">//最后找到可能原因是chrome配置出现了问题，所以先备份了先前的配置文件，然后重新让chrome生成一遍全新的配置文件</span>
-<span class="preprocessor">#cd /.config</span>
-<span class="preprocessor">#cp -r google-chrome google-chrome-bak </span>
-<span class="preprocessor">#rm -rf google-chrome</span>
-<span class="comment">//之后重新启动chrome，就像是chrome刚装上一样。</span>
-</code></pre><p>目前就是这样解决的无法退出全屏的问题，如果有更好的解决办法，请在博客下方留言，谢谢:)  </p>
+        <p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
+<a id="more"></a>  
 
+<h3 id="struct_sk_buff">struct sk_buff</h3>
+<p>sk_buff结构体的定义位于：include/linux/skbuff.h文件中。其中的主要元素及解释如下所示：  </p>
+<pre><code><span class="keyword">struct</span> sk_buff {
+    <span class="comment">/* These two members must be first */</span>
+    <span class="keyword">struct</span> sk_buff      *next;  
+    <span class="keyword">struct</span> sk_buff      *prev;
+
+    <span class="keyword">struct</span> sk_buff      tstamp;                 <span class="comment">// sk_buff发送时间/接收时间</span>
+
+    <span class="keyword">struct</span> sock         *sk;                    <span class="comment">// 标示这个sk_buff属于哪个sock  </span>
+    <span class="keyword">struct</span> net_device   *dev;                   <span class="comment">// 表示从哪个设备接收/发出  </span>
+
+    <span class="keyword">char</span>                cb[<span class="number">48</span>] __aligned(<span class="number">8</span>);    <span class="comment">// control buffer, TCP map this buffer to struct tcp_skb_cb  </span>
+    ...  
+
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>        len;                    <span class="comment">// sk_buff的总长度  = linear-data + paged-data  </span>
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>        data_len;               <span class="comment">// paged-data length</span>
+    __u16               mac_len;            
+    __u16               hdr_len;                <span class="comment">// writable header length of cloned skb</span>
+    ...  
+
+    __u32               priority;               <span class="comment">// packet queueing priority</span>
+    ...  
+    __u8                peeked:<span class="number">1</span>;               <span class="comment">// packet has been seen already, so stats have been done for it, don't do them again</span>
+    ...  
+    <span class="comment">/* 有意思的是alloc_skb时，skb-&gt;tail = skb-&gt;data - skb-&gt;head。tail其实是一个偏移量，而不是一个真正意义上的指针
+     * 同时skb-&gt;end = skb-&gt;tail + size 也是一样偏移量。
+     */</span>
+    sk_buff_data_t      tail;                   <span class="comment">// last byte of the data residing in linear area (与data指针对应)</span>
+    sk_buff_data_t      end;                    <span class="comment">// end of linear-data area (与head指针对应)</span>
+    <span class="keyword">unsigned</span> <span class="keyword">char</span>       *head;                  <span class="comment">// points to the start of the linear data area (first byte allocated)</span>
+    <span class="keyword">unsigned</span> <span class="keyword">char</span>       *data;                  <span class="comment">// start of data residing in the linear area   (first byte used)</span>
+
+    <span class="keyword">unsigned</span> <span class="keyword">int</span>        truesize;               <span class="comment">// total memory allocated for this buffer = sizeof(sk_buff) + the size of the data block allocated for this sk_buff  </span>
+};
+
+<span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *sk_buff_data_t;
+</code></pre><h4 id="struct_skb_shared_info">struct skb_shared_info</h4>
+<p>This data is invariant(不变的) across clones and lives at the end of the header data, ie. at skb-&gt;end.<br>这个数据结构主要半酣sk_buff中的nonlinear data。所谓的nonlinear data其实就是linear-data area放不下的数据就放到nonlinear area了。<br>书中把nonlinear data area也叫做 paged-data area. The paged-data area is possible only if DMA allows scatter-gather operations on the physically scattered pages.  </p>
+<hr>
+<h3 id="Routines_operating_on_sk_buff">Routines operating on sk_buff</h3>
+<ol>
+<li><p>stuct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask, int flags, int mode)<br>该函数分配一个新的sk_buff实例，需要给定的参数是linear-data area的大小和内存分配的模式。  </p>
+</li>
+<li><p>static inline void skb_reserve(struct sk_buff *skb, int len)<br>该函数将skb的data和tail指针往后移动，移动长度为len。常见的用途是为协议头部保留空间。  </p>
+</li>
+<li><p>unsigned char <em>skb_put(struct sk_buff </em>skb, unsigned int len)<br>该函数负责将sk_buff的linear-data area的tail指针增加len。可以看到3.10的kernel里面使用了skb_tail_pointer的方式获取真正意义上的指向数据使用部分的最后一个字节的指针。进一步验证了之前分析sk_buff结构体定义时认为tail是一个offset的判断。这点与书中描述的是不一致的。可见Linux kernel中关于TCP这块的更新还是很频繁的。连sk_buff这种重要的数据结构也一直在改动。  </p>
+</li>
+<li><p>unsigned char <em>skb_push(struct sk_buff </em>skb, unsigend int len)<br>该函数负责将sk_buff的linear-data area的data指针往前移动，距离为len。不难看出，skb_put是用来构建包的数据的，而skb_push则是当一个上层包传递到下一层后，下层在添加头部数据时调用skb_push。  </p>
+</li>
+<li><p>unsigned char <em>skb_pull(struct sk_buff </em>skb, unsigned int len)<br>该函数与skb_push相对应，它将data指针往后移动，距离为len。也就意味着skb-&gt;len要减少len。当有数据包到达后，一层层解析包头的过程中往往会用到该函数。  </p>
+</li>
+</ol>
+<p>书中的5.5节描述了发送数据包时header是如何添加的，5.6节描述了收到的数据包头是如何被解析的。不过基本上熟悉了上面几个函数后，基本的惭怍方法应该都能理解了。还有不清楚的可以看下书。<br>这章主要就是讲sk_buff及其相关的一些操作函数，还算比较好理解。  </p>
+<pre><code>tcp_skb_cb结构体是TCP层对于sk_buff-&gt;<span class="keyword">cb</span>的实例化。里面主要有seq，timestamp和sacked flag  
+</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/04/25/chrome-bugs/" data-id="bjseww6pik0hd2s8" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/" data-id="of4iuk4z1fm4i2dj" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/04/25/chrome-bugs/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/chrome/">chrome</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP/">TCP</a></li></ul>
 
     </footer>
   </div>
   
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/11/13/guide-for-technical-development/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Guide for Technical Development by Google</div>
+    </a>
+  
+</nav>
+
+  
 </article>
 
 
-  
-  
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
 </section>
         
           <aside id="sidebar">
@@ -267,11 +332,13 @@
 <script>
   var disqus_shortname = 'mybloglife-perthcharles';
   
+  var disqus_url = 'http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/';
+  
   (function(){
     var dsq = document.createElement('script');
     dsq.type = 'text/javascript';
     dsq.async = true;
-    dsq.src = '//' + disqus_shortname + '.disqus.com/count.js';
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
   })();
 </script>

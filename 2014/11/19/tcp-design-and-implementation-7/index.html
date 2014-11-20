@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+
+  
+  <title>TCP ADI in Linux(7): TCP send | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP ADI in Linux(7): TCP send">
+<meta property="og:url" content="http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP ADI in Linux(7): TCP send">
+<meta name="twitter:description" content="这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-tcp-design-and-implementation-7" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/11/19/tcp-design-and-implementation-7/" class="article-date">
+  <time datetime="2014-11-19T11:30:22.000Z" itemprop="datePublished">11月 19 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      TCP ADI in Linux(7): TCP send
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
+<a id="more"></a>  
+
+<p>7.1 TCP segmentation unit for sending data<br>当应用层调用send发送数据后，内核中对应的函数就是tcp_sendmsg()。因此我们从这个函数切入来理解TCP的发送流程。  </p>
+<pre><code>SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags) // net/socket.c  
+=<span class="ruby">&gt; sys_sendto(fd, buff, len, flags, <span class="constant">NULL</span>, <span class="number">0</span>)  /<span class="regexp">/ send a datagram to a given address, net/socket</span>.c line <span class="number">1754</span>  
+</span>    =<span class="ruby">&gt; sock = sockfd_lookup_light()  /<span class="regexp">/ 通过fd找到sock  
+</span></span>    =<span class="ruby">&gt; err = sock_sendmsg(sock, &amp;msg, len)  
+</span>        =<span class="ruby">&gt; sock-&gt;ops-&gt;sendmsg()  == tcp_sendmsg()
+</span>
+tcp_sendmsg()  
+    =<span class="ruby">&gt; mss_now = tcp_send_mss()  /<span class="regexp">/ 获得current mss
+</span></span>    =<span class="ruby">&gt; sg = !!(sk-&gt;sk_route_caps * <span class="constant">NETIF_F_SG</span>)  /<span class="regexp">/ 检查硬件是否支持scatter-gather
+</span></span>    =<span class="ruby">&gt; 两个循环，第一层遍历所有的buffer块，第二层遍历某一个buffer的所有数据  
+</span><span class="comment">        /* 获取sk-&gt;sk_write_queue的最后一个skb，用于检查是否用满。</span>
+         * 用满了就新建一个skb放新数据，否则将新数据拼接到这最后一个skb中   
+         */
+        =<span class="ruby">&gt; skb = tcp_write_queue_tail(sk)  
+</span>        =<span class="ruby">&gt; <span class="keyword">if</span> (copy &lt;= <span class="number">0</span>) /<span class="regexp">/ 需要new a segment
+</span></span>            =<span class="ruby">&gt; sk_stream_memory_free(sk)  /<span class="regexp">/ 检查send buffer的配额是否超过上限, 超过了要跳转到wait_for_sndbuf  
+</span></span>                =<span class="ruby">&gt; <span class="keyword">return</span> sk-&gt;sk_wmem_queued &lt; sk-&gt;sk_sndbuf  
+</span>            =<span class="ruby">&gt; skb = sk_stream_alloc_skb() /<span class="regexp">/ 为新数据新分配一个skb  
+</span></span>            =<span class="ruby">&gt; skb_entail(sk, skb)    /<span class="regexp">/ 将新生成的skb挂到sk-&gt;sk_write_queue的尾部  
+</span></span>        =<span class="ruby">&gt; skb_can_coalesce()  /<span class="regexp">/ 判断最后一页能否合并更多数据  
+</span></span>
+        =<span class="ruby">&gt; forced_push(tp) /<span class="regexp">/ 解释见接下来的note
+</span></span>        =<span class="ruby">&gt; tcp_mark_push(tp, skb)  /<span class="regexp">/ 解释见接下来的note
+</span></span><span class="comment">        /* push out any pending frames which were held back due to TCP_CORK </span>
+         * or attempt at coalescing tiny packets 
+         */
+        =<span class="ruby">&gt; __tcp_push_pending_frame()  /<span class="regexp">/ 如果是设置了PSH flag，会调用该函数尽快的将数据发送出去  
+</span></span>
+        =<span class="ruby">&gt; <span class="keyword">if</span> (copied) tcp_push()  /<span class="regexp">/发送数据
+</span></span>            =<span class="ruby">&gt; check sk-&gt;sk_send_head is <span class="constant">NULL</span> <span class="keyword">or</span> <span class="keyword">not</span> /<span class="regexp">/ 不为空表示有数据待发送  
+</span></span>            =<span class="ruby">&gt; __tcp_push_pending_frames()  /<span class="regexp">/ 大部分数据应该是走这条流程被发送出去的  
+</span></span>                =<span class="ruby">&gt; tcp_write_xmit()  /<span class="regexp">/ this rountine write packets to the network  
+</span></span><span class="comment">                    /* 只要有数据pending在write queue里面就继续发送，</span>
+                     * 当然循环内部有各种条件判断是否应该终止循环  
+                     */
+                    =<span class="ruby">&gt; <span class="keyword">while</span> (skb = tcp_send_head(sk))  
+</span>                        =<span class="ruby">&gt; cwnd_quota = tcp_cwnd_test(tp, skb)  /<span class="regexp">/ 根据cwnd与packet in flight的差得到配额  
+</span></span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(!tcp_snd_wnd_test(tp, skb, mss_now)) <span class="keyword">break</span>;  <span class="regexp">//</span> 判断是否受限于rwnd  
+</span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(!tcp_nagle_test()) <span class="keyword">break</span>;  <span class="regexp">//</span> <span class="keyword">return</span> <span class="keyword">true</span> <span class="keyword">if</span> allow by <span class="constant">Nagle</span>
+</span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(tcp_transmit_skb(sk, skb, <span class="number">1</span>, gfp)) <span class="keyword">break</span>;  <span class="regexp">//</span> 发送一个skb，不成功则<span class="keyword">break</span>。参数<span class="number">1</span>表示传递一份clone  
+</span>                            =<span class="ruby">&gt; 细节见后续章节    
+</span>                        =<span class="ruby">&gt; tcp_event_new_data_sent(sk, skb)  /<span class="regexp">/ 更新sk-&gt;sk_send_head，tp-&gt;snd_nxt, tp-&gt;packet_out等  
+</span></span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (push_one) <span class="keyword">break</span>;  <span class="regexp">//</span> 如果之前只允许发送一个，则<span class="keyword">break</span>  
+</span>
+
+
+tcp_mark_push()为sk_buff设置PSH flag。当满足下面某一个条件时，PSH会被设置：  
+    1. we have written more than half of the so far maximum window size from the last byte marked as pushed  
+    2. we have one full-sized TCP segment ready for transmission.  
+
+forced_push()就是用来判断上面条件一是否成立的  
+</code></pre><h4 id="tcp_transmit_skb">tcp_transmit_skb</h4>
+<p>源代码函数上方的几句注释摘录一下，应该基本知道该函数的功能了。  </p>
+<pre><code>This routine actually transmits TCP packets queued <span class="keyword">in</span> <span class="keyword">by</span> tcp_do_sendmsg().  
+This <span class="keyword">is</span> used <span class="keyword">by</span> both the initial transmission <span class="keyword">and</span> possible later retransmissions.  
+All SKB<span class="comment">'s seen here are completely headerless.  </span>
+</code></pre><p>话多不说，直接读代码  </p>
+<pre><code>tcp_transmit_skb()  
+    =&gt; skb = skb_clone(skb, gfp_mask)  <span class="comment">// 复制一份skb，新的skb不属于任何一个socket  </span>
+    =&gt; <span class="keyword">if</span> (tcp_packets_in_flight(tp) == <span class="number">0</span>) tcp_ca_event(sk, CA_EVENT_TX_START);  <span class="comment">// 根据packet inflight判断传输的开始  </span>
+    =&gt; skb_push(skb, tcp_head_size)  <span class="comment">// 根据计算得到的TCP header长度调整skb  </span>
+    =&gt; th = tcp_hdr(skb)  <span class="comment">// 获得TCP header对应位置，并开始构建TCP header</span>
+    =&gt; tcp_options_write()  <span class="comment">// write previously computed TCP options to the packet</span>
+    =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;send_check</span>(sk, skb) == tcp_v4_send_check()  <span class="comment">// compute an IPv4 TCP checksum  </span>
+    =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;len</span> != tcp_header_size) tcp_event_data_send(tp, sk)  <span class="comment">// congestion state accounting after a packet has been sent  </span>
+    =&gt; err = icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;queue_xmit</span>()   ==  ip_queue_xmit() <span class="comment">// 目前不关心ip层及以下的实现  </span>
+</code></pre><h3 id="TODO">TODO</h3>
+<p>sock结构体中有一个sk_forward_alloc，需要理解一下这个变量  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/" data-id="z4fxptrs48n6pcdl" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP/">TCP</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/11/18/tcp-design-and-implementation-6/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">TCP ADI in Linux(6): Movement of sk_buff across protocol layers</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/19/tcp-design-and-implementation-7/">TCP ADI in Linux(7): TCP send</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-6/">TCP ADI in Linux(6): Movement of sk_buff across protocol layers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-5/">TCP ADI in Linux(5): sk_buff and protocol headers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/16/tcpdump-tcptrace-tshark/">Analysis tools for network traces</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/05/setup-nginx-sever/">Setup Nginx server in linux</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/26/make-progress-everyday/">知识积累</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/20/the-art-of-readable-code/">The Art of Readable Code</a>
+          </li>
+        
+          <li>
+            <a href="/2013/12/22/insert-latex-to-markdown/">Markdown中插入Latex代码</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 12.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 18.00px;">C/C++</a><a href="/tags/DFS/" style="font-size: 12.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 12.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 16.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 12.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 16.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 12.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 12.00px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.00px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.00px;">Tools</a><a href="/tags/X11/" style="font-size: 14.00px;">X11</a><a href="/tags/YQL/" style="font-size: 12.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 12.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 14.00px;">assembly</a><a href="/tags/chrome/" style="font-size: 12.00px;">chrome</a><a href="/tags/excel/" style="font-size: 14.00px;">excel</a><a href="/tags/google/" style="font-size: 12.00px;">google</a><a href="/tags/hexo/" style="font-size: 12.00px;">hexo</a><a href="/tags/javascript/" style="font-size: 12.00px;">javascript</a><a href="/tags/latex/" style="font-size: 14.00px;">latex</a><a href="/tags/mapreduce/" style="font-size: 12.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 12.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 12.00px;">matlab</a><a href="/tags/mount/" style="font-size: 12.00px;">mount</a><a href="/tags/nginx/" style="font-size: 12.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 12.00px;">ntfs</a><a href="/tags/papers/" style="font-size: 12.00px;">papers</a><a href="/tags/python/" style="font-size: 16.00px;">python</a><a href="/tags/ssh/" style="font-size: 12.00px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 12.00px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 12.00px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 12.00px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 12.00px;">ubuntu</a><a href="/tags/vim/" style="font-size: 12.00px;">vim</a><a href="/tags/wget/" style="font-size: 12.00px;">wget</a><a href="/tags/yum/" style="font-size: 12.00px;">yum</a><a href="/tags/自学材料/" style="font-size: 12.00px;">自学材料</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-11-19T08:53:19.104Z</updated>
+  <updated>2014-11-20T08:10:28.107Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,11 +15,104 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[TCP ADI in Linux(7): TCP send]]></title>
+    <link href="http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/"/>
+    <id>http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/</id>
+    <published>2014-11-19T11:30:22.000Z</published>
+    <updated>2014-11-20T08:10:24.000Z</updated>
+    <content type="html"><![CDATA[<p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
+<a id="more"></a>  
+
+<p>7.1 TCP segmentation unit for sending data<br>当应用层调用send发送数据后，内核中对应的函数就是tcp_sendmsg()。因此我们从这个函数切入来理解TCP的发送流程。  </p>
+<pre><code>SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags) // net/socket.c  
+=<span class="ruby">&gt; sys_sendto(fd, buff, len, flags, <span class="constant">NULL</span>, <span class="number">0</span>)  /<span class="regexp">/ send a datagram to a given address, net/socket</span>.c line <span class="number">1754</span>  
+</span>    =<span class="ruby">&gt; sock = sockfd_lookup_light()  /<span class="regexp">/ 通过fd找到sock  
+</span></span>    =<span class="ruby">&gt; err = sock_sendmsg(sock, &amp;msg, len)  
+</span>        =<span class="ruby">&gt; sock-&gt;ops-&gt;sendmsg()  == tcp_sendmsg()
+</span>
+tcp_sendmsg()  
+    =<span class="ruby">&gt; mss_now = tcp_send_mss()  /<span class="regexp">/ 获得current mss
+</span></span>    =<span class="ruby">&gt; sg = !!(sk-&gt;sk_route_caps * <span class="constant">NETIF_F_SG</span>)  /<span class="regexp">/ 检查硬件是否支持scatter-gather
+</span></span>    =<span class="ruby">&gt; 两个循环，第一层遍历所有的buffer块，第二层遍历某一个buffer的所有数据  
+</span><span class="comment">        /* 获取sk-&gt;sk_write_queue的最后一个skb，用于检查是否用满。</span>
+         * 用满了就新建一个skb放新数据，否则将新数据拼接到这最后一个skb中   
+         */
+        =<span class="ruby">&gt; skb = tcp_write_queue_tail(sk)  
+</span>        =<span class="ruby">&gt; <span class="keyword">if</span> (copy &lt;= <span class="number">0</span>) /<span class="regexp">/ 需要new a segment
+</span></span>            =<span class="ruby">&gt; sk_stream_memory_free(sk)  /<span class="regexp">/ 检查send buffer的配额是否超过上限, 超过了要跳转到wait_for_sndbuf  
+</span></span>                =<span class="ruby">&gt; <span class="keyword">return</span> sk-&gt;sk_wmem_queued &lt; sk-&gt;sk_sndbuf  
+</span>            =<span class="ruby">&gt; skb = sk_stream_alloc_skb() /<span class="regexp">/ 为新数据新分配一个skb  
+</span></span>            =<span class="ruby">&gt; skb_entail(sk, skb)    /<span class="regexp">/ 将新生成的skb挂到sk-&gt;sk_write_queue的尾部  
+</span></span>        =<span class="ruby">&gt; skb_can_coalesce()  /<span class="regexp">/ 判断最后一页能否合并更多数据  
+</span></span>
+        =<span class="ruby">&gt; forced_push(tp) /<span class="regexp">/ 解释见接下来的note
+</span></span>        =<span class="ruby">&gt; tcp_mark_push(tp, skb)  /<span class="regexp">/ 解释见接下来的note
+</span></span><span class="comment">        /* push out any pending frames which were held back due to TCP_CORK </span>
+         * or attempt at coalescing tiny packets 
+         */
+        =<span class="ruby">&gt; __tcp_push_pending_frame()  /<span class="regexp">/ 如果是设置了PSH flag，会调用该函数尽快的将数据发送出去  
+</span></span>
+        =<span class="ruby">&gt; <span class="keyword">if</span> (copied) tcp_push()  /<span class="regexp">/发送数据
+</span></span>            =<span class="ruby">&gt; check sk-&gt;sk_send_head is <span class="constant">NULL</span> <span class="keyword">or</span> <span class="keyword">not</span> /<span class="regexp">/ 不为空表示有数据待发送  
+</span></span>            =<span class="ruby">&gt; __tcp_push_pending_frames()  /<span class="regexp">/ 大部分数据应该是走这条流程被发送出去的  
+</span></span>                =<span class="ruby">&gt; tcp_write_xmit()  /<span class="regexp">/ this rountine write packets to the network  
+</span></span><span class="comment">                    /* 只要有数据pending在write queue里面就继续发送，</span>
+                     * 当然循环内部有各种条件判断是否应该终止循环  
+                     */
+                    =<span class="ruby">&gt; <span class="keyword">while</span> (skb = tcp_send_head(sk))  
+</span>                        =<span class="ruby">&gt; cwnd_quota = tcp_cwnd_test(tp, skb)  /<span class="regexp">/ 根据cwnd与packet in flight的差得到配额  
+</span></span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(!tcp_snd_wnd_test(tp, skb, mss_now)) <span class="keyword">break</span>;  <span class="regexp">//</span> 判断是否受限于rwnd  
+</span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(!tcp_nagle_test()) <span class="keyword">break</span>;  <span class="regexp">//</span> <span class="keyword">return</span> <span class="keyword">true</span> <span class="keyword">if</span> allow by <span class="constant">Nagle</span>
+</span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(tcp_transmit_skb(sk, skb, <span class="number">1</span>, gfp)) <span class="keyword">break</span>;  <span class="regexp">//</span> 发送一个skb，不成功则<span class="keyword">break</span>。参数<span class="number">1</span>表示传递一份clone  
+</span>                            =<span class="ruby">&gt; 细节见后续章节    
+</span>                        =<span class="ruby">&gt; tcp_event_new_data_sent(sk, skb)  /<span class="regexp">/ 更新sk-&gt;sk_send_head，tp-&gt;snd_nxt, tp-&gt;packet_out等  
+</span></span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (push_one) <span class="keyword">break</span>;  <span class="regexp">//</span> 如果之前只允许发送一个，则<span class="keyword">break</span>  
+</span>
+
+
+tcp_mark_push()为sk_buff设置PSH flag。当满足下面某一个条件时，PSH会被设置：  
+    1. we have written more than half of the so far maximum window size from the last byte marked as pushed  
+    2. we have one full-sized TCP segment ready for transmission.  
+
+forced_push()就是用来判断上面条件一是否成立的  
+</code></pre><h4 id="tcp_transmit_skb">tcp_transmit_skb</h4>
+<p>源代码函数上方的几句注释摘录一下，应该基本知道该函数的功能了。  </p>
+<pre><code>This routine actually transmits TCP packets queued <span class="keyword">in</span> <span class="keyword">by</span> tcp_do_sendmsg().  
+This <span class="keyword">is</span> used <span class="keyword">by</span> both the initial transmission <span class="keyword">and</span> possible later retransmissions.  
+All SKB<span class="comment">'s seen here are completely headerless.  </span>
+</code></pre><p>话多不说，直接读代码  </p>
+<pre><code>tcp_transmit_skb()  
+    =&gt; skb = skb_clone(skb, gfp_mask)  <span class="comment">// 复制一份skb，新的skb不属于任何一个socket  </span>
+    =&gt; <span class="keyword">if</span> (tcp_packets_in_flight(tp) == <span class="number">0</span>) tcp_ca_event(sk, CA_EVENT_TX_START);  <span class="comment">// 根据packet inflight判断传输的开始  </span>
+    =&gt; skb_push(skb, tcp_head_size)  <span class="comment">// 根据计算得到的TCP header长度调整skb  </span>
+    =&gt; th = tcp_hdr(skb)  <span class="comment">// 获得TCP header对应位置，并开始构建TCP header</span>
+    =&gt; tcp_options_write()  <span class="comment">// write previously computed TCP options to the packet</span>
+    =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;send_check</span>(sk, skb) == tcp_v4_send_check()  <span class="comment">// compute an IPv4 TCP checksum  </span>
+    =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;len</span> != tcp_header_size) tcp_event_data_send(tp, sk)  <span class="comment">// congestion state accounting after a packet has been sent  </span>
+    =&gt; err = icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;queue_xmit</span>()   ==  ip_queue_xmit() <span class="comment">// 目前不关心ip层及以下的实现  </span>
+</code></pre><h3 id="TODO">TODO</h3>
+<p>sock结构体中有一个sk_forward_alloc，需要理解一下这个变量  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[TCP ADI in Linux(6): Movement of sk_buff across protocol layers]]></title>
     <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/"/>
     <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/</id>
     <published>2014-11-18T13:50:50.000Z</published>
-    <updated>2014-11-19T06:36:50.000Z</updated>
+    <updated>2014-11-19T11:30:56.000Z</updated>
     <content type="html"><![CDATA[<p>这章主要是从宏观上来理解整个TCP/IP协议栈道额工作机制。在整个讨论的过程中，涉及到以下的层次划分：  </p>
 <pre><code><span class="keyword">socket</span> layer  
 tcp    layer  
@@ -1531,34 +1624,6 @@ $reboot</span>
     </summary>
     
       <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[[latex]linux环境下的latex安装]]></title>
-    <link href="http://perthcharles.github.com/2013/09/14/linux-tex/"/>
-    <id>http://perthcharles.github.com/2013/09/14/linux-tex/</id>
-    <published>2013-09-14T04:00:00.000Z</published>
-    <updated>2014-11-04T05:37:42.000Z</updated>
-    <content type="html"><![CDATA[<p>本来想着使用yum安装的，结果发现没有直接的rpm包<br>网上有许多的方法，特别是对于中文的问题的解决<br>但是都过于复杂，可能是懒人有懒福吧。总算找到一种最简单的安装办法<br>详见<a href="http://blog.chinaunix.net/uid-20940095-id-66105.html" target="_blank" rel="external">这篇博客:linux下texlive 2010 简单安装教程</a>，非常感谢这位大牛的指点。让我节省了不少时间。  </p>
-<a id="more"></a>
-
-<p>下面是我的安装步骤，可喜的是竟然安装了最新的2013版，意外之喜啊。<br>    wget <a href="http://ftp.ctex.org/mirrors/CTAN/systems/texlive/tlnet/install-tl-unx.tar.gz" target="_blank" rel="external">http://ftp.ctex.org/mirrors/CTAN/systems/texlive/tlnet/install-tl-unx.tar.gz</a><br>    tar zxvf install-tl-unx.tar.gz<br>    ./install-tl —gui<br>    //环境变量是要设置的，这点与上面提到的博客有点不同<br>    PATH=path-of-your-texlive:$PATH<br>    //更加推荐的方式：把上面这条加到~/.bashrc中后，source一下</p>
-<p>随后就可以使用pdflatex命令对.tex文件进行编译了<br>    pdflatex template.tex<br>    evince template.pdf</p>
-<p>安装中文输入法<br>    yum install “@Chinese Support”</p>
-<p>虽然时间可能有点长，但是安装就是这么简单。上面那个下载的文件可能是一个在线安装的管理脚本，所以时间会比较长。  </p>
-<h3 id="参考资料">参考资料</h3>
-<p>这几个参考资料都是readme中推荐的学习网站，好像是官方的<br><a href="http://tug.org/begin.html" target="_blank" rel="external">Tex介绍性材料：for freshman</a><br><a href="http://tug.org/interest.html" target="_blank" rel="external">Tex web资源的通用列表，包括文档、系统、宏包、字体等</a><br><a href="http://tug.org/ctan.html" target="_blank" rel="external">CTAN的一个入口，CTAN是所有Tex相关内容的在线仓库</a><br><a href="http://tug.org/usergroups.html" target="_blank" rel="external">世界上Tex用户组织的列表</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>本来想着使用yum安装的，结果发现没有直接的rpm包<br>网上有许多的方法，特别是对于中文的问题的解决<br>但是都过于复杂，可能是懒人有懒福吧。总算找到一种最简单的安装办法<br>详见<a href="http://blog.chinaunix.net/uid-20940095-id-66105.html" target="_blank" rel="external">这篇博客:linux下texlive 2010 简单安装教程</a>，非常感谢这位大牛的指点。让我节省了不少时间。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="latex" scheme="http://perthcharles.github.com/tags/latex/"/>
     
   </entry>
   

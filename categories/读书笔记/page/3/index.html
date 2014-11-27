@@ -5,12 +5,12 @@
   <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
 
   
-  <title>Tag: excel | 天赋，无与伦比的坚持</title>
+  <title>Category: 读书笔记 | 天赋，无与伦比的坚持</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description">
 <meta property="og:type" content="website">
 <meta property="og:title" content="天赋，无与伦比的坚持">
-<meta property="og:url" content="http://perthcharles.github.com/tags/excel/">
+<meta property="og:url" content="http://perthcharles.github.com/categories/读书笔记/page/3/">
 <meta property="og:site_name" content="天赋，无与伦比的坚持">
 <meta property="og:description">
 <meta name="twitter:card" content="summary">
@@ -68,12 +68,16 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-a-macro-for-excel" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-c-and-pointer" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/07/15/a-macro-for-excel/" class="article-date">
-  <time datetime="2013-07-15T05:00:03.000Z" itemprop="datePublished">7月 15 2013</time>
+    <a href="/2013/09/05/c-and-pointer/" class="article-date">
+  <time datetime="2013-09-05T04:00:00.000Z" itemprop="datePublished">9月 5 2013</time>
 </a>
     
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
   </div>
   <div class="article-inner">
     
@@ -82,7 +86,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/07/15/a-macro-for-excel/">EXCEL宏学习 -- 读文本数据</a>
+      <a class="article-title" href="/2013/09/05/c-and-pointer/">C和指针[Kenneth A.Reek 著]</a>
     </h1>
   
 
@@ -90,69 +94,22 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="背景">背景</h2>
-<p>最近为了使用EXCEL处理一些数据和画一些图，需要将大量文本文件的数据输入到EXCEL文件中，所以查了下宏的使用。  </p>
-<h2 id="宏功能">宏功能</h2>
-<p>目的：从指定列表中的文件中读取所有的数据到一个新的EXCEL标签页中。<br>快捷键：Ctrl+q<br>使用方法：<br>1.使用弹出框口功能，选定需要处理的单个文件<br>2.在列表中指定需要处理的文件名，自动处理<br>3.在列表中指定需要处理的文件名前缀，按照同一方法自动处理  </p>
-<h3 id="代码文件">代码文件</h3>
-<p><a href="https://github.com/PerthCharles/codeware/blob/master/%E8%AF%BB%E6%96%87%E6%9C%AC%E6%95%B0%E6%8D%AE-EXCEL%E5%AE%8F.txt" target="_blank" rel="external">读文本数据—EXCEL宏</a>  </p>
+        <h3 id="第一章：快速上手">第一章：快速上手</h3>
+<p>1.使用scanf函数进行用户输入的时候，需要注意：<br>使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳<br>过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都<br>会忽略重复的空白。  </p>
 
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/07/15/a-macro-for-excel/" data-id="esit8emyt99qi2lp" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/07/15/a-macro-for-excel/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/excel/">excel</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-matlabl-read-data-from-excel" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/06/19/matlabl-read-data-from-excel/" class="article-date">
-  <time datetime="2013-06-19T15:02:23.000Z" itemprop="datePublished">6月 19 2013</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
         
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/06/19/matlabl-read-data-from-excel/">使用matlab从excel文件中读取指定数据，并画图</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="问题描述">问题描述</h3>
-<p>在matlab下，直接读取EXCEL文件中的数据，并根据指定的数据画图  </p>
-<h3 id="步骤">步骤</h3>
-<p>1.读EXCEL数据<br>主要用到xlsread函数，之所以要写下来是因为读取特定行的方法在帮助文件里面没有提到。<br>  读取指定列，比如C列<br>  A = xlsread(‘test.xls’, 1, ‘C:C’);<br>  这样就能够直接读取除第C列的数据，且自动去掉标题！<br>  更多的普通用法可以查看help xlsread<br>2.画图<br>根据指定间隔，画出二维图或散点图  </p>
-<h3 id="代码文件">代码文件</h3>
-<p>该Matlab代码通过函数的形式实现，具有一定的移植性，并可以根据实际需要进一步调整。返回值分别是读取的数据总数和用于画图的数据总数。<br><a href="https://github.com/PerthCharles/codeware/blob/master/plant_a_array.m" target="_blank" rel="external">Matlab 代码</a>  </p>
-
+          <p class="article-more-link">
+            <a href="/2013/09/05/c-and-pointer/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/06/19/matlabl-read-data-from-excel/" data-id="hj7zk9po32ti1uuy" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/09/05/c-and-pointer/" data-id="1442tupup1hvyj2p" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/06/19/matlabl-read-data-from-excel/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/09/05/c-and-pointer/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/excel/">excel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/matlab/">matlab</a></li></ul>
-
     </footer>
   </div>
   
@@ -160,6 +117,10 @@
 
 
   
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/categories/读书笔记/page/2/">&laquo; Prev</a><a class="page-number" href="/categories/读书笔记/">1</a><a class="page-number" href="/categories/读书笔记/page/2/">2</a><span class="page-number current">3</span>
+    </nav>
   
 </section>
         

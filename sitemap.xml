@@ -2,6 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</loc>
+    <lastmod>2014-11-27T14:18:37.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</loc>
+    <lastmod>2014-11-24T09:17:47.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</loc>
+    <lastmod>2014-11-21T12:15:32.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/</loc>
     <lastmod>2014-11-20T08:10:24.000Z</lastmod>
   </url>
@@ -9,16 +24,6 @@
   <url>
     <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/</loc>
     <lastmod>2014-11-19T11:30:56.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</loc>
-    <lastmod>2014-11-18T13:29:58.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</loc>
-    <lastmod>2014-11-18T03:53:00.000Z</lastmod>
   </url>
   
   <url>

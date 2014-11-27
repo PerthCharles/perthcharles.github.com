@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-11-20T08:10:28.107Z</updated>
+  <updated>2014-11-27T14:18:51.992Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,195 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[TCP ADI in Linux(8): TCP receive]]></title>
+    <link href="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/"/>
+    <id>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</id>
+    <published>2014-11-20T08:17:45.000Z</published>
+    <updated>2014-11-27T14:18:37.000Z</updated>
+    <content type="html"><![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
+<ol>
+<li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
+<li>否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。  </li>
+</ol>
+<a id="more"></a>  
+
+<p>8.1 Queuing mechanism<br>处理收到的TCP时，涉及到三个queue：backlog queue, prequeue, 和receive queue。<br>注：prequeue好像已经是一个过气的概念了。  </p>
+<pre><code><span class="number">1</span>. receive queue 包含的都是处理过的包，也就是说所有的协议头都被解析完了，  
+   里面的数据就等着被复制到<span class="literal">user</span> space了。  
+</code></pre><p>TCP层处理数据包的第一个函数是tcp_v4_rcv()，首先从这个函数开始理解整个流程。  </p>
+<pre><code>tcp_v4_rcv()  <span class="comment">// net/ipv4/tcp_ipv4.c  </span>
+    =&gt; sk = __inet_lookup_skb()  <span class="comment">// 找到skb属于的sock结构体  </span>
+    =&gt; <span class="keyword">if</span> (!sock_owned_by_user(sk))  <span class="comment">// sock未被加锁  </span>
+        =&gt; <span class="keyword">if</span> (!tcp_prequeue(sk, skb))  <span class="comment">// 如果符合加入prequeue的原则，则加入prequeue，返回true;反之返回false  </span>
+            =&gt; ret = tcp_v4_do_rcv(sk, skb)  
+                =&gt; tcp_rcv_established()  <span class="comment">// receive function for the ESTABLISHED state  </span>
+                    =&gt; <span class="keyword">if</span> (len == tcp_header_len)  <span class="comment">// 如果是纯ack包</span>
+                        =&gt; tcp_ack(sk, skb, <span class="number">0</span>)  <span class="comment">// dealing with incoming acks  </span>
+                            =&gt; flag |= tcp_clean_rtx_queue()  <span class="comment">// see if we can take anything off of the retransmit queue  </span>
+                            =&gt; <span class="keyword">if</span> (tcp_ack_is_dubious(sk, flag)  <span class="comment">// 判断时候出现可疑情况，具体看下代码吧。  </span>
+                                =&gt; tcp_fastretrans_alert()  <span class="comment">// 进入快速重传  </span>
+                                    =&gt; tcp_cwnd_down()  <span class="comment">// decrease cwnd each second ack, 该函数就是快速重传对cwnd操作的关键函数  </span>
+                                    =&gt; tcp_xmit_retransmit_queue(sk)  <span class="comment">// 在重传阶段，该函数负责找到合适的数据进行重传  </span>
+                        =&gt; __kfree_skb(skb)  <span class="comment">// free an sk_buff  </span>
+                        =&gt; tcp_data_snd_check(sk)  <span class="comment">// 如果有数据需要发送，则发送数据到对端  </span>
+                            =&gt; tcp_push_pending_frames(sk)   <span class="comment">// 发送pending的数据</span>
+                                =&gt; tcp_write_xmit()  <span class="comment">// writes packets to the network， 这部分在上一章已经分析过了   </span>
+                            =&gt; tcp_check_space(sk)  <span class="comment">//  如果有内存释放，则唤醒等待内存的队列  </span>
+                                <span class="comment">/* when incoming ACK allows to free some skb from write_queue,  
+                                 * we remember this event in flag SOCK_QUEUE_SHRUNK and wake up socket  
+                                 * on the exit from tcp input hander.
+                                 *  
+                                 * PROBLEM: sndbuf expansion does not work well with largesend. 
+                                 */</span>
+                                =&gt; tcp_new_space(sk)  
+                                    =&gt; sk<span class="variable">-&gt;sk_sndbuf</span> = min(sndmem, sysctl_tcp_wmem[<span class="number">2</span>])  <span class="comment">// expand the sndbuf if possible  </span>
+                    =&gt; <span class="keyword">else</span> <span class="comment">// 如果是带数据的包  </span>
+                        <span class="comment">/* 此数据包刚好是下一个读取的数据，并且用户空间可存放下该数据包 */</span>
+                        =&gt; <span class="keyword">if</span> (tp<span class="variable">-&gt;copied_seq</span> == tp<span class="variable">-&gt;rcv_nxt</span> &amp;&amp; len - tcp_header_len &lt;= tp<span class="variable">-&gt;ucopy</span>.len)  
+                            <span class="comment">/* 如果函数在进程上下文调用并且sock被用户占用的话 */</span>
+                            =&gt; <span class="keyword">if</span> (tp<span class="variable">-&gt;ucopy</span>.task == current &amp;&amp; sock_owned_by_user(sk) &amp;&amp; !copied_early)  
+                                =&gt; tcp_copy_to_iovec()  <span class="comment">// 直接copy 到用户空间  </span>
+                        =&gt; <span class="keyword">if</span> (!eaten)  <span class="comment">// 没有直接读到用户空间  </span>
+                            <span class="comment">/* 当truesize大于sk_forward_alloc时，表示已分配的限额已经用完，不能直接放到receive queue中, 此时往往要重新计算sk_forward_alloc */</span>
+                            =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;truesize</span> &gt; sk<span class="variable">-&gt;sk_forward_alloc</span>) <span class="keyword">goto</span> step5  
+                            =&gt; eaten = tcp_queue_rcv()  
+                                =&gt; tcp_try_coalesce()  <span class="comment">// try merge skb to prior one  </span>
+                                =&gt; <span class="keyword">if</span> (!eaten) __skb_queue_tail()  <span class="comment">// 如果上一步未成功，则将skb放入receive queue中  </span>
+                        =&gt; tcp_event_data_recv(sk, skb)  <span class="comment">// 数据包接收后续处理  </span>
+                            <span class="comment">/* 每次收到超过128字节的数据报后，需要调用tcp_grow_window增加rcv_ssthresh的值 */</span>
+                            =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;len</span> &gt;= <span class="number">128</span>) tcp_grow_window(sk, skb) 
+                        =&gt; __tcp_ack_snd_check(sk, <span class="number">0</span>) <span class="comment">// check if sending an ack is needed  </span>
+
+                    =&gt; tcp_validate_incoming(sk, skb, th, <span class="number">1</span>)  <span class="comment">// standard slow path, [details ignored]  </span>
+                    =&gt; tcp_data_queue(sk, skb)  <span class="comment">// 对数据包进行处理  </span>
+                        =&gt; <span class="keyword">if</span> (TCP_SKB_CB(skb)<span class="variable">-&gt;seq</span> == tp<span class="variable">-&gt;rcv_nxt</span>)   <span class="comment">// 如果是待接收的报文  </span>
+                            =&gt; <span class="keyword">if</span> (tcp_receive_window(tp) == <span class="number">0</span>) <span class="keyword">goto</span> out_of_window;  <span class="comment">// 如果超出rwnd，则直接丢掉  </span>
+                            =&gt; 如果正在读，且正是要读的数据，那么直接拷贝到用户空间  
+                            =&gt; <span class="keyword">else</span> eaten = tcp_queue_rcv()  <span class="comment">// 将数据放入receive queue中  </span>
+                            =&gt; <span class="keyword">if</span> (!skb_queue_empty(&amp;tp<span class="variable">-&gt;out_of_order_queue</span>))  <span class="comment">// 如果out of ordre queue不为空  </span>
+                                =&gt; tcp_ofo_queue(sk)  <span class="comment">// This one checks to see if we can put data from the out-of-order queue into the receive-queue  </span>
+                            =&gt; tcp_fast_path_check(sk)  <span class="comment">// 检查是否可以从slowpath回到fastpath  </span>
+
+                        =&gt; <span class="keyword">else</span> tcp_data_queue_ofo(sk, skb)  <span class="comment">// 将数据包放到out-of-order queue中  </span>
+                    =&gt; tcp_data_snd_check(sk)  <span class="comment">// 如果有数据需要发送，则发送数据到对端  </span>
+                    =&gt; tcp_ack_snd_check(sk)  <span class="comment">// 判断是否有必要发送一个ack  </span>
+</code></pre><hr>
+<h4 id="prequeue的作用">prequeue的作用</h4>
+<p>首先来理解两个相关的参数。    </p>
+<ol>
+<li><p>sysctl_tcp_low_latency == /proc/sys/net/ipv4/tcp_low_latency<br>通过man 7 tcp可以看到官方的解释  </p>
+<p> tcp_low_latency (Boolean; default: disabled)  </p>
+<pre><code> <span class="keyword">If</span> enabled, the  TCP  stack makes decisions that prefer lower
+ latency <span class="keyword">as</span> opposed <span class="keyword">to</span> higher throughput.   It  this  <span class="keyword">option</span>  <span class="keyword">is</span>
+ disabled,  <span class="keyword">then</span>  higher throughput <span class="keyword">is</span> preferred.  An example <span class="keyword">of</span>
+ an application <span class="keyword">where</span> this <span class="keyword">default</span> should be changed would be  a
+ Beowulf compute cluster.
+</code></pre></li>
+</ol>
+<ol>
+<li>tcp_sock-&gt;ucopy.task<br>ucopy.task != NULL 表示进程空间有进程在等待sock的数据到来  </li>
+</ol>
+<p>下面这句话是tcp_prequeue()的一个关键判断：是否将该skb放到prequeue中。  </p>
+<pre><code><span class="keyword">if</span> (sysctl_tcp_low_latency || !tp-&gt;ucopy.task) <span class="keyword">return</span> <span class="keyword">false</span>;  
+</code></pre><p>首先字面理解这行代码就是说:<br>如果更关心low latency则不用prequeue;<br>如果当前用进程在等待读数据，则不用prequeue.  </p>
+<p>根据目前的理解，我认为prequeue有如下几方面的作用：  </p>
+<pre><code>1. 进prequeue处理会更侧重throughput。
+    由于软中断每次处理一个包，如果不进prequeue，而调用<span class="function">tcp_v4_do_rcv</span>()放进receive queue的话，  
+    工作量会不少(<span class="function">tcp_rcv_established</span>()函数很复杂的)。  
+    为了软中断更快的完成，放进prequeue后软中断就直接返回了，从而能更多地处理更多地收包。  
+    具体处理prequeue中数据的任务交给了进程上下文(即tcp_recvmsg调用中)去处理了。   
+    注：其实最终prequeue中的skb还是调用<span class="function">tcp_v4_do_rcv</span>()来处理的，所以放在prequeue中只是选择不同的处理skb的时机罢了。  
+2. 进prequeue能够更快速的唤醒blocking状态的数据读请求。  
+    这点很显然，进入prequeue的话，一般会立即wake up等待的进程。
+</code></pre><hr>
+<p>fastpath VS slowpath<br>这是一个看代码才了解到的概念，目前理解还不是太透彻，只是通过注释和代码初步知道了一些判断是否进入fast path的原则。区分这两类path的具体原因还没理解，等之后理解了再来补充吧。<br>目前的猜测可能是说满足fast path条件的话能省去许多判断的工作。暂时就简单列下tcp_rcv_established函数前面的一些注释吧：  </p>
+<pre><code>The fast path <span class="keyword">is</span> disabled <span class="keyword">when</span>:  
+- A zero window was announced from us - zero window probing  
+  <span class="keyword">is</span> only handled properly <span class="keyword">in</span> the slow path.  
+- <span class="keyword">Out</span> <span class="keyword">of</span> order segments arrived.  
+- Urgent data <span class="keyword">is</span> expected.  
+- There <span class="keyword">is</span> no <span class="keyword">buffer</span> space left.  
+- Unexpected TCP flags/window value/header lenghts are received  
+  (detected by checking the TCP header against pred_flags)  
+- Data <span class="keyword">is</span> sent <span class="keyword">in</span> both directions. Fast path only supports <span class="keyword">pure</span> senders  
+  <span class="keyword">or</span> <span class="keyword">pure</span> receivers (this means either the <span class="keyword">sequence</span> number <span class="keyword">or</span> the ack  
+  value must stay <span class="keyword">constant</span>)  
+- Unexpected TCP option.  
+
+Fast processing <span class="keyword">is</span> turned <span class="keyword">on</span> <span class="keyword">in</span> tcp_data_queue <span class="keyword">when</span> everything <span class="keyword">is</span> OK.  
+</code></pre><hr>
+<h3 id="Processing_of_Queues">Processing of Queues</h3>
+<p>TCP的接收队列的处理主要是在tcp_recvmsg()函数中，所以先从这个函数入手。<br>CSDN的<a href="http://blog.csdn.net/mrpre/article/details/33347221" target="_blank" rel="external">这篇博客</a>是一个不错的参考，不过一切还请以代码为准。  </p>
+<pre><code>tcp_recvmsg()  <span class="regexp">//</span> <span class="keyword">this</span> routine copies from a sock struct into the user buffer<span class="function">  
+    =&gt;</span> lock_sock(sk)  <span class="regexp">//</span> become a socket user<span class="function">  
+    =&gt;</span> skb_queue_walk()  <span class="regexp">//</span> get a skb<span class="function">  
+
+    =&gt;</span> 如果有skb可供拷贝<span class="function">  
+        =&gt;</span> err = skb_copy_datagram_iovec()  <span class="regexp">//</span> copy data into iovec <span class="keyword">if</span> found_ok_skb  
+        /* This <span class="reserved">function</span> should be called every time data <span class="keyword">is</span> copied to user space.  
+         * It calculates the appropriate TCP receive buffer space.  
+         */<span class="function">  
+        =&gt;</span> tcp_rcv_space_adjust<span class="function"><span class="params">(sk)</span>  
+            =&gt;</span> 调整至少每隔一个RTT才进行一次<span class="function">  
+            =&gt;</span> space = <span class="number">2</span> * (tp-&gt;copied_seq - tp-&gt;rcvq_space.seq)  <span class="regexp">//</span> 一个RTT内，接收并复制到用户空间的数量的<span class="number">2</span>倍  
+            ...<span class="function">  
+            =&gt;</span> sk-&gt;sk_rcvbuf = space  <span class="regexp">//</span> 调整接收缓冲区的大小<span class="function">  
+        =&gt;</span> sk_eat_skb(sk, skb, copied_early)  <span class="regexp">//</span> 如果一个skb内数据被拷贝完了，则释放掉该skb<span class="function">  
+
+    =&gt;</span> 如果没有skb可供拷贝  
+        <span class="regexp">/* 如果设置了MSG_WAITALL，target == len; 否则target == 1 */</span><span class="function">
+        =&gt;</span> <span class="keyword">if</span> (copied &gt;= target &amp;&amp; !sk-&gt;sk_backlog.tail) <span class="keyword">break</span>;  <span class="regexp">//</span> 如果读够了target，且backlog queue 为空则直接<span class="keyword">return</span><span class="function">  
+
+        =&gt;</span> tcp_cleanup_rbuf(sk, copied)  
+            <span class="regexp">/* 注意区分这个函数与sk_eat_skb()  后者是清掉某个skb及其内存, 前者的主要功能是发送一个接收窗口更新的ACK--因为用户进程消费了读缓存中的数据 */</span><span class="function">
+            =&gt;</span> <span class="keyword">if</span> <span class="function"><span class="params">(inet_csk_ack_scheduled(sk))</span>  // <span class="title">if</span> <span class="title">the</span> <span class="title">ack</span> <span class="title">is</span> <span class="title">scheduled</span> <span class="title">by</span> <span class="title">calling</span> <span class="title">tcp_ack_scheduled</span><span class="params">()</span>  
+                =&gt;</span> <span class="keyword">if</span> delayed ACK was blocked <span class="keyword">by</span> socket lock, send an ACK<span class="function">  
+                =&gt;</span> <span class="keyword">if</span> we have <span class="keyword">not</span> ACKed data <span class="keyword">of</span> length &gt; <span class="number">1</span>mss, send an ACK<span class="function">  
+                =&gt;</span> <span class="keyword">if</span> we have emptied the receive buffer, <span class="keyword">and</span> there <span class="keyword">is</span> data flow only <span class="keyword">in</span> one direction, send an ACK<span class="function">  
+            =&gt;</span> rcv_window_now = tcp_receive_window(tp)  <span class="regexp">//</span> 计算当前的应该通知对方的receive <span class="built_in">window</span><span class="function">
+                =&gt;</span> win = tp-&gt;rcv_wup + tp-&gt;rcv_wnd - tp-&gt;rcv_nxt  <span class="regexp">//</span> 左边界 + 当前receive_window - 已用<span class="function">  
+            =&gt;</span> new_window = __tcp_select_window(sk)  <span class="regexp">//</span> 计算新的接收窗口大小, 约为rcvbuf空闲部分的一半<span class="function">  
+            =&gt;</span> <span class="keyword">if</span> (new_window &amp;&amp; new_window &gt;= <span class="number">2</span> * rcv_window_now)  send an ACK<span class="function">  
+
+            =&gt;</span> <span class="keyword">if</span> (time_to_ack) tcp_send_ack(sk)   <span class="regexp">//</span> 如果上面有需要发送ack的需求，则发送一个ACK  
+        /* <span class="keyword">if</span> prequeue <span class="keyword">is</span> <span class="keyword">not</span> empty, we have to process it before releasing socket  
+         * queue的处理优先级如下：  
+         * receive queue 最高
+         * prequeue queue 次之
+         * backlog queue 最低
+         */<span class="function">  
+        =&gt;</span> <span class="keyword">if</span> prequeue <span class="keyword">is</span> <span class="keyword">not</span> empty, goto do_prequeue<span class="function">
+            =&gt;</span> tcp_prequeue_process<span class="function"><span class="params">(sk)</span>  
+                =&gt;</span> sk_backlog_rcv<span class="function"><span class="params">(sk, skb)</span>  == <span class="title">tcp_v4_do_rcv</span><span class="params">()</span>  
+
+        =&gt;</span> <span class="keyword">if</span> (copied &gt;= target)   <span class="regexp">//</span> 下面两个步骤主要就是为了处理backlog queue<span class="function">  
+            =&gt;</span> release_sock<span class="function"><span class="params">(sk)</span>  
+                =&gt;</span> <span class="keyword">if</span> <span class="function"><span class="params">(sk-&gt;sk_backlog.tail)</span>   
+                    =&gt;</span> __release_sock<span class="function"><span class="params">(sk)</span>  
+                        =&gt;</span> sk_backlog_rcv<span class="function"><span class="params">(sk, skb)</span>  == <span class="title">tcp_v4_do_rcv</span><span class="params">()</span>  
+            =&gt;</span> lock_sock<span class="function"><span class="params">(sk)</span> 
+        =&gt;</span> <span class="keyword">else</span><span class="function">  
+            =&gt;</span> sk_wait_data(sk, &amp;timeo)  <span class="regexp">//</span> 睡眠等待新数据的到来  
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
+<ol>
+<li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
+<li>否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。  </li>
+</ol>
+]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[TCP ADI in Linux(7): TCP send]]></title>
@@ -151,7 +340,7 @@ transmission/reception
     <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/"/>
     <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</id>
     <published>2014-11-18T06:22:06.000Z</published>
-    <updated>2014-11-18T13:29:58.000Z</updated>
+    <updated>2014-11-21T12:15:32.000Z</updated>
     <content type="html"><![CDATA[<p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
 <a id="more"></a>  
 
@@ -208,7 +397,7 @@ transmission/reception
 <li><p>unsigned char <em>skb_pull(struct sk_buff </em>skb, unsigned int len)<br>该函数与skb_push相对应，它将data指针往后移动，距离为len。也就意味着skb-&gt;len要减少len。当有数据包到达后，一层层解析包头的过程中往往会用到该函数。  </p>
 </li>
 </ol>
-<p>书中的5.5节描述了发送数据包时header是如何添加的，5.6节描述了收到的数据包头是如何被解析的。不过基本上熟悉了上面几个函数后，基本的惭怍方法应该都能理解了。还有不清楚的可以看下书。<br>这章主要就是讲sk_buff及其相关的一些操作函数，还算比较好理解。  </p>
+<p>书中的5.5节描述了发送数据包时header是如何添加的，5.6节描述了收到的数据包头是如何被解析的。不过基本上熟悉了上面几个函数后，基本的操作方法应该都能理解了。还有不清楚的可以看下书。<br>这章主要就是讲sk_buff及其相关的一些操作函数，还算比较好理解。  </p>
 <pre><code>tcp_skb_cb结构体是TCP层对于sk_buff-&gt;<span class="keyword">cb</span>的实例化。里面主要有seq，timestamp和sacked flag  
 </code></pre>]]></content>
     <summary type="html">
@@ -283,7 +472,7 @@ ACM
     <link href="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/"/>
     <id>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</id>
     <published>2014-11-05T01:52:27.000Z</published>
-    <updated>2014-11-18T03:53:00.000Z</updated>
+    <updated>2014-11-24T09:17:47.000Z</updated>
     <content type="html"><![CDATA[<p>这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。  </p>
 <a id="more"></a>  
 
@@ -535,11 +724,7 @@ Once a three-way handshake <span class="keyword">is</span> over, the connection 
 
 __tcp_v4_lookup_established() searches <span class="keyword">for</span> established connections <span class="keyword">in</span> the ehash table.  
 tcp_v4_lookup_listener() searches <span class="keyword">for</span> listening sockets <span class="keyword">in</span> the tcp_listening_hash hash table.  
-</code></pre><h4 id="TODO">TODO</h4>
-<ol>
-<li>fastpath 和 slowpath的区别  </li>
-</ol>
-]]></content>
+</code></pre>]]></content>
     <summary type="html">
     <![CDATA[<p>这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。  </p>
 ]]>
@@ -1583,42 +1768,6 @@ $reboot</span>
     <summary type="html">
     <![CDATA[<h3 id="List">List</h3>
 <p>声明一个list: list_name = [item1, item2]<br>中括号对应list<br>与C中的数据较类似，但也具有重大区别：list的长度是可变的！<br>    //给list添加新元素<br>    list_name.append(item)<br>    //获取list的长度<br>    len(list_name)<br>    //取部分list，类似对字符串的操作<br>    my_list = [0, 1, 2, 3]<br>    my_slice = my_list[1:3]    //结果是my_slice = [1, 2]</p>
-]]>
-    
-    </summary>
-    
-      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[[python学习笔记之二]常用模块和方法]]></title>
-    <link href="http://perthcharles.github.com/2013/09/14/python-learning-2/"/>
-    <id>http://perthcharles.github.com/2013/09/14/python-learning-2/</id>
-    <published>2013-09-14T04:01:01.000Z</published>
-    <updated>2014-11-04T06:23:32.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="模块加载方法">模块加载方法</h3>
-<p>1.generic imports<br>语法：import [module]<br>这种方式称之为generic import.在使用模块中的函数时，需要加上模块的前缀<br>如下例：<br>    import math<br>    print math.sqrt(25)</p>
-<a id="more"></a>
-
-<p>2.function imports<br>语法：form [module] import function<br>这种方式教适合仅需要使用到模块的一个函数的情形，且使用函数时无需加模块前缀<br>如下例：<br>    from math import sqrt<br>    print sqrt(25)</p>
-<p>3.universal imports<br>语法： from [module] import *<br>这种方式类似使用通配符，将模块中所有的函数和变量都导入了  </p>
-<h3 id="获取模块中可用的方法">获取模块中可用的方法</h3>
-<p>需要知道某个模块中都有哪些能用的方法，可以使用下面的方法得到<br>    import math<br>    print dir(math)</p>
-<h3 id="python_build-in_method">python build-in method</h3>
-<p>1.字符串处理的方法：在<a href="http://perthcharles.github.io/python/2013/09/04/python-learing-1" target="_blank" rel="external">python 基本入门</a>中有介绍  </p>
-<p>2.数值比较函数：max,min,abs  </p>
-<p>3.变量类型检查：type()  </p>
-<pre><code>&gt;&gt;&gt;print <span class="typedef"><span class="keyword">type</span><span class="container">(4)</span></span>
-&lt;<span class="typedef"><span class="keyword">type</span>, 'int'&gt;</span>
-&gt;&gt;&gt;<span class="typedef"><span class="keyword">type</span><span class="container">(4)</span> == int</span>
-<span class="type">True</span>
-</code></pre><h3 id="常用模块">常用模块</h3>
-<p>1.math：常用数学函数<br>2.matplotlib: 画图模块，与matlab函数接口类似  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h3 id="模块加载方法">模块加载方法</h3>
-<p>1.generic imports<br>语法：import [module]<br>这种方式称之为generic import.在使用模块中的函数时，需要加上模块的前缀<br>如下例：<br>    import math<br>    print math.sqrt(25)</p>
 ]]>
     
     </summary>

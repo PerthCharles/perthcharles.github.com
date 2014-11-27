@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+
+  
+  <title>TCP ADI in Linux(8): TCP receive | 天赋，无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这章主要是TCP接收包得处理流程。kernel对于TCP包得处理大致可以分为两类：  
+
+如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  
+否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP ADI in Linux(8): TCP receive">
+<meta property="og:url" content="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/">
+<meta property="og:site_name" content="天赋，无与伦比的坚持">
+<meta property="og:description" content="这章主要是TCP接收包得处理流程。kernel对于TCP包得处理大致可以分为两类：  
+
+如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  
+否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP ADI in Linux(8): TCP receive">
+<meta name="twitter:description" content="这章主要是TCP接收包得处理流程。kernel对于TCP包得处理大致可以分为两类：  
+
+如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  
+否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋，无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋，无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-tcp-design-and-implementation-8" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/11/20/tcp-design-and-implementation-8/" class="article-date">
+  <time datetime="2014-11-20T08:17:45.000Z" itemprop="datePublished">11月 20 2014</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      TCP ADI in Linux(8): TCP receive
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
+<ol>
+<li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
+<li>否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。  </li>
+</ol>
+<a id="more"></a>  
+
+<p>8.1 Queuing mechanism<br>处理收到的TCP时，涉及到三个queue：backlog queue, prequeue, 和receive queue。<br>注：prequeue好像已经是一个过气的概念了。  </p>
+<pre><code><span class="number">1</span>. receive queue 包含的都是处理过的包，也就是说所有的协议头都被解析完了，  
+   里面的数据就等着被复制到<span class="literal">user</span> space了。  
+</code></pre><p>TCP层处理数据包的第一个函数是tcp_v4_rcv()，首先从这个函数开始理解整个流程。  </p>
+<pre><code>tcp_v4_rcv()  <span class="comment">// net/ipv4/tcp_ipv4.c  </span>
+    =&gt; sk = __inet_lookup_skb()  <span class="comment">// 找到skb属于的sock结构体  </span>
+    =&gt; <span class="keyword">if</span> (!sock_owned_by_user(sk))  <span class="comment">// sock未被加锁  </span>
+        =&gt; <span class="keyword">if</span> (!tcp_prequeue(sk, skb))  <span class="comment">// 如果符合加入prequeue的原则，则加入prequeue，返回true;反之返回false  </span>
+            =&gt; ret = tcp_v4_do_rcv(sk, skb)  
+                =&gt; tcp_rcv_established()  <span class="comment">// receive function for the ESTABLISHED state  </span>
+                    =&gt; <span class="keyword">if</span> (len == tcp_header_len)  <span class="comment">// 如果是纯ack包</span>
+                        =&gt; tcp_ack(sk, skb, <span class="number">0</span>)  <span class="comment">// dealing with incoming acks  </span>
+                            =&gt; flag |= tcp_clean_rtx_queue()  <span class="comment">// see if we can take anything off of the retransmit queue  </span>
+                            =&gt; <span class="keyword">if</span> (tcp_ack_is_dubious(sk, flag)  <span class="comment">// 判断时候出现可疑情况，具体看下代码吧。  </span>
+                                =&gt; tcp_fastretrans_alert()  <span class="comment">// 进入快速重传  </span>
+                                    =&gt; tcp_cwnd_down()  <span class="comment">// decrease cwnd each second ack, 该函数就是快速重传对cwnd操作的关键函数  </span>
+                                    =&gt; tcp_xmit_retransmit_queue(sk)  <span class="comment">// 在重传阶段，该函数负责找到合适的数据进行重传  </span>
+                        =&gt; __kfree_skb(skb)  <span class="comment">// free an sk_buff  </span>
+                        =&gt; tcp_data_snd_check(sk)  <span class="comment">// 如果有数据需要发送，则发送数据到对端  </span>
+                            =&gt; tcp_push_pending_frames(sk)   <span class="comment">// 发送pending的数据</span>
+                                =&gt; tcp_write_xmit()  <span class="comment">// writes packets to the network， 这部分在上一章已经分析过了   </span>
+                            =&gt; tcp_check_space(sk)  <span class="comment">//  如果有内存释放，则唤醒等待内存的队列  </span>
+                                <span class="comment">/* when incoming ACK allows to free some skb from write_queue,  
+                                 * we remember this event in flag SOCK_QUEUE_SHRUNK and wake up socket  
+                                 * on the exit from tcp input hander.
+                                 *  
+                                 * PROBLEM: sndbuf expansion does not work well with largesend. 
+                                 */</span>
+                                =&gt; tcp_new_space(sk)  
+                                    =&gt; sk<span class="variable">-&gt;sk_sndbuf</span> = min(sndmem, sysctl_tcp_wmem[<span class="number">2</span>])  <span class="comment">// expand the sndbuf if possible  </span>
+                    =&gt; <span class="keyword">else</span> <span class="comment">// 如果是带数据的包  </span>
+                        <span class="comment">/* 此数据包刚好是下一个读取的数据，并且用户空间可存放下该数据包 */</span>
+                        =&gt; <span class="keyword">if</span> (tp<span class="variable">-&gt;copied_seq</span> == tp<span class="variable">-&gt;rcv_nxt</span> &amp;&amp; len - tcp_header_len &lt;= tp<span class="variable">-&gt;ucopy</span>.len)  
+                            <span class="comment">/* 如果函数在进程上下文调用并且sock被用户占用的话 */</span>
+                            =&gt; <span class="keyword">if</span> (tp<span class="variable">-&gt;ucopy</span>.task == current &amp;&amp; sock_owned_by_user(sk) &amp;&amp; !copied_early)  
+                                =&gt; tcp_copy_to_iovec()  <span class="comment">// 直接copy 到用户空间  </span>
+                        =&gt; <span class="keyword">if</span> (!eaten)  <span class="comment">// 没有直接读到用户空间  </span>
+                            <span class="comment">/* 当truesize大于sk_forward_alloc时，表示已分配的限额已经用完，不能直接放到receive queue中, 此时往往要重新计算sk_forward_alloc */</span>
+                            =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;truesize</span> &gt; sk<span class="variable">-&gt;sk_forward_alloc</span>) <span class="keyword">goto</span> step5  
+                            =&gt; eaten = tcp_queue_rcv()  
+                                =&gt; tcp_try_coalesce()  <span class="comment">// try merge skb to prior one  </span>
+                                =&gt; <span class="keyword">if</span> (!eaten) __skb_queue_tail()  <span class="comment">// 如果上一步未成功，则将skb放入receive queue中  </span>
+                        =&gt; tcp_event_data_recv(sk, skb)  <span class="comment">// 数据包接收后续处理  </span>
+                            <span class="comment">/* 每次收到超过128字节的数据报后，需要调用tcp_grow_window增加rcv_ssthresh的值 */</span>
+                            =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;len</span> &gt;= <span class="number">128</span>) tcp_grow_window(sk, skb) 
+                        =&gt; __tcp_ack_snd_check(sk, <span class="number">0</span>) <span class="comment">// check if sending an ack is needed  </span>
+
+                    =&gt; tcp_validate_incoming(sk, skb, th, <span class="number">1</span>)  <span class="comment">// standard slow path, [details ignored]  </span>
+                    =&gt; tcp_data_queue(sk, skb)  <span class="comment">// 对数据包进行处理  </span>
+                        =&gt; <span class="keyword">if</span> (TCP_SKB_CB(skb)<span class="variable">-&gt;seq</span> == tp<span class="variable">-&gt;rcv_nxt</span>)   <span class="comment">// 如果是待接收的报文  </span>
+                            =&gt; <span class="keyword">if</span> (tcp_receive_window(tp) == <span class="number">0</span>) <span class="keyword">goto</span> out_of_window;  <span class="comment">// 如果超出rwnd，则直接丢掉  </span>
+                            =&gt; 如果正在读，且正是要读的数据，那么直接拷贝到用户空间  
+                            =&gt; <span class="keyword">else</span> eaten = tcp_queue_rcv()  <span class="comment">// 将数据放入receive queue中  </span>
+                            =&gt; <span class="keyword">if</span> (!skb_queue_empty(&amp;tp<span class="variable">-&gt;out_of_order_queue</span>))  <span class="comment">// 如果out of ordre queue不为空  </span>
+                                =&gt; tcp_ofo_queue(sk)  <span class="comment">// This one checks to see if we can put data from the out-of-order queue into the receive-queue  </span>
+                            =&gt; tcp_fast_path_check(sk)  <span class="comment">// 检查是否可以从slowpath回到fastpath  </span>
+
+                        =&gt; <span class="keyword">else</span> tcp_data_queue_ofo(sk, skb)  <span class="comment">// 将数据包放到out-of-order queue中  </span>
+                    =&gt; tcp_data_snd_check(sk)  <span class="comment">// 如果有数据需要发送，则发送数据到对端  </span>
+                    =&gt; tcp_ack_snd_check(sk)  <span class="comment">// 判断是否有必要发送一个ack  </span>
+</code></pre><hr>
+<h4 id="prequeue的作用">prequeue的作用</h4>
+<p>首先来理解两个相关的参数。    </p>
+<ol>
+<li><p>sysctl_tcp_low_latency == /proc/sys/net/ipv4/tcp_low_latency<br>通过man 7 tcp可以看到官方的解释  </p>
+<p> tcp_low_latency (Boolean; default: disabled)  </p>
+<pre><code> <span class="keyword">If</span> enabled, the  TCP  stack makes decisions that prefer lower
+ latency <span class="keyword">as</span> opposed <span class="keyword">to</span> higher throughput.   It  this  <span class="keyword">option</span>  <span class="keyword">is</span>
+ disabled,  <span class="keyword">then</span>  higher throughput <span class="keyword">is</span> preferred.  An example <span class="keyword">of</span>
+ an application <span class="keyword">where</span> this <span class="keyword">default</span> should be changed would be  a
+ Beowulf compute cluster.
+</code></pre></li>
+</ol>
+<ol>
+<li>tcp_sock-&gt;ucopy.task<br>ucopy.task != NULL 表示进程空间有进程在等待sock的数据到来  </li>
+</ol>
+<p>下面这句话是tcp_prequeue()的一个关键判断：是否将该skb放到prequeue中。  </p>
+<pre><code><span class="keyword">if</span> (sysctl_tcp_low_latency || !tp-&gt;ucopy.task) <span class="keyword">return</span> <span class="keyword">false</span>;  
+</code></pre><p>首先字面理解这行代码就是说:<br>如果更关心low latency则不用prequeue;<br>如果当前用进程在等待读数据，则不用prequeue.  </p>
+<p>根据目前的理解，我认为prequeue有如下几方面的作用：  </p>
+<pre><code>1. 进prequeue处理会更侧重throughput。
+    由于软中断每次处理一个包，如果不进prequeue，而调用<span class="function">tcp_v4_do_rcv</span>()放进receive queue的话，  
+    工作量会不少(<span class="function">tcp_rcv_established</span>()函数很复杂的)。  
+    为了软中断更快的完成，放进prequeue后软中断就直接返回了，从而能更多地处理更多地收包。  
+    具体处理prequeue中数据的任务交给了进程上下文(即tcp_recvmsg调用中)去处理了。   
+    注：其实最终prequeue中的skb还是调用<span class="function">tcp_v4_do_rcv</span>()来处理的，所以放在prequeue中只是选择不同的处理skb的时机罢了。  
+2. 进prequeue能够更快速的唤醒blocking状态的数据读请求。  
+    这点很显然，进入prequeue的话，一般会立即wake up等待的进程。
+</code></pre><hr>
+<p>fastpath VS slowpath<br>这是一个看代码才了解到的概念，目前理解还不是太透彻，只是通过注释和代码初步知道了一些判断是否进入fast path的原则。区分这两类path的具体原因还没理解，等之后理解了再来补充吧。<br>目前的猜测可能是说满足fast path条件的话能省去许多判断的工作。暂时就简单列下tcp_rcv_established函数前面的一些注释吧：  </p>
+<pre><code>The fast path <span class="keyword">is</span> disabled <span class="keyword">when</span>:  
+- A zero window was announced from us - zero window probing  
+  <span class="keyword">is</span> only handled properly <span class="keyword">in</span> the slow path.  
+- <span class="keyword">Out</span> <span class="keyword">of</span> order segments arrived.  
+- Urgent data <span class="keyword">is</span> expected.  
+- There <span class="keyword">is</span> no <span class="keyword">buffer</span> space left.  
+- Unexpected TCP flags/window value/header lenghts are received  
+  (detected by checking the TCP header against pred_flags)  
+- Data <span class="keyword">is</span> sent <span class="keyword">in</span> both directions. Fast path only supports <span class="keyword">pure</span> senders  
+  <span class="keyword">or</span> <span class="keyword">pure</span> receivers (this means either the <span class="keyword">sequence</span> number <span class="keyword">or</span> the ack  
+  value must stay <span class="keyword">constant</span>)  
+- Unexpected TCP option.  
+
+Fast processing <span class="keyword">is</span> turned <span class="keyword">on</span> <span class="keyword">in</span> tcp_data_queue <span class="keyword">when</span> everything <span class="keyword">is</span> OK.  
+</code></pre><hr>
+<h3 id="Processing_of_Queues">Processing of Queues</h3>
+<p>TCP的接收队列的处理主要是在tcp_recvmsg()函数中，所以先从这个函数入手。<br>CSDN的<a href="http://blog.csdn.net/mrpre/article/details/33347221" target="_blank" rel="external">这篇博客</a>是一个不错的参考，不过一切还请以代码为准。  </p>
+<pre><code>tcp_recvmsg()  <span class="regexp">//</span> <span class="keyword">this</span> routine copies from a sock struct into the user buffer<span class="function">  
+    =&gt;</span> lock_sock(sk)  <span class="regexp">//</span> become a socket user<span class="function">  
+    =&gt;</span> skb_queue_walk()  <span class="regexp">//</span> get a skb<span class="function">  
+
+    =&gt;</span> 如果有skb可供拷贝<span class="function">  
+        =&gt;</span> err = skb_copy_datagram_iovec()  <span class="regexp">//</span> copy data into iovec <span class="keyword">if</span> found_ok_skb  
+        /* This <span class="reserved">function</span> should be called every time data <span class="keyword">is</span> copied to user space.  
+         * It calculates the appropriate TCP receive buffer space.  
+         */<span class="function">  
+        =&gt;</span> tcp_rcv_space_adjust<span class="function"><span class="params">(sk)</span>  
+            =&gt;</span> 调整至少每隔一个RTT才进行一次<span class="function">  
+            =&gt;</span> space = <span class="number">2</span> * (tp-&gt;copied_seq - tp-&gt;rcvq_space.seq)  <span class="regexp">//</span> 一个RTT内，接收并复制到用户空间的数量的<span class="number">2</span>倍  
+            ...<span class="function">  
+            =&gt;</span> sk-&gt;sk_rcvbuf = space  <span class="regexp">//</span> 调整接收缓冲区的大小<span class="function">  
+        =&gt;</span> sk_eat_skb(sk, skb, copied_early)  <span class="regexp">//</span> 如果一个skb内数据被拷贝完了，则释放掉该skb<span class="function">  
+
+    =&gt;</span> 如果没有skb可供拷贝  
+        <span class="regexp">/* 如果设置了MSG_WAITALL，target == len; 否则target == 1 */</span><span class="function">
+        =&gt;</span> <span class="keyword">if</span> (copied &gt;= target &amp;&amp; !sk-&gt;sk_backlog.tail) <span class="keyword">break</span>;  <span class="regexp">//</span> 如果读够了target，且backlog queue 为空则直接<span class="keyword">return</span><span class="function">  
+
+        =&gt;</span> tcp_cleanup_rbuf(sk, copied)  
+            <span class="regexp">/* 注意区分这个函数与sk_eat_skb()  后者是清掉某个skb及其内存, 前者的主要功能是发送一个接收窗口更新的ACK--因为用户进程消费了读缓存中的数据 */</span><span class="function">
+            =&gt;</span> <span class="keyword">if</span> <span class="function"><span class="params">(inet_csk_ack_scheduled(sk))</span>  // <span class="title">if</span> <span class="title">the</span> <span class="title">ack</span> <span class="title">is</span> <span class="title">scheduled</span> <span class="title">by</span> <span class="title">calling</span> <span class="title">tcp_ack_scheduled</span><span class="params">()</span>  
+                =&gt;</span> <span class="keyword">if</span> delayed ACK was blocked <span class="keyword">by</span> socket lock, send an ACK<span class="function">  
+                =&gt;</span> <span class="keyword">if</span> we have <span class="keyword">not</span> ACKed data <span class="keyword">of</span> length &gt; <span class="number">1</span>mss, send an ACK<span class="function">  
+                =&gt;</span> <span class="keyword">if</span> we have emptied the receive buffer, <span class="keyword">and</span> there <span class="keyword">is</span> data flow only <span class="keyword">in</span> one direction, send an ACK<span class="function">  
+            =&gt;</span> rcv_window_now = tcp_receive_window(tp)  <span class="regexp">//</span> 计算当前的应该通知对方的receive <span class="built_in">window</span><span class="function">
+                =&gt;</span> win = tp-&gt;rcv_wup + tp-&gt;rcv_wnd - tp-&gt;rcv_nxt  <span class="regexp">//</span> 左边界 + 当前receive_window - 已用<span class="function">  
+            =&gt;</span> new_window = __tcp_select_window(sk)  <span class="regexp">//</span> 计算新的接收窗口大小, 约为rcvbuf空闲部分的一半<span class="function">  
+            =&gt;</span> <span class="keyword">if</span> (new_window &amp;&amp; new_window &gt;= <span class="number">2</span> * rcv_window_now)  send an ACK<span class="function">  
+
+            =&gt;</span> <span class="keyword">if</span> (time_to_ack) tcp_send_ack(sk)   <span class="regexp">//</span> 如果上面有需要发送ack的需求，则发送一个ACK  
+        /* <span class="keyword">if</span> prequeue <span class="keyword">is</span> <span class="keyword">not</span> empty, we have to process it before releasing socket  
+         * queue的处理优先级如下：  
+         * receive queue 最高
+         * prequeue queue 次之
+         * backlog queue 最低
+         */<span class="function">  
+        =&gt;</span> <span class="keyword">if</span> prequeue <span class="keyword">is</span> <span class="keyword">not</span> empty, goto do_prequeue<span class="function">
+            =&gt;</span> tcp_prequeue_process<span class="function"><span class="params">(sk)</span>  
+                =&gt;</span> sk_backlog_rcv<span class="function"><span class="params">(sk, skb)</span>  == <span class="title">tcp_v4_do_rcv</span><span class="params">()</span>  
+
+        =&gt;</span> <span class="keyword">if</span> (copied &gt;= target)   <span class="regexp">//</span> 下面两个步骤主要就是为了处理backlog queue<span class="function">  
+            =&gt;</span> release_sock<span class="function"><span class="params">(sk)</span>  
+                =&gt;</span> <span class="keyword">if</span> <span class="function"><span class="params">(sk-&gt;sk_backlog.tail)</span>   
+                    =&gt;</span> __release_sock<span class="function"><span class="params">(sk)</span>  
+                        =&gt;</span> sk_backlog_rcv<span class="function"><span class="params">(sk, skb)</span>  == <span class="title">tcp_v4_do_rcv</span><span class="params">()</span>  
+            =&gt;</span> lock_sock<span class="function"><span class="params">(sk)</span> 
+        =&gt;</span> <span class="keyword">else</span><span class="function">  
+            =&gt;</span> sk_wait_data(sk, &amp;timeo)  <span class="regexp">//</span> 睡眠等待新数据的到来  
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/" data-id="fppat20upb7xbs0k" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP/">TCP</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/11/19/tcp-design-and-implementation-7/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">TCP ADI in Linux(7): TCP send</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/11/20/tcp-design-and-implementation-8/">TCP ADI in Linux(8): TCP receive</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/19/tcp-design-and-implementation-7/">TCP ADI in Linux(7): TCP send</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-6/">TCP ADI in Linux(6): Movement of sk_buff across protocol layers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-5/">TCP ADI in Linux(5): sk_buff and protocol headers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/16/tcpdump-tcptrace-tshark/">Analysis tools for network traces</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/05/setup-nginx-sever/">Setup Nginx server in linux</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/26/make-progress-everyday/">知识积累</a>
+          </li>
+        
+          <li>
+            <a href="/2014/04/20/the-art-of-readable-code/">The Art of Readable Code</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 11.67px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a><a href="/tags/yum/" style="font-size: 11.67px;">yum</a><a href="/tags/自学材料/" style="font-size: 11.67px;">自学材料</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

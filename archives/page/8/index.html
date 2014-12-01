@@ -68,6 +68,57 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-using-git-to-write-blog-in-win7" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/12/using-git-to-write-blog-in-win7/" class="article-date">
+  <time datetime="2013-08-12T15:00:00.000Z" itemprop="datePublished">8月 12 2013</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/博客搭建/">博客搭建</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/12/using-git-to-write-blog-in-win7/">win7下搭建博客环境</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="安装包下载地址">安装包下载地址</h2>
+<p><a href="https://code.google.com/p/msysgit/downloads/list" target="_blank" rel="external">git for windows:msysgit</a><br><a href="http://rubyinstaller.org/downloads/" target="_blank" rel="external">RubyInstallers</a>  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/08/12/using-git-to-write-blog-in-win7/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/12/using-git-to-write-blog-in-win7/" data-id="pwbp8mgnqhg9k2aj" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/12/using-git-to-write-blog-in-win7/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Git/">Git</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-a-macro-for-excel" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2013/07/15/a-macro-for-excel/" class="article-date">
@@ -268,58 +319,9 @@
 
 
   
-    <article id="post-git-multi-user-error" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/05/31/git-multi-user-error/" class="article-date">
-  <time datetime="2013-05-31T05:00:00.000Z" itemprop="datePublished">5月 31 2013</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/05/31/git-multi-user-error/">git multi user error</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="如果在同一台机器上尝试使用多个git帐号，可能遇到下面这个问题：">如果在同一台机器上尝试使用多个git帐号，可能遇到下面这个问题：</h2>
-<pre><code><span class="comment">#git push origin master</span>
-ERROR: Permission <span class="built_in">to</span> repo1.git denied <span class="built_in">to</span> user2.       <span class="comment"> //repo1.git 属于user1.所以出错点已经很明显。</span>
-fatal: The remote <span class="function"><span class="keyword">end</span> <span class="title">hung</span> <span class="title">up</span> <span class="title">unexpectedly</span></span>
-<span class="comment">#ssh git@github.com -v    //检测github识别的用户</span>
-Hi user2! You<span class="string">'ve successfully authenticated, but GitHub does not provide shell access.    //看到了吧，github识别的是第二个帐号</span>
-</code></pre><p>上面这种问题出现的情况可能是你的ssh key配置出现问题，尝试各种选择，最终适合我的解决方法是：<br><em>删除user2中的ssh key</em>，因为我的问题是同一个key加到了两个不同的帐号里面，这样可能github不支持，而只认识最早加上这个key的用户。  </p>
-<h2 id="参考资料">参考资料</h2>
-<p><a href="http://git-scm.com/book/en/Getting-Started-First-Time-Git-Setup" target="_blank" rel="external">Getting Started - First-Time Git Setup</a><br><a href="http://stackoverflow.com/questions/5335197/gits-famous-error-permission-to-git-denied-to-user" target="_blank" rel="external">Git’s famous “ERROR: Permission to .git denied to user”</a>  </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/05/31/git-multi-user-error/" data-id="5hde9z2bvxg4f9jy" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/05/31/git-multi-user-error/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Git/">Git</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/page/7/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/6/">6</a><a class="page-number" href="/archives/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/archives/page/9/">9</a><a class="page-number" href="/archives/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/15/">15</a><a class="extend next" rel="next" href="/archives/page/9/">Next &raquo;</a>
+      <a class="extend prev" rel="prev" href="/archives/page/7/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/6/">6</a><a class="page-number" href="/archives/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/archives/page/9/">9</a><a class="page-number" href="/archives/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/16/">16</a><a class="extend next" rel="next" href="/archives/page/9/">Next &raquo;</a>
     </nav>
   
 </section>
@@ -330,7 +332,7 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -340,6 +342,10 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/11/28/tcp-design-and-implementation-9/">TCP ADI in Linux(9): TCP Memory Management</a>
+          </li>
         
           <li>
             <a href="/2014/11/20/tcp-design-and-implementation-8/">TCP ADI in Linux(8): TCP receive</a>
@@ -397,10 +403,6 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
             <a href="/2014/04/26/make-progress-everyday/">知识积累</a>
           </li>
         
-          <li>
-            <a href="/2014/04/20/the-art-of-readable-code/">The Art of Readable Code</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -420,7 +422,7 @@ Hi user2! You<span class="string">'ve successfully authenticated, but GitHub doe
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

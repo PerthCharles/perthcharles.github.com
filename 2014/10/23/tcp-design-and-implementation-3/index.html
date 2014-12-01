@@ -203,12 +203,22 @@ u16        advmss;                    <span class="comment">// advertised MSS  <
     TCP sockets.  
 </code></pre><p>最后结合Linux v3.10的代码梳理一下，sys-socket()中暂时感兴趣的major rountines.  </p>
 <pre><code>socket() [User Space] 等价于 sys_socket() [Kernel Space]
-__________________________________________________________________<span class="function">
-=&gt;</span> sock_create<span class="function"><span class="params">()</span> 
-    =&gt;</span> net_families[family]<span class="function">-&gt;</span>create<span class="function"><span class="params">()</span> = <span class="title">inet_create</span><span class="params">()</span>
-        =&gt;</span> sock_init_data()  <span class="regexp">//</span> 完成sock结构体的初始化<span class="function">
-        =&gt;</span> sk-&gt;sk_prot-&gt;init<span class="function"><span class="params">()</span> = <span class="title">tcp_v4_init_sock</span><span class="params">()</span>    
-            =&gt;</span> tcp_init_sock()  <span class="regexp">//</span> 完成tcp_sock结构体的初始化
+__________________________________________________________________
+SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol)  <span class="comment">// net/socket.c</span>
+    =&gt; sock_create() <span class="comment">// 在net/socket.c文件中  </span>
+        =&gt; sock = sock_alloc()  <span class="comment">// allocate the BSD socket</span>
+        =&gt; pf = rcu_dereference(net_families[family]);  <span class="comment">// 根据family值，得到struct net_proto_family结构体  </span>
+        =&gt; pf<span class="variable">-&gt;create</span>() = inet_create()  <span class="comment">// PF_INET对应的定义在net/ipv4/af_inet.c中  </span>
+            =&gt; 遍历inetsw <span class="keyword">list</span>，如果protocol没设置，则默认会匹配成IPPROTO_TCP
+            =&gt; sock<span class="variable">-&gt;ops</span> = answer<span class="variable">-&gt;ops</span>  <span class="comment">// 设置sock-&gt;ops = &amp;inet_stream_ops</span>
+            =&gt; sk = sk_alloc()  <span class="comment">// 分配struct sock结构体，传递了tcp_prot结构体地址作为参数，所以一次性分配了整个tcp_sock结构体大小的内存空间  </span>
+            =&gt; sock_init_data()  <span class="comment">// 完成sock结构体的初始化，把sock与socket关联</span>
+
+            =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;init</span>() = tcp_v4_init_sock()    
+                =&gt; tcp_init_sock()  <span class="comment">// 完成tcp_sock结构体的初始化</span>
+    =&gt; sock_map_fd()  <span class="comment">// bind sock with fd</span>
+        =&gt; fd = get_unused_fd_flags()
+        =&gt; newfile = sock_alloc_file()  <span class="comment">// create file 结构体，并于socket关联</span>
 </code></pre>
       
     </div>
@@ -260,7 +270,7 @@ __________________________________________________________________<span class="f
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -270,6 +280,10 @@ __________________________________________________________________<span class="f
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2014/11/28/tcp-design-and-implementation-9/">TCP ADI in Linux(9): TCP Memory Management</a>
+          </li>
         
           <li>
             <a href="/2014/11/20/tcp-design-and-implementation-8/">TCP ADI in Linux(8): TCP receive</a>
@@ -327,10 +341,6 @@ __________________________________________________________________<span class="f
             <a href="/2014/04/26/make-progress-everyday/">知识积累</a>
           </li>
         
-          <li>
-            <a href="/2014/04/20/the-art-of-readable-code/">The Art of Readable Code</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -350,7 +360,7 @@ __________________________________________________________________<span class="f
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

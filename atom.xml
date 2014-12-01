@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-11-27T14:18:51.992Z</updated>
+  <updated>2014-12-01T13:07:07.755Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,35 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[TCP ADI in Linux(9): TCP Memory Management]]></title>
+    <link href="http://perthcharles.github.com/2014/11/28/tcp-design-and-implementation-9/"/>
+    <id>http://perthcharles.github.com/2014/11/28/tcp-design-and-implementation-9/</id>
+    <published>2014-11-28T09:13:03.000Z</published>
+    <updated>2014-11-28T13:42:14.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h3 id="TODO">TODO</h3>
+<ol>
+<li>sk-&gt;forward_alloc的真实含义？  </li>
+<li>sk_wmem_schedule 和 sk_rmem_schedule的用途？<br> Note: 书中有提到tcp_mem_schedule是一个forward allocation of memory的相关函数。<br> 所以sk_wmem_schedule这些是不是也有可能是一样的？  </li>
+</ol>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h3 id="TODO">TODO</h3>
+<ol>
+<li>sk-&gt;forward_alloc的真实含义？  </li>
+<li>sk_wmem_schedule 和 sk_rmem_schedule的用途？<br> Note: 书中有提到tcp_mem_s]]>
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[TCP ADI in Linux(8): TCP receive]]></title>
@@ -820,7 +849,7 @@ tcp_v4_lookup_listener() searches <span class="keyword">for</span> listening soc
     <link href="http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/"/>
     <id>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/</id>
     <published>2014-10-23T14:29:08.000Z</published>
-    <updated>2014-11-03T14:34:43.000Z</updated>
+    <updated>2014-12-01T13:06:32.000Z</updated>
     <content type="html"><![CDATA[<p>这章主要从socket()系统调用入手，介绍socket建立时初始化的一些重要数据结构。熟练掌握这些数据结构和他们之间的关系能够有效的帮助理解代码，所以这部分随着理解的加深，随时需要补充和完善。  </p>
 <a id="more"></a>
 
@@ -932,12 +961,22 @@ u16        advmss;                    <span class="comment">// advertised MSS  <
     TCP sockets.  
 </code></pre><p>最后结合Linux v3.10的代码梳理一下，sys-socket()中暂时感兴趣的major rountines.  </p>
 <pre><code>socket() [User Space] 等价于 sys_socket() [Kernel Space]
-__________________________________________________________________<span class="function">
-=&gt;</span> sock_create<span class="function"><span class="params">()</span> 
-    =&gt;</span> net_families[family]<span class="function">-&gt;</span>create<span class="function"><span class="params">()</span> = <span class="title">inet_create</span><span class="params">()</span>
-        =&gt;</span> sock_init_data()  <span class="regexp">//</span> 完成sock结构体的初始化<span class="function">
-        =&gt;</span> sk-&gt;sk_prot-&gt;init<span class="function"><span class="params">()</span> = <span class="title">tcp_v4_init_sock</span><span class="params">()</span>    
-            =&gt;</span> tcp_init_sock()  <span class="regexp">//</span> 完成tcp_sock结构体的初始化
+__________________________________________________________________
+SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol)  <span class="comment">// net/socket.c</span>
+    =&gt; sock_create() <span class="comment">// 在net/socket.c文件中  </span>
+        =&gt; sock = sock_alloc()  <span class="comment">// allocate the BSD socket</span>
+        =&gt; pf = rcu_dereference(net_families[family]);  <span class="comment">// 根据family值，得到struct net_proto_family结构体  </span>
+        =&gt; pf<span class="variable">-&gt;create</span>() = inet_create()  <span class="comment">// PF_INET对应的定义在net/ipv4/af_inet.c中  </span>
+            =&gt; 遍历inetsw <span class="keyword">list</span>，如果protocol没设置，则默认会匹配成IPPROTO_TCP
+            =&gt; sock<span class="variable">-&gt;ops</span> = answer<span class="variable">-&gt;ops</span>  <span class="comment">// 设置sock-&gt;ops = &amp;inet_stream_ops</span>
+            =&gt; sk = sk_alloc()  <span class="comment">// 分配struct sock结构体，传递了tcp_prot结构体地址作为参数，所以一次性分配了整个tcp_sock结构体大小的内存空间  </span>
+            =&gt; sock_init_data()  <span class="comment">// 完成sock结构体的初始化，把sock与socket关联</span>
+
+            =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;init</span>() = tcp_v4_init_sock()    
+                =&gt; tcp_init_sock()  <span class="comment">// 完成tcp_sock结构体的初始化</span>
+    =&gt; sock_map_fd()  <span class="comment">// bind sock with fd</span>
+        =&gt; fd = get_unused_fd_flags()
+        =&gt; newfile = sock_alloc_file()  <span class="comment">// create file 结构体，并于socket关联</span>
 </code></pre>]]></content>
     <summary type="html">
     <![CDATA[<p>这章主要从socket()系统调用入手，介绍socket建立时初始化的一些重要数据结构。熟练掌握这些数据结构和他们之间的关系能够有效的帮助理解代码，所以这部分随着理解的加深，随时需要补充和完善。  </p>
@@ -1737,42 +1776,6 @@ $reboot</span>
     </summary>
     
       <category term="YQL" scheme="http://perthcharles.github.com/tags/YQL/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[[python学习笔记之三]lists 和 dictionaries]]></title>
-    <link href="http://perthcharles.github.com/2013/09/14/python-learning-3/"/>
-    <id>http://perthcharles.github.com/2013/09/14/python-learning-3/</id>
-    <published>2013-09-14T14:00:00.000Z</published>
-    <updated>2014-11-04T06:24:42.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="List">List</h3>
-<p>声明一个list: list_name = [item1, item2]<br>中括号对应list<br>与C中的数据较类似，但也具有重大区别：list的长度是可变的！<br>    //给list添加新元素<br>    list_name.append(item)<br>    //获取list的长度<br>    len(list_name)<br>    //取部分list，类似对字符串的操作<br>    my_list = [0, 1, 2, 3]<br>    my_slice = my_list[1:3]    //结果是my_slice = [1, 2]</p>
-<a id="more"></a>
-
-<p>1.查找list中的item<br>    a = [1, 2, 3, 4, 5]<br>    four_index = a.index(4)<br>    print four_index    //4对应的index为3<br>2.添加item至list<br>    a = [1, 3, 4]<br>    a.insert(1, 2)    //在index为1的位置插入数值2<br>    print a     //[1, 2, 3, 4]<br>3.使用for循环对list进行操作<br>语法：<br>    for variable in list_name:</p>
-<pre><code>    #<span class="operator"><span class="keyword">do</span> <span class="keyword">stuff</span></span>
-</code></pre><p>语法上跟shell的类似，但是格式上需要注意<em>冒号</em>的使用  </p>
-<p>4.对list进行排序<br>使用list_name.sort()会对list进行排序，排序原则是：按数字或字母增序排列  </p>
-<p>5.对list进行删除<br>语法：list_name.remove(item)  </p>
-<p>6.检测list中是否含有某元素  </p>
-<pre><code>&gt;&gt;&gt;x in list_name
-=&gt; <span class="keyword">False</span>    <span class="comment">//x不在list中</span>
-=&gt; <span class="keyword">True</span>     <span class="comment">//x在list中</span>
-</code></pre><h3 id="dictionary">dictionary</h3>
-<p>所谓字典就是每个item都是一对key-value对。通过key获取value<br>与list类似，dictionary同样是mutable。比如：<br>    //声明一个新dictionary<br>    dict_name = {‘a’:1, ‘b’:2}<br>    //添加新的key-value对,如果key存在，相当于重新赋值<br>    dict_name[new_key] = new_value<br>    //删除一对key-value<br>    del dict_name[key_name]</p>
-<h3 id="其他">其他</h3>
-<p>1.float():强制转换为float类型<br>    a = 1<br>    b = float(a)    //b = 1.0</p>
-<p>2.对于由数值构成的list，求和可以直接使用sum()<br>    result = sum(list)</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h3 id="List">List</h3>
-<p>声明一个list: list_name = [item1, item2]<br>中括号对应list<br>与C中的数据较类似，但也具有重大区别：list的长度是可变的！<br>    //给list添加新元素<br>    list_name.append(item)<br>    //获取list的长度<br>    len(list_name)<br>    //取部分list，类似对字符串的操作<br>    my_list = [0, 1, 2, 3]<br>    my_slice = my_list[1:3]    //结果是my_slice = [1, 2]</p>
-]]>
-    
-    </summary>
-    
-      <category term="python" scheme="http://perthcharles.github.com/tags/python/"/>
     
   </entry>
   

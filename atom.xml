@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title><![CDATA[天赋，无与伦比的坚持]]></title>
+  <title><![CDATA[天赋  无与伦比的坚持]]></title>
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-12-01T13:22:58.367Z</updated>
+  <updated>2014-12-16T08:28:10.323Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,24 +15,15 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
-    <title><![CDATA[TCP ADI in Linux(9): TCP Memory Management]]></title>
-    <link href="http://perthcharles.github.com/2014/11/28/tcp-design-and-implementation-9/"/>
-    <id>http://perthcharles.github.com/2014/11/28/tcp-design-and-implementation-9/</id>
-    <published>2014-11-28T09:13:03.000Z</published>
-    <updated>2014-11-28T13:42:14.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<h3 id="TODO">TODO</h3>
-<ol>
-<li>sk-&gt;forward_alloc的真实含义？  </li>
-<li>sk_wmem_schedule 和 sk_rmem_schedule的用途？<br> Note: 书中有提到tcp_mem_schedule是一个forward allocation of memory的相关函数。<br> 所以sk_wmem_schedule这些是不是也有可能是一样的？  </li>
-</ol>
+    <title><![CDATA[TCP ADI in Linux Phase 1]]></title>
+    <link href="http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/"/>
+    <id>http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/</id>
+    <published>2014-12-16T08:11:42.000Z</published>
+    <updated>2014-12-16T08:26:54.000Z</updated>
+    <content type="html"><![CDATA[<p>对Linux TCP implementation的阅读暂时先告一段落。以后有需求的时候再来加深理解。<br>顺道分享一个总结性的<a href="http://vdisk.weibo.com/s/B_gfVkmzsvB60" target="_blank" rel="external">PPT</a>。  </p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<hr>
-<h3 id="TODO">TODO</h3>
-<ol>
-<li>sk-&gt;forward_alloc的真实含义？  </li>
-<li>sk_wmem_schedule 和 sk_rmem_schedule的用途？<br> Note: 书中有提到tcp_mem_s]]>
+    <![CDATA[<p>对Linux TCP implementation的阅读暂时先告一段落。以后有需求的时候再来加深理解。<br>顺道分享一个总结性的<a href="http://vdisk.weibo.com/s/B_gfVkmzsvB60" target="_blank" rel="ex]]>
     </summary>
     
       <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
@@ -501,7 +492,7 @@ ACM
     <link href="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/"/>
     <id>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</id>
     <published>2014-11-05T01:52:27.000Z</published>
-    <updated>2014-11-24T09:17:47.000Z</updated>
+    <updated>2014-12-03T01:59:00.000Z</updated>
     <content type="html"><![CDATA[<p>这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。  </p>
 <a id="more"></a>  
 
@@ -540,7 +531,8 @@ ACM
 </code></pre><p>可以看出sockaddr_in其实只用了其中6个字节作为有效区域。需要说明的是，作为服务器端sin_addr一般设置为INADDR_ANY（0x00000000）, 意思就是说可以接受来自不同网卡（服务器一般有多个网卡，也就对应对个IP地址）的链接请求。  </p>
 <h4 id="bind系统调用的过程">bind系统调用的过程</h4>
 <pre><code>sys_bind()
-    =&gt; sockfd_lookup_light() <span class="comment">// 根据fd 获取套接口指针，并返回是否需要减少文件引用计数</span>
+    =&gt; sock = sockfd_lookup_light() <span class="comment">// 根据fd 获取套接口指针  </span>
+    =&gt; err = move_addr_to_kernel()
     =&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;bind</span>()  == inet_bind()
         =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;bind</span>() == raw_bind()  <span class="comment">// 如果是RAW sock</span>
         =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>() == inet_csk_get_port()  <span class="comment">// 如果是 TCP</span>
@@ -551,8 +543,8 @@ ACM
 <p>sock_fd_lookup_light的具体过程如下：  </p>
 <pre><code>sock_fd_lookup_light()
 <span class="output"><span class="status">    =&gt;</span> file = fget_light(fd, fput_needed);    <span class="regexp">//</span> 获取文件指针</span>
-<span class="output"><span class="status">    =&gt;</span> sock = sock_from_file(file, err);      <span class="regexp">//</span> 获取sock指针</span>
-        <span class="keyword">return</span> file-&gt;private_data;  <span class="regexp">//</span> private_data即是file结构体中的指向sock结构体的指针
+<span class="output"><span class="status">    =&gt;</span> sock = sock_from_file(file, err);      <span class="regexp">//</span> 获取socket指针</span>
+        <span class="keyword">return</span> file-&gt;private_data;  <span class="regexp">//</span> private_data即是file结构体中的指向socket结构体的指针
 </code></pre><p>inet_bind的实现在net/ipv4/af_inet.c中，具体过程如下：  </p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">如果是RAW sock的话，直接调用bind</div><div class="line">检查addr_len和sin_family</div><div class="line">chk_addr_ret = inet_addr_type();  <span class="comment">// 得到地址的类型，用于后续检查</span></div><div class="line">对port进行判断，用户仅能使用Port &gt;= <span class="number">1024</span>的端口。</div><div class="line">根据sk-&gt;sk_state及inet-&gt;inet_num判断socket状态，检查重复绑定的错误</div><div class="line"></div><div class="line"><span class="comment">/* rcv_saddr用于hash lookups, inet_saddr用于transmit。正常情况下它们值相同 */</span></div><div class="line">inet-&gt;inet_rcv_saddr = inet-&gt;inet_saddr = addr-&gt;sin_addr.s_addr;  </div><div class="line"></div><div class="line">调用sk-&gt;sk_prot-&gt;get_port(sk, snum);  <span class="comment">// snum就是sin_port</span></div></pre></td></tr></table></figure>
 
@@ -698,35 +690,35 @@ ACM
     is established <span class="operator">with</span> <span class="operator">the</span> server <span class="keyword">else</span> returns <span class="operator">an</span> error <span class="built_in">number</span>.  
 </code></pre><p>connect系统调用对应内核中的sys_connect()函数，具体的实现则在net/socket.c文件中。<br>connect主要调用流程如下：  </p>
 <pre><code>SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr,  
-                int, addrlen)  == sys_connect<span class="function"><span class="params">()</span>  
-    =&gt;</span> sock = sockfd_lookup_light<span class="function"><span class="params">()</span>  
-    =&gt;</span> err = move_addr_to_kernel<span class="function"><span class="params">()</span>  
-    =&gt;</span> err = sock-&gt;ops-&gt;connect<span class="function"><span class="params">()</span>  == <span class="title">inet_stream_connect</span><span class="params">()</span>  
-        =&gt;</span> Any state other <span class="keyword">then</span> SS_CONNECTED <span class="keyword">is</span> unacceptable <span class="keyword">for</span> processing<span class="function">  
-        =&gt;</span> err = sk-&gt;sk_prot-&gt;connect<span class="function"><span class="params">(sk, uaddr, addr_len)</span>  == <span class="title">tcp_v4_connect</span><span class="params">()</span>  
-            =&gt;</span> rt = ip_route_connect()  <span class="regexp">//</span> get the route <span class="keyword">for</span> the dst addr. All routing entries <span class="keyword">for</span> the system are hashed <span class="keyword">in</span> the <span class="built_in">global</span> table rt_hash_table[].<span class="function">    
-            =&gt;</span> tcp_set_state<span class="function"><span class="params">(sk, TCP_SYN_SEND)</span>
-            =&gt;</span> err = inet_hash_connect(&amp;tcp_death_row, sk);  <span class="regexp">//</span> 获得一个free的Port,流程与tcp_v4_get_port较类似<span class="function">  
-                =&gt;</span> inet_get_local_port_range<span class="function"><span class="params">(&amp;low, &amp;high)</span>
-                =&gt;</span> 遍历所有端口，对某个备选端口，遍历inet_bind_bucket确认是否有冲突。<span class="function">  
-                =&gt;</span> 如果没有冲突，则tb = inet_bind_bucket_create()创建bind_bucket中的hash表项<span class="function">
+                int, addrlen)  == sys_connect()  
+    =&gt; sock = sockfd_lookup_light()  
+    =&gt; err = move_addr_to_kernel()  
+    =&gt; err = sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;connect</span>()  == inet_stream_connect()  
+        =&gt; Any states other then SS_UNCONNECTED are unacceptable <span class="keyword">for</span> processing  
+        =&gt; err = sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;connect</span>(sk, uaddr, addr_len)  == tcp_v4_connect()  
+            =&gt; rt = ip_route_connect()  <span class="comment">// get the route for the dst addr. All routing entries for the system are hashed in the global table rt_hash_table[].    </span>
+            =&gt; tcp_set_state(sk, TCP_SYN_SEND)
+            =&gt; err = inet_hash_connect(&amp;tcp_death_row, sk);  <span class="comment">// 获得一个free的Port,流程与tcp_v4_get_port较类似  </span>
+                =&gt; inet_get_local_port_range(&amp;low, &amp;high)
+                =&gt; 遍历所有端口，对某个备选端口，遍历inet_bind_bucket确认是否有冲突。  
+                =&gt; 如果没有冲突，则tb = inet_bind_bucket_create()创建bind_bucket中的hash表项
 
-            =&gt;</span> Until now we got the route to destination, <span class="keyword">and</span> obtained the local port number,  
-               <span class="keyword">and</span> we have initialized remote address, remote port, local address, <span class="keyword">and</span> local address fields <span class="keyword">of</span> the socket.<span class="function">  
+            =&gt; Until now we got the route to destination, <span class="keyword">and</span> obtained the local port number,  
+               <span class="keyword">and</span> we have initialized remote address, remote port, local address, <span class="keyword">and</span> local address fields of the socket.  
 
-            =&gt;</span> err = tcp_connect(sk)  <span class="regexp">//</span> generate a SYN packet <span class="keyword">and</span> give it to the IP layer<span class="function">  
-                =&gt;</span> tcp_connect_init(sk)  <span class="regexp">//</span> <span class="keyword">do</span> all connect socket setups that can be done AF independent<span class="function">  
-                    =&gt;</span> tcp_select_initial_window() <span class="regexp">//</span> determine  a <span class="built_in">window</span> scaling <span class="keyword">and</span> initial <span class="built_in">window</span> to offer<span class="function">  
-                =&gt;</span> buff = alloc_skb_fclone()  <span class="regexp">//</span> allocate a sk_buff structure, 细节在下一章再写<span class="function">  
-                =&gt;</span> tcp_transmit_skb(sk, buff, <span class="number">1</span>, sk-&gt;sk_allocation)  <span class="regexp">//</span> 复制一份Buff，然后发送出去<span class="function">
-                    =&gt;</span> skb = skb_clone(skb, gfp_mask)  <span class="regexp">//</span> 复制一份buff<span class="function">  
-                    =&gt;</span> 初始化skb及TCP header<span class="function">  
-                    =&gt;</span> tcp_options_write()  <span class="regexp">//</span> write previously computed tcp options to the packet<span class="function">  
-                    =&gt;</span> icsk-&gt;icsk_af_ops-&gt;send_check(sk, skb)  == tcp_v4_send_check()  <span class="regexp">//</span> compute checksum<span class="function">
-                    =&gt;</span> err = icsk-&gt;icsk_af_ops-&gt;queue_xmit()  == ip_queue_xmit()  <span class="regexp">//</span> transmit packet to IP layer<span class="function">  
-        =&gt;</span> 至此已发送SYN包，然后等待SYN/ACK包从而完成三次握手<span class="function">  
-        =&gt;</span> timeo = sock_sndtimeo<span class="function"><span class="params">(sk, flag * O_NONBLOCK)</span>
-        =&gt;</span> inet_wait_for_connect(sk, timeo, writebias)  <span class="regexp">//</span> 完成三次握手的最后的工作  
+            =&gt; err = tcp_connect(sk)  <span class="comment">// generate a SYN packet and give it to the IP layer  </span>
+                =&gt; tcp_connect_init(sk)  <span class="comment">// do all connect socket setups that can be done AF independent  </span>
+                    =&gt; tcp_select_initial_window() <span class="comment">// determine  a window scaling and initial window to offer  </span>
+                =&gt; buff = alloc_skb_fclone()  <span class="comment">// allocate a sk_buff structure, 细节在下一章再写  </span>
+                =&gt; tcp_transmit_skb(sk, buff, <span class="number">1</span>, sk<span class="variable">-&gt;sk_allocation</span>)  <span class="comment">// 复制一份Buff，然后发送出去</span>
+                    =&gt; skb = skb_clone(skb, gfp_mask)  <span class="comment">// 复制一份buff  </span>
+                    =&gt; 初始化skb及TCP header  
+                    =&gt; tcp_options_write()  <span class="comment">// write previously computed tcp options to the packet  </span>
+                    =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;send_check</span>(sk, skb)  == tcp_v4_send_check()  <span class="comment">// compute checksum</span>
+                    =&gt; err = icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;queue_xmit</span>()  == ip_queue_xmit()  <span class="comment">// transmit packet to IP layer  </span>
+        =&gt; 至此已发送SYN包，然后等待SYN/ACK包从而完成三次握手  
+        =&gt; timeo = sock_sndtimeo(sk, flag * O_NONBLOCK)
+        =&gt; inet_wait_for_connect(sk, timeo, writebias)  <span class="comment">// 完成三次握手的最后的工作  </span>
 </code></pre><h3 id="SUMMARY">SUMMARY</h3>
 <p>摘录书中的原文如下  </p>
 <pre><code>Protocol-specific operation one the socket <span class="keyword">is</span> accessed from prot field <span class="keyword">of</span> the sock object.  
@@ -1236,7 +1228,7 @@ $reboot</span>
     <link href="http://perthcharles.github.com/2014/06/05/setup-nginx-sever/"/>
     <id>http://perthcharles.github.com/2014/06/05/setup-nginx-sever/</id>
     <published>2014-06-05T05:00:00.000Z</published>
-    <updated>2014-11-04T06:41:45.000Z</updated>
+    <updated>2014-12-05T08:45:12.000Z</updated>
     <content type="html"><![CDATA[<h3 id="Installation">Installation</h3>
 <p>By default, Nginx will be installed in /usr/local/nginx.  </p>
 <pre><code>./configure  
@@ -1250,8 +1242,10 @@ $reboot</span>
 }  
 </code></pre><h3 id="Running_Nginx">Running Nginx</h3>
 <pre><code>/usr/<span class="built_in">local</span>/nginx/sbin/nginx         <span class="comment"> //start nginx  </span>
-/usr/<span class="built_in">local</span>/nginx/sbin/nginx -q quit <span class="comment"> //stop nginx  </span>
-</code></pre><h3 id="References">References</h3>
+/usr/<span class="built_in">local</span>/nginx/sbin/nginx -s quit <span class="comment"> //stop nginx  </span>
+</code></pre><h3 id="Problems">Problems</h3>
+<p>If you do not need the rewrite module and gzip module, you can ignore the<br>errors with PCRE and gzip when configuring.  </p>
+<h3 id="References">References</h3>
 <p><a href="http://wiki.nginx.org/Install" target="_blank" rel="external">Install - Nginx Community</a><br><a href="http://blog.martinfjordvald.com/2010/07/nginx-primer/" target="_blank" rel="external">Nginx Configuration Primer</a>  </p>
 ]]></content>
     <summary type="html">

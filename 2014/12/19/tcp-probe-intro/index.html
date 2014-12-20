@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+
+  
+  <title>tcpprobe, observe the TCP flow with kprobes | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.主要说说这个内核模块：  
+
+tcpprobe是什么？  
+tcpprobe的基本用法？  
+tcpprobe是怎么实现的？  
+实践中如何用好tcpprobe？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="tcpprobe, observe the TCP flow with kprobes">
+<meta property="og:url" content="http://perthcharles.github.com/2014/12/19/tcp-probe-intro/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.主要说说这个内核模块：  
+
+tcpprobe是什么？  
+tcpprobe的基本用法？  
+tcpprobe是怎么实现的？  
+实践中如何用好tcpprobe？">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="tcpprobe, observe the TCP flow with kprobes">
+<meta name="twitter:description" content="这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.主要说说这个内核模块：  
+
+tcpprobe是什么？  
+tcpprobe的基本用法？  
+tcpprobe是怎么实现的？  
+实践中如何用好tcpprobe？">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-tcp-probe-intro" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2014/12/19/tcp-probe-intro/" class="article-date">
+  <time datetime="2014-12-19T02:49:23.000Z" itemprop="datePublished">12月 19 2014</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      tcpprobe, observe the TCP flow with kprobes
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.<br>主要说说这个内核模块：  </p>
+<ol>
+<li>tcpprobe是什么？  </li>
+<li>tcpprobe的基本用法？  </li>
+<li>tcpprobe是怎么实现的？  </li>
+<li>实践中如何用好tcpprobe？  </li>
+</ol>
+<a id="more"></a>  
+
+<hr>
+<h4 id="1-_tcp_probe_是什么？">1. tcp probe 是什么？</h4>
+<p>下面摘录<a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/tcpprobe" target="_blank" rel="external">LINUX FOUNDATION对于tcpprobe</a>上对于tcpprobe的一段解释：  </p>
+<pre><code>tcpprobe is <span class="operator">a</span> module that records <span class="operator">the</span> state <span class="operator">of</span> <span class="operator">a</span> TCP connection <span class="operator">in</span> response <span class="built_in">to</span> incoming packets.  
+It works <span class="keyword">by</span> inserting <span class="operator">a</span> hook <span class="keyword">into</span> <span class="operator">the</span> tcp_recv processing path <span class="keyword">using</span> kprobe, so that <span class="operator">the</span> 
+congestion window <span class="operator">and</span> sequence <span class="built_in">number</span> can be captured.  
+</code></pre><p>首先tcpprobe是一个内核模块，可以按需加载与卸载。在下文的实践中如何用好tcpprobe可以看出模块化的好处。<br>同时tcpprobe是用于监听某些特定TCP的，而不是整个TCP/IP协议栈的内容。在使用tcpprobe模块时需要指定特定的端口号用于监听。<br>这个限制主要是出于效率上的考虑，但是基本上也能满足大部分的需求了，后面我们也将介绍如何根据需要实现我们自己的限制条件。<br>最后tcpprobe是基于kprobe机制实现的，它能捕捉cwnd和seq等信息。这些内容将在后续的内容中具体介绍。  </p>
+<hr>
+<h4 id="2-_tcpprobe的基本用法">2. tcpprobe的基本用法</h4>
+<p>Linux Foundation上有一个简单地例子，这里我结合我的实际使用给出一个更加具体的例子。  </p>
+<p>2.1 编译tcpprobe模块  </p>
+<pre><code><span class="comment">// 方法1：tcpprobe是一个内核模块，在Linux 3.10中它的实现代码是net/ipv4/tcp_probe.c  </span>
+<span class="comment">//        可以设置在编译内核时，将tcpprobe也编译了。方法就是在.config中添加</span>
+CONFIG_NET_TCPPROBE=m  
+
+<span class="comment">// 方法2：可以像一个普通内核模块一样，只编译tcpprobe模块，然后加载  </span>
+# vim Makefile    <span class="comment">// 为tcpprobe模块建立一个新Makefile文件，最好把整个tcp_probe.c和Makefile放到单独的一个文件夹中</span>
+obj-m += tcp_probe.o
+all:
+    make -C <span class="regexp">/lib/m</span>odules<span class="regexp">/`uname -r`/</span>build M=${PWD} modules  
+clean:
+    make -C <span class="regexp">/lib/m</span>odules<span class="regexp">/`uname -r`/</span>build M=${PWD} clean
+</code></pre><p>2.2 tcpprobe模块的加载与卸载  </p>
+<pre><code><span class="comment">// 如果是通过修改.config来编译tcpprobe的，可以使用modprobe加载    </span>
+<span class="preprocessor"># modprobe tcp_probe port=5001          // 监听所有本地端口是5001的TCP流，仅在cwnd变化时捕捉信息  </span>
+<span class="preprocessor"># modprobe tcp_probe full=1 port=5001   // full选项表示每次收到数据包都捕捉信息</span>
+
+<span class="comment">// 如果是普通内核模块形式编译的，则使用insmod加载  </span>
+<span class="preprocessor"># insmod tcp_probe.ko full=1 port=5001  </span>
+
+<span class="comment">// 卸掉tcpprobe模块的命令也很简单，只要当前没有任务在使用tcpprobe模块即可卸载  </span>
+<span class="preprocessor"># rmmod tcp_probe  </span>
+</code></pre><p>2.3 tcpprobe模块的使用<br>加载tcpprobe模块后，会新增一个/proc/net/tcpprobe的接口，可以通过这个接口获取tcpprobe捕捉的信息。  </p>
+<pre><code><span class="preprocessor"># cat /proc/net/tcpprobe &gt; data.out &amp;    // tcpprobe捕捉的信息是持续性的，因此读这个接口可以放到后台读  </span>
+<span class="preprocessor"># pid=$!   // 保存上一个读命令的pid，用于结束读tcpprobe接口  </span>
+<span class="preprocessor"># iperf -c otherhost    // 使用iperf建立一个TCP流  </span>
+<span class="preprocessor"># kill $pid  </span>
+</code></pre><p>记录在data.out中的数据大致是这个样子：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">11<span class="class">.172120204</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842ccad</span> 0<span class="tag">x84299c5</span> 10 168 14608 143  </div><div class="line">11<span class="class">.172141113</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842ccad</span> 0<span class="tag">x842b60d</span> 11 168 29088 137  </div><div class="line">11<span class="class">.172283353</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842f9ed</span> 0<span class="tag">x842bbb5</span> 11 168 31984 133</div></pre></td></tr></table></figure>
+
+
+<p>每行的各列分别为：  </p>
+<pre><code>timestamp  
+saddr:port  <span class="comment">// 源IP及端口，我的数据是在发送端捕捉的，所以port是固定的8089    </span>
+daddr:port  <span class="comment">// 目的IP及端口  </span>
+skb-&gt;len    <span class="comment">// 收到的数据包skb大小，收到的都是ACK包，所以len都比较小。  </span>
+snd_nxt     <span class="comment">// 下一个待发送数据的序列号  </span>
+snd_una     <span class="comment">// 待确认数据的序列号  </span>
+snd_cwnd    <span class="comment">// 拥塞窗口大小  </span>
+ssthresh    <span class="comment">// 慢启动阈值  </span>
+snd_wnd     <span class="comment">// 接收窗口大小  </span>
+srtt        <span class="comment">// smoothed RTT  </span>
+</code></pre><p>可以使用简单地文本处理及gnuplot将得到的数据进行可视化，不过这里就不展开了。  </p>
+<hr>
+<h4 id="3-_tcpprobe是怎么实现的？">3. tcpprobe是怎么实现的？</h4>
+<p>tcpprobe是一个机遇kprobe机制实现的模块，代码量其实不大，这节算是我的一个学习笔记吧。  </p>
+<p>首先tcpprobe定义了两个由于记录捕捉信息的数据结构：struct tcp_log和static struct tcp_probe。<br>tcp_log的元素基本就是上面介绍的一行中各列的数据，而tcp_probe结构体算是一个管理结构体，比如spinlock和用于判断cwnd是否改变的lastcwnd。  </p>
+<p>作为一个内核模块，必不可少的就是初始化和退出函数。下面先总体上说下这两个函数完成的任务。  </p>
+<pre><code><span class="keyword">static</span> __init <span class="type">int</span> tcpprobe_init(<span class="type">void</span>)  
+    =&gt; spin_lock_init(&amp;tcp_probe.lock)  // 初始化tcp_probe结构体中的内容  
+    =&gt; tcp_probe.log = kcalloc(bufsize, sizeof(struct tcp_log), <span class="type">GFP_KERNEL</span>) // 为捕捉数据分配内存空间  
+    =&gt; proc_create(procname, <span class="type">S_URUSR</span>, init_net.proc_net, &amp;tcpprobe_fops)    // 为tcpprobe模块创建一个<span class="keyword">proc</span>文件系统接口  
+    =&gt; register_jprobe(&amp;tcp_jprobe) // 将tcp_jprobe注册到内核中  
+
+<span class="keyword">static</span> __exit <span class="type">void</span> tcpprobe_exit(<span class="type">void</span>)
+    =&gt; remove_proc_entry(procname, init_net.proc_net);  // 删除tcpprobe模块的<span class="keyword">proc</span>接口  
+    =&gt; unregister_jprobe(&amp;tcp_jprobe);  // 注销tcp_jprobe
+    =&gt; kfree(tcp_probe.log)      // 释放内存
+</code></pre><p>tcp_probe中锁的初始化和内存分配就不说了，先介绍一下proc_create()函数创建的proc接口，再说说register_jprobe()函数。<br>proc_create()函数的原型如下，在include/linux/proc_fs.h中实现。  </p>
+<pre><code><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct</span> proc_dir_entry *proc_create(
+        <span class="keyword">const</span> <span class="keyword">char</span> *name, umode_t mode, <span class="keyword">struct</span> proc_dir_entry *parent,
+        <span class="keyword">const</span> <span class="keyword">struct</span> file_operations *proc_fops)
+</code></pre><p>tcpprobe模块中的各个参数的含义如下：  </p>
+<ol>
+<li>name      = “tcpprobe”  </li>
+<li>mode      = S_IRUSR, 允许读文件  </li>
+<li>parent    = init_net.proc_net，新建的proc接口将出现在/proc/net/目录中  </li>
+<li>proc_fops = &amp;tcpprobe_fops  </li>
+</ol>
+<p>tcpprobe_fops结构体的声明如下  </p>
+<pre><code>static const struct file_operations <span class="variable">tcpprobe_fops =</span> {
+    .<span class="variable">owner   =</span> THIS_MODULE,
+    .<span class="variable">open    =</span> tcpprobe_open,  
+    .<span class="variable">read    =</span> tcpprobe_read,  
+    .<span class="variable">llseek  =</span> noop_llseek,
+};
+</code></pre><p>proc接口也是被当做文件来处理的，且由于是只读的，所以主要需要实现open和read这两个函数。<br>tcpprobe_open()主要就是将tcp_probe结构体的各项内容进行reset，<br>tcpprobe_read()则是读取已经记录的数据，当没有数据可读时则睡眠，正常情况就将tcp_probe.log数组的最后一项读取出来。  </p>
+<p>至此还只是建好了一个只读的proc接口，但是数据的采集函数并没有注册到内核中，接下来就简单说说tcp_jprobe这个数据结构体。<br>register_jprobe()函数的原型如下，在kernel/kprobes.c中实现。  </p>
+<pre><code><span class="keyword">int</span> __kprobes register_jprobe(<span class="keyword">struct</span> jprobe *jp)  
+</code></pre><p>tcp_jprobe结构体的定义如下：  </p>
+<pre><code>static struct jprobe <span class="variable">tcp_jprobe =</span> {
+    .<span class="variable">kp =</span> {
+        .<span class="variable">symbol_name  =</span> <span class="string">"tcp_rcv_established"</span>,
+    },
+    .<span class="variable">entry =</span> jtcp_rcv_established,
+};
+</code></pre><p>可以看出来，tcpprobe其实是用的jprobe方式实现的，监听tcp_rcv_established函数(这也是为什么tcpprobe不会抓取三次握手时候的包信息的原因)。<br>对kprobe和jprobe感兴趣的话，可以看看最后给出的几个参考资料。  </p>
+<p>最后说说jtcp_rcv_established()函数，由于它是用于监听tcp_rcv_established()函数的，因此函数的参数需要完全一致，从而jtcp_rcv_established()就拿到了一个TCP流最关键的sk结构体。<br>具体实现就是如果这个包的Port是监听的那一个，则往tcp_probe.log中新写入一项，然后唤醒等待数据的读进程。<br>还有一点就是tcp_probe.log是以一个循环数组形式实现的，再具体点就是那种保留一项不用的实现。代码就补解释了。  </p>
+<h4 id="4-_实践中如何用好tcpprobe？">4. 实践中如何用好tcpprobe？</h4>
+<p>在实践中往往会发现tcpprobe的功能还不够强大，但只要适当修改，利用tcpprobe的实现原理还是能做很多的事情的。<br>tcpprobe算是目前为止我了解到的用于分析Linux内核TCP流的最赞的工具之一了。  </p>
+<p>首先，由于tcpprobe能够拿到TCP流的sk结构体，其实它能用于打印输出的信息远远不止是cwnd。<br>sk结构体是内核中记录一个TCP流最关键的数据结构，里面包含一条TCP流几乎任何的信息。<br>比如内存相关的可以看发送缓冲区的大小和占用情况，接收缓存区的大小。<br>其实只要在内核中拿到了一条TCP流的sk结构体，几乎可以对这条TCP流做任何事情。<br>所以建议在使用tcpprobe的时候，根据自己的需求修改tcp_probe.log结构体的内容。  </p>
+<p>其次，有时候无法或不便知道端口号，tcpprobe的现有实现就无法满足要求了。但是其实只要根据实际情况适当的修改tcpprobe模块，或许就能达到目的。比如如果我们知道src IP和dst IP，那么只要修改jtcp_rcv_established()函数记录数据的判断条件即可。  </p>
+<p>最后如果对TCP的内核实现熟悉的话，甚至可以改掉tcpprobe的监听入口函数。比如我们想监听skb发送时的一些信息，可以把监听入口函数改为tcp_transmit_skb()。  </p>
+<p>以上。</p>
+<hr>
+<h4 id="参考资料">参考资料</h4>
+<p><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/tcpprobe" target="_blank" rel="external">tcpprobe by LINUX FOUNDATION</a><br><a href="http://www.ibm.com/developerworks/cn/linux/l-kprobes.html" target="_blank" rel="external">使用Kprobes调试内核 by IBM</a><br><a href="https://www.redhat.com/magazine/005mar05/features/kprobes/" target="_blank" rel="external">Gaining insight into the linux kernel with kprobes</a><br><a href="http://www.opensourceforu.com/2011/04/kernel-debugging-using-kprobe-and-jprobe/" target="_blank" rel="external">Kernel Debugging Using Kprobe and Jprobe</a><br><a href="http://lwn.net/Articles/132196/" target="_blank" rel="external">An introduction to KProbes</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2014/12/19/tcp-probe-intro/" data-id="blfw2bt4uff7jpt8" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2014/12/19/tcp-probe-intro/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TCP/">TCP</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2014/12/16/tshark-intro/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">tshark, network protocol analyzer</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2014/12/19/tcp-probe-intro/">tcpprobe, observe the TCP flow with kprobes</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/16/tshark-intro/">tshark, network protocol analyzer</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/16/tcp-design-and-implementation-phase1/">TCP ADI in Linux Phase 1</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/20/tcp-design-and-implementation-8/">TCP ADI in Linux(8): TCP receive</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/19/tcp-design-and-implementation-7/">TCP ADI in Linux(7): TCP send</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-6/">TCP ADI in Linux(6): Movement of sk_buff across protocol layers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-5/">TCP ADI in Linux(5): sk_buff and protocol headers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/22/tcp-design-and-implementation/">TCP ADI in Linux(1): Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/18/double-boot-win7-and-ubuntu/">Install windows 7 into a ubuntu server</a>
+          </li>
+        
+          <li>
+            <a href="/2014/06/16/tcpdump-tcptrace-tshark/">Analysis tools for network traces</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 13.33px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a><a href="/tags/wireshark/" style="font-size: 11.67px;">wireshark</a><a href="/tags/yum/" style="font-size: 11.67px;">yum</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2014 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2014/12/19/tcp-probe-intro/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

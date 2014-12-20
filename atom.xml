@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-12-16T09:12:22.586Z</updated>
+  <updated>2014-12-20T15:45:42.393Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,167 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[tcpprobe, observe the TCP flow with kprobes]]></title>
+    <link href="http://perthcharles.github.com/2014/12/19/tcp-probe-intro/"/>
+    <id>http://perthcharles.github.com/2014/12/19/tcp-probe-intro/</id>
+    <published>2014-12-19T02:49:23.000Z</published>
+    <updated>2014-12-20T15:45:26.000Z</updated>
+    <content type="html"><![CDATA[<p>这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.<br>主要说说这个内核模块：  </p>
+<ol>
+<li>tcpprobe是什么？  </li>
+<li>tcpprobe的基本用法？  </li>
+<li>tcpprobe是怎么实现的？  </li>
+<li>实践中如何用好tcpprobe？  </li>
+</ol>
+<a id="more"></a>  
+
+<hr>
+<h4 id="1-_tcp_probe_是什么？">1. tcp probe 是什么？</h4>
+<p>下面摘录<a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/tcpprobe" target="_blank" rel="external">LINUX FOUNDATION对于tcpprobe</a>上对于tcpprobe的一段解释：  </p>
+<pre><code>tcpprobe is <span class="operator">a</span> module that records <span class="operator">the</span> state <span class="operator">of</span> <span class="operator">a</span> TCP connection <span class="operator">in</span> response <span class="built_in">to</span> incoming packets.  
+It works <span class="keyword">by</span> inserting <span class="operator">a</span> hook <span class="keyword">into</span> <span class="operator">the</span> tcp_recv processing path <span class="keyword">using</span> kprobe, so that <span class="operator">the</span> 
+congestion window <span class="operator">and</span> sequence <span class="built_in">number</span> can be captured.  
+</code></pre><p>首先tcpprobe是一个内核模块，可以按需加载与卸载。在下文的实践中如何用好tcpprobe可以看出模块化的好处。<br>同时tcpprobe是用于监听某些特定TCP的，而不是整个TCP/IP协议栈的内容。在使用tcpprobe模块时需要指定特定的端口号用于监听。<br>这个限制主要是出于效率上的考虑，但是基本上也能满足大部分的需求了，后面我们也将介绍如何根据需要实现我们自己的限制条件。<br>最后tcpprobe是基于kprobe机制实现的，它能捕捉cwnd和seq等信息。这些内容将在后续的内容中具体介绍。  </p>
+<hr>
+<h4 id="2-_tcpprobe的基本用法">2. tcpprobe的基本用法</h4>
+<p>Linux Foundation上有一个简单地例子，这里我结合我的实际使用给出一个更加具体的例子。  </p>
+<p>2.1 编译tcpprobe模块  </p>
+<pre><code><span class="comment">// 方法1：tcpprobe是一个内核模块，在Linux 3.10中它的实现代码是net/ipv4/tcp_probe.c  </span>
+<span class="comment">//        可以设置在编译内核时，将tcpprobe也编译了。方法就是在.config中添加</span>
+CONFIG_NET_TCPPROBE=m  
+
+<span class="comment">// 方法2：可以像一个普通内核模块一样，只编译tcpprobe模块，然后加载  </span>
+# vim Makefile    <span class="comment">// 为tcpprobe模块建立一个新Makefile文件，最好把整个tcp_probe.c和Makefile放到单独的一个文件夹中</span>
+obj-m += tcp_probe.o
+all:
+    make -C <span class="regexp">/lib/m</span>odules<span class="regexp">/`uname -r`/</span>build M=${PWD} modules  
+clean:
+    make -C <span class="regexp">/lib/m</span>odules<span class="regexp">/`uname -r`/</span>build M=${PWD} clean
+</code></pre><p>2.2 tcpprobe模块的加载与卸载  </p>
+<pre><code><span class="comment">// 如果是通过修改.config来编译tcpprobe的，可以使用modprobe加载    </span>
+<span class="preprocessor"># modprobe tcp_probe port=5001          // 监听所有本地端口是5001的TCP流，仅在cwnd变化时捕捉信息  </span>
+<span class="preprocessor"># modprobe tcp_probe full=1 port=5001   // full选项表示每次收到数据包都捕捉信息</span>
+
+<span class="comment">// 如果是普通内核模块形式编译的，则使用insmod加载  </span>
+<span class="preprocessor"># insmod tcp_probe.ko full=1 port=5001  </span>
+
+<span class="comment">// 卸掉tcpprobe模块的命令也很简单，只要当前没有任务在使用tcpprobe模块即可卸载  </span>
+<span class="preprocessor"># rmmod tcp_probe  </span>
+</code></pre><p>2.3 tcpprobe模块的使用<br>加载tcpprobe模块后，会新增一个/proc/net/tcpprobe的接口，可以通过这个接口获取tcpprobe捕捉的信息。  </p>
+<pre><code><span class="preprocessor"># cat /proc/net/tcpprobe &gt; data.out &amp;    // tcpprobe捕捉的信息是持续性的，因此读这个接口可以放到后台读  </span>
+<span class="preprocessor"># pid=$!   // 保存上一个读命令的pid，用于结束读tcpprobe接口  </span>
+<span class="preprocessor"># iperf -c otherhost    // 使用iperf建立一个TCP流  </span>
+<span class="preprocessor"># kill $pid  </span>
+</code></pre><p>记录在data.out中的数据大致是这个样子：  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">11<span class="class">.172120204</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842ccad</span> 0<span class="tag">x84299c5</span> 10 168 14608 143  </div><div class="line">11<span class="class">.172141113</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842ccad</span> 0<span class="tag">x842b60d</span> 11 168 29088 137  </div><div class="line">11<span class="class">.172283353</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842f9ed</span> 0<span class="tag">x842bbb5</span> 11 168 31984 133</div></pre></td></tr></table></figure>
+
+
+<p>每行的各列分别为：  </p>
+<pre><code>timestamp  
+saddr:port  <span class="comment">// 源IP及端口，我的数据是在发送端捕捉的，所以port是固定的8089    </span>
+daddr:port  <span class="comment">// 目的IP及端口  </span>
+skb-&gt;len    <span class="comment">// 收到的数据包skb大小，收到的都是ACK包，所以len都比较小。  </span>
+snd_nxt     <span class="comment">// 下一个待发送数据的序列号  </span>
+snd_una     <span class="comment">// 待确认数据的序列号  </span>
+snd_cwnd    <span class="comment">// 拥塞窗口大小  </span>
+ssthresh    <span class="comment">// 慢启动阈值  </span>
+snd_wnd     <span class="comment">// 接收窗口大小  </span>
+srtt        <span class="comment">// smoothed RTT  </span>
+</code></pre><p>可以使用简单地文本处理及gnuplot将得到的数据进行可视化，不过这里就不展开了。  </p>
+<hr>
+<h4 id="3-_tcpprobe是怎么实现的？">3. tcpprobe是怎么实现的？</h4>
+<p>tcpprobe是一个机遇kprobe机制实现的模块，代码量其实不大，这节算是我的一个学习笔记吧。  </p>
+<p>首先tcpprobe定义了两个由于记录捕捉信息的数据结构：struct tcp_log和static struct tcp_probe。<br>tcp_log的元素基本就是上面介绍的一行中各列的数据，而tcp_probe结构体算是一个管理结构体，比如spinlock和用于判断cwnd是否改变的lastcwnd。  </p>
+<p>作为一个内核模块，必不可少的就是初始化和退出函数。下面先总体上说下这两个函数完成的任务。  </p>
+<pre><code><span class="keyword">static</span> __init <span class="type">int</span> tcpprobe_init(<span class="type">void</span>)  
+    =&gt; spin_lock_init(&amp;tcp_probe.lock)  // 初始化tcp_probe结构体中的内容  
+    =&gt; tcp_probe.log = kcalloc(bufsize, sizeof(struct tcp_log), <span class="type">GFP_KERNEL</span>) // 为捕捉数据分配内存空间  
+    =&gt; proc_create(procname, <span class="type">S_URUSR</span>, init_net.proc_net, &amp;tcpprobe_fops)    // 为tcpprobe模块创建一个<span class="keyword">proc</span>文件系统接口  
+    =&gt; register_jprobe(&amp;tcp_jprobe) // 将tcp_jprobe注册到内核中  
+
+<span class="keyword">static</span> __exit <span class="type">void</span> tcpprobe_exit(<span class="type">void</span>)
+    =&gt; remove_proc_entry(procname, init_net.proc_net);  // 删除tcpprobe模块的<span class="keyword">proc</span>接口  
+    =&gt; unregister_jprobe(&amp;tcp_jprobe);  // 注销tcp_jprobe
+    =&gt; kfree(tcp_probe.log)      // 释放内存
+</code></pre><p>tcp_probe中锁的初始化和内存分配就不说了，先介绍一下proc_create()函数创建的proc接口，再说说register_jprobe()函数。<br>proc_create()函数的原型如下，在include/linux/proc_fs.h中实现。  </p>
+<pre><code><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct</span> proc_dir_entry *proc_create(
+        <span class="keyword">const</span> <span class="keyword">char</span> *name, umode_t mode, <span class="keyword">struct</span> proc_dir_entry *parent,
+        <span class="keyword">const</span> <span class="keyword">struct</span> file_operations *proc_fops)
+</code></pre><p>tcpprobe模块中的各个参数的含义如下：  </p>
+<ol>
+<li>name      = “tcpprobe”  </li>
+<li>mode      = S_IRUSR, 允许读文件  </li>
+<li>parent    = init_net.proc_net，新建的proc接口将出现在/proc/net/目录中  </li>
+<li>proc_fops = &amp;tcpprobe_fops  </li>
+</ol>
+<p>tcpprobe_fops结构体的声明如下  </p>
+<pre><code>static const struct file_operations <span class="variable">tcpprobe_fops =</span> {
+    .<span class="variable">owner   =</span> THIS_MODULE,
+    .<span class="variable">open    =</span> tcpprobe_open,  
+    .<span class="variable">read    =</span> tcpprobe_read,  
+    .<span class="variable">llseek  =</span> noop_llseek,
+};
+</code></pre><p>proc接口也是被当做文件来处理的，且由于是只读的，所以主要需要实现open和read这两个函数。<br>tcpprobe_open()主要就是将tcp_probe结构体的各项内容进行reset，<br>tcpprobe_read()则是读取已经记录的数据，当没有数据可读时则睡眠，正常情况就将tcp_probe.log数组的最后一项读取出来。  </p>
+<p>至此还只是建好了一个只读的proc接口，但是数据的采集函数并没有注册到内核中，接下来就简单说说tcp_jprobe这个数据结构体。<br>register_jprobe()函数的原型如下，在kernel/kprobes.c中实现。  </p>
+<pre><code><span class="keyword">int</span> __kprobes register_jprobe(<span class="keyword">struct</span> jprobe *jp)  
+</code></pre><p>tcp_jprobe结构体的定义如下：  </p>
+<pre><code>static struct jprobe <span class="variable">tcp_jprobe =</span> {
+    .<span class="variable">kp =</span> {
+        .<span class="variable">symbol_name  =</span> <span class="string">"tcp_rcv_established"</span>,
+    },
+    .<span class="variable">entry =</span> jtcp_rcv_established,
+};
+</code></pre><p>可以看出来，tcpprobe其实是用的jprobe方式实现的，监听tcp_rcv_established函数(这也是为什么tcpprobe不会抓取三次握手时候的包信息的原因)。<br>对kprobe和jprobe感兴趣的话，可以看看最后给出的几个参考资料。  </p>
+<p>最后说说jtcp_rcv_established()函数，由于它是用于监听tcp_rcv_established()函数的，因此函数的参数需要完全一致，从而jtcp_rcv_established()就拿到了一个TCP流最关键的sk结构体。<br>具体实现就是如果这个包的Port是监听的那一个，则往tcp_probe.log中新写入一项，然后唤醒等待数据的读进程。<br>还有一点就是tcp_probe.log是以一个循环数组形式实现的，再具体点就是那种保留一项不用的实现。代码就补解释了。  </p>
+<h4 id="4-_实践中如何用好tcpprobe？">4. 实践中如何用好tcpprobe？</h4>
+<p>在实践中往往会发现tcpprobe的功能还不够强大，但只要适当修改，利用tcpprobe的实现原理还是能做很多的事情的。<br>tcpprobe算是目前为止我了解到的用于分析Linux内核TCP流的最赞的工具之一了。  </p>
+<p>首先，由于tcpprobe能够拿到TCP流的sk结构体，其实它能用于打印输出的信息远远不止是cwnd。<br>sk结构体是内核中记录一个TCP流最关键的数据结构，里面包含一条TCP流几乎任何的信息。<br>比如内存相关的可以看发送缓冲区的大小和占用情况，接收缓存区的大小。<br>其实只要在内核中拿到了一条TCP流的sk结构体，几乎可以对这条TCP流做任何事情。<br>所以建议在使用tcpprobe的时候，根据自己的需求修改tcp_probe.log结构体的内容。  </p>
+<p>其次，有时候无法或不便知道端口号，tcpprobe的现有实现就无法满足要求了。但是其实只要根据实际情况适当的修改tcpprobe模块，或许就能达到目的。比如如果我们知道src IP和dst IP，那么只要修改jtcp_rcv_established()函数记录数据的判断条件即可。  </p>
+<p>最后如果对TCP的内核实现熟悉的话，甚至可以改掉tcpprobe的监听入口函数。比如我们想监听skb发送时的一些信息，可以把监听入口函数改为tcp_transmit_skb()。  </p>
+<p>以上。</p>
+<hr>
+<h4 id="参考资料">参考资料</h4>
+<p><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/tcpprobe" target="_blank" rel="external">tcpprobe by LINUX FOUNDATION</a><br><a href="http://www.ibm.com/developerworks/cn/linux/l-kprobes.html" target="_blank" rel="external">使用Kprobes调试内核 by IBM</a><br><a href="https://www.redhat.com/magazine/005mar05/features/kprobes/" target="_blank" rel="external">Gaining insight into the linux kernel with kprobes</a><br><a href="http://www.opensourceforu.com/2011/04/kernel-debugging-using-kprobe-and-jprobe/" target="_blank" rel="external">Kernel Debugging Using Kprobe and Jprobe</a><br><a href="http://lwn.net/Articles/132196/" target="_blank" rel="external">An introduction to KProbes</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.<br>主要说说这个内核模块：  </p>
+<ol>
+<li>tcpprobe是什么？  </li>
+<li>tcpprobe的基本用法？  </li>
+<li>tcpprobe是怎么实现的？  </li>
+<li>实践中如何用好tcpprobe？  </li>
+</ol>
+]]>
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[tshark, network protocol analyzer]]></title>
+    <link href="http://perthcharles.github.com/2014/12/16/tshark-intro/"/>
+    <id>http://perthcharles.github.com/2014/12/16/tshark-intro/</id>
+    <published>2014-12-16T09:17:05.000Z</published>
+    <updated>2014-12-16T10:08:23.000Z</updated>
+    <content type="html"><![CDATA[<p>分析过网络trace的同学一定对tcpdump和wireshark比较熟悉，但是wireshark毕竟是一个图形界面，如果想对整个抓包和分析包的过程都脚本化，wireshark可能就不能满足需求了。<br>Google找到了tshark，terminal wireshark，果断用起来啊，当然类似的工具还有tcptrace。<br>基本的用法Google一下就能找到，tshark能做的事情还是听多的。结合shell和gunplot用起来的话基本上能满足基本需求了。  </p>
+<hr>
+<p><a href="https://www.wireshark.org/docs/man-pages/tshark.html" target="_blank" rel="external">tshark man page</a><br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>分析过网络trace的同学一定对tcpdump和wireshark比较熟悉，但是wireshark毕竟是一个图形界面，如果想对整个抓包和分析包的过程都脚本化，wireshark可能就不能满足需求了。<br>Google找到了tshark，terminal wireshark]]>
+    </summary>
+    
+      <category term="tshark" scheme="http://perthcharles.github.com/tags/tshark/"/>
+    
+      <category term="wireshark" scheme="http://perthcharles.github.com/tags/wireshark/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[TCP ADI in Linux Phase 1]]></title>
@@ -1689,87 +1850,6 @@ $reboot</span>
     </summary>
     
       <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[YUI 学习笔记]]></title>
-    <link href="http://perthcharles.github.com/2013/10/05/yui-learning/"/>
-    <id>http://perthcharles.github.com/2013/10/05/yui-learning/</id>
-    <published>2013-10-05T04:00:00.000Z</published>
-    <updated>2014-11-04T06:26:39.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="工具简介">工具简介</h3>
-<p>YUI是一个免费、开源的JacaScript和CSS库，能够方便的开发出交互性良好的web applications.<br>我用到的版本是YUI 3.12.0  </p>
-<h3 id="Core">Core</h3>
-<p>1.event<a href="http://perthcharles.github.io/yql_test/YUI_text.html#demo-1" target="_blank" rel="external">示例</a><br>提供API处理DOM event。当用户执行某些操作时，出发相应的event。常见的有click, close, keydown等。<br>这里是所有支持的<a href="http://yuilibrary.com/yui/docs/event/#event-whitelist" target="_blank" rel="external">Whitelisted DOM events</a>  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://yuilibrary.com/yui/docs/" target="_blank" rel="external">YUI documentation</a><br><a href="http://yuilibrary.com/yui/docs/guides/" target="_blank" rel="external">YUI User Guides</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h3 id="工具简介">工具简介</h3>
-<p>YUI是一个免费、开源的JacaScript和CSS库，能够方便的开发出交互性良好的web applications.<br>我用到的版本是YUI 3.12.0  </p>
-<h3 id="Core">Core</h3>
-<p]]>
-    </summary>
-    
-      <category term="YUI" scheme="http://perthcharles.github.com/tags/YUI/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[YQL学习笔记]]></title>
-    <link href="http://perthcharles.github.com/2013/09/28/yahoo-yql/"/>
-    <id>http://perthcharles.github.com/2013/09/28/yahoo-yql/</id>
-    <published>2013-09-28T04:00:00.000Z</published>
-    <updated>2014-11-04T06:25:46.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="简介">简介</h3>
-<p>YQL是雅虎提供的一种类似SQL的数据查询服务。<br>设计出发点是把整个Web当成一个巨大的数据库供开发者使用。  </p>
-<a id="more"></a>
-
-<h3 id="YQL语法">YQL语法</h3>
-<p>1.select语句<br>select 字段名 from 表名 where 过滤条件 [| 方法]<br>    字段名：对应于后台服务返回结果中的XML元素或是JSON对象中的属性。<br>            “*”表示选择全部的字段；多个字段名用逗号分隔<br>    表名：后台服务的名称<br>    过滤条件：声明结果中的记录应该满足的条件<br>    方法：用来对结果进行附加的处理，如排序和去重等</p>
-<p>关于select的上限：<br>最大返回数量上限为5000，最长执行时间为30秒<br>对于大部分表格，默认的返回数量为10，除非在select语句中指定limit  </p>
-<p>2.子select语句<br>举例：<br>    select * from flickr.photos.info<br>        where photo_id in (select id from flickr.photos.recent)</p>
-<p>3.分页<br>YQL服务的返回结果的记录总数往往比较大。为了提高性能，YQL服务提供了分页功能<br>可以限制每次查询返回的记录数<br>举例：<br>    //仅获取前20个结果<br>    SELECT <em> FROM flickr.photos.search(0, 20) WHERE text=”beijing”<br>    //返回整个结果集的第11到20条记录<br>    SELECT </em> FROM flickr.photos.search WHERE text=”bei” LIMIT 10 OFFSET 10</p>
-<p>4.排序和其它方法<br>可以用类似linux管道的思路来理解这些方法<br>    //sort title<br>    SELECT * FROM flickr.photos.search WHERE text=”bei” | sort(field=”title”)<br>其它方法可以查看手册  </p>
-<p>5.使用功能：抽取HTML文件<br>虽然YQL服务访问的后台Web服务返回的一般是XML和JSON等结构化数据<br>YQL服务也可以用来从HTML文档中抽取数据。<br>只需要指定 HTML 页面的URL以及抽取数据所用的XPath语句YQL服务就可以完成抽取。<br>这其实就相当于能完成网页抽取的工作，不用自己写代码去获取了。 Cheers!<br>如果需要抽取的html5网页文件，则加入兼容选项，如：<br>    select * from html where url=”<a href="http://groups.yahoo.com/search?query=surfing&amp;sort=relevance" target="_blank" rel="external">http://groups.yahoo.com/search?query=surfing&amp;sort=relevance</a>“ and compat=”html5”</p>
-<h3 id="使用YQL访问开方数据表格">使用YQL访问开方数据表格</h3>
-<p>YQL 服务已经提供了许多内置的开放数据表格，可以直接使用。<br>通过在 YQL 控制台输入 show tables就可以查看所有内置数据表格的列表。<br>对于其它 Web 服务，如果想在 YQL 中使用，只需要提供一个描述文件即可。<br>该描述文件用来告诉 YQL 如何对该 Web 服务进行操作。  </p>
-<h3 id="创建自己的YQL开方表格">创建自己的YQL开方表格</h3>
-<h3 id="更多YQL">更多YQL</h3>
-<p>1.使用上限<br>    YQL endpoint    /v1/public/<em>        /v1/yql/</em><br>    Hourly Cap        2,000 per IP        20,000 per IP<br>    Daily Cap        None                100,000 per day per API key</p>
-<p>2.YQL语句总结<br>    select：        //retrieves data from the specified table<br>        select <em> from social.profile where guid=xyz<br>    insert:            //insert data into specified table<br>        insert into table (key1, key2) values (‘value1’, ‘value2’)<br>    update:            //updates data in the specified table<br>        update (table) set field1=value where filter<br>    delete:            //deletes data in the specified table<br>        delete from (table) where filter<br>    show tables:    //gets a list of the tables available in YQL<br>        show tables<br>    desc:            //gets a description of the table<br>        desc social.connections<br>    use:            //maps a table name to the url of an open data table<br>        use “<a href="http://myserver.com/mytable.xml" target="_blank" rel="external">http://myserver.com/mytable.xml</a>“ as mytable; select </em> from mytable where …<br>    set:            //allows you to set up key values for use within open data tables<br>        set (name)=(value);  select * from mytable where …</p>
-<p>3.条件查询where<br>条件查询分为远端条件过滤和本地条件过滤<br>远端条件过滤指的是条件被back-end的Web-Service执行，远端条件查询支持：”=”和 IN 操作符<br>语法类似：input_key IN [list of one or more literals]<br>本地条件查询的过程是先从back-end的Wev-Service获取数据，然后执行条件匹配判断<br>语法类似：field comparison_operator literal  </p>
-<p>举例：<br>    //单条件选择<br>    select <em> from flickr.photos.info where photo_id=’2323453235’<br>    //单条件，多匹配条件<br>    select </em> from geo.palces where text in (“asss”, “dfdfd”)<br>    //多条件选择<br>    select <em> from local.search where zip=’94085’ and query=’pizza’<br>    select </em> from local.search where zip=’94085’ or query=’pizza’<br>    //模糊查询，返回以Chinese或CHINESE开头的结果<br>    select <em> from flickr.photos.interestingness where title like ‘Chinese%’<br>    //正则表达式<br>    select </em> from flickr.photos.interestingness where title matches ‘.<em>blue.</em>‘</p>
-<h3 id="xpath学习">xpath学习</h3>
-<p><a href="http://www.w3school.com.cn/xpath/xpath_intro.asp" target="_blank" rel="external">XPath是一门在XML文档中查找信息的语言。XPath用于在XML文档中通过元素和属性进行导航。</a>  </p>
-<p>1.XPath节点<br>在 XPath 中，有七种类型的节点：元素、属性、文本、命名空间、处理指令、注释以及文档（根）节点。<br>XML 文档是被作为节点树来对待的。树的根被称为文档节点或者根节点。  </p>
-<p><em>基本值</em>：无父或无子的节点<br><em>项目</em>：基本值或者节点  </p>
-<p>节点关系包括：父节点、子节点、同胞节点、先辈节点和后代节点。这些概念类似图论中的概念。  </p>
-<p>2.XPath语法<br>XPath 使用路径表达式来选取 XML 文档中的节点或节点集。节点是通过沿着路径 (path) 或者步 (steps) 来选取的。  </p>
-<p>常用路径表达式：<br>    nodename    选取此节点的所有子节点<br>    /            从根节点选取<br>    //            从匹配选择的当前节点选择文档中的节点，而不考虑它们的位置<br>    .            选取当前节点<br>    ..            选取当前节点的父节点<br>    @            选取属性</p>
-<p>谓语（Predicates）<br>    谓语用来查找某个特定的节点或者包含某个指定的值的节点。<br>    谓语被嵌套在方括号中</p>
-<p>语法支持以下通配符：  </p>
-<pre><code>*        匹配任何元素节点
-<span class="at_rule">@<span class="keyword">*</span>        匹配任何属性的节点
-<span class="function">node</span>()    匹配任何类型的节点</span>
-</code></pre><p>选取若干路径<br>通过在路径表达式中使用”|”运算符，可以选取多个路径  </p>
-<p>3.XPath轴<br>轴可以用于选取特定的节点集，具体用法可以查手册  </p>
-<h3 id="YQL练习">YQL练习</h3>
-<p><a href="http://perthcharles.github.io/yql_test/" target="_blank" rel="external">这里</a>有几个YQL使用的实例<br>建议使用chrome浏览器查看源码并调试输出结果  </p>
-<h3 id="小注：">小注：</h3>
-<p>YQL服务有时候会无法正常返回查询结果，等一会再刷新就好了  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://www.ibm.com/developerworks/cn/web/1011_chengfu_yql/" target="_blank" rel="external">YQL - 将 Web 作为数据库来使用的查询语言</a><br><a href="http://developer.yahoo.com/yql/console/" target="_blank" rel="external">Yahoo YQL console</a><br><a href="http://www.w3school.com.cn/xpath/index.asp" target="_blank" rel="external">XPath 教程</a><br><a href="http://www.w3school.com.cn/xpath/xpath_functions.asp#accessor" target="_blank" rel="external">XPath、XQuery 以及 XSLT 函数</a><br><a href="http://oauth.net/" target="_blank" rel="external">OAuth:如果对授权机制不熟悉</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h3 id="简介">简介</h3>
-<p>YQL是雅虎提供的一种类似SQL的数据查询服务。<br>设计出发点是把整个Web当成一个巨大的数据库供开发者使用。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="YQL" scheme="http://perthcharles.github.com/tags/YQL/"/>
     
   </entry>
   

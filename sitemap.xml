@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://perthcharles.github.com/2014/12/19/tcp-probe-intro/</loc>
+    <lastmod>2014-12-20T15:45:26.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/12/16/tshark-intro/</loc>
+    <lastmod>2014-12-16T10:08:23.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/</loc>
     <lastmod>2014-12-16T08:26:54.000Z</lastmod>
   </url>

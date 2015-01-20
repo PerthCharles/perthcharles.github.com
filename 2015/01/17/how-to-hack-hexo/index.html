@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+
+  
+  <title>如何为hexo主题添加新layout | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。在找到Wixo这个hexo的主题后，我就知道">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何为hexo主题添加新layout">
+<meta property="og:url" content="http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。在找到Wixo这个hexo的主题后，我就知道">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何为hexo主题添加新layout">
+<meta name="twitter:description" content="在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。在找到Wixo这个hexo的主题后，我就知道">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-how-to-hack-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/01/17/how-to-hack-hexo/" class="article-date">
+  <time datetime="2015-01-17T08:09:48.000Z" itemprop="datePublished">1月 17 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/博客搭建/">博客搭建</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      如何为hexo主题添加新layout
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<p>在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。<br>最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。<br>在找到<a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo</a>这个hexo的主题后，我就知道我想要的那个页面就是这个样子的。<br>但我暂时还不想完全改变博客的主题，所以就需要将Wixo主题实现的功能给融合进现有的<a href="https://github.com/hexojs/hexo-theme-landscape" target="_blank" rel="external">Landscape</a>主题中，整个过程记录成此文。<br><a id="more"></a>  </p>
+<h3 id="1-_Hexo主题的安装与使用">1. Hexo主题的安装与使用</h3>
+<hr>
+<p>Hexo安装一个主题的方法非常简单，只需要在<a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">theme list</a>中找准一个自己喜欢的主题，然后下载下来就可以了。<br>以默认landscape主题为例，具体步骤如下：  </p>
+<pre><code><span class="comment">// 将源码下载到你博客项目的themes目录下  </span>
+$ git <span class="keyword">clone</span> https:<span class="comment">//github.com/hexojs/hexo-theme-landscape.git themes/landscape</span>
+<span class="comment">// 编辑_config.yml，将theme设置为landscape  </span>
+$ vim _config.yml  
+  theme: landscape 
+</code></pre><h3 id="2-_Landscape主题的源码结构">2. Landscape主题的源码结构</h3>
+<hr>
+<p>关于hexo主题的源码结构，在<a href="http://hexo.io/docs/themes.html" target="_blank" rel="external">官方的文档:Themes</a>中有比较详细的介绍，_config.yml是主题的配置文件，scripts文件夹主要用于存放javascript脚本，source中主要存放CSS，图片等内容，layout中则实现了该主题支持的layout。<br>在layout文件夹中是一些ejs文件，EJS是Embedded JavsScript的缩写，这些ejs文件完成的功能我理解成整个博客框架的模板。  </p>
+<pre><code><span class="keyword">layout</span>.ejs：是整个博客的最基本的模板，所有的页面都在它基础上展开。  
+从源码可以到，它主要就是为每一个页面定义了一个统一的最基本的框架，比如head,sidebar,footer。      
+</code></pre><figure class="highlight title:"><figcaption><span>layout.ejs源码  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="vbscript">&lt;%- partial(<span class="comment">'_partial/head') %&gt;</span></span></div><div class="line"><span class="tag">&lt;<span class="title">body</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"container"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"wrap"</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/header', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">      <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"outer"</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">section</span> <span class="attribute">id</span>=<span class="value">"main"</span>&gt;</span><span class="vbscript">&lt;%- body %&gt;</span><span class="tag">&lt;/<span class="title">section</span>&gt;</span></div><div class="line">        <span class="vbscript">&lt;% <span class="keyword">if</span> (theme.sidebar && theme.sidebar !== <span class="comment">'bottom'){ %&gt;</span></span></div><div class="line">          <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/sidebar', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">        <span class="vbscript">&lt;% } %&gt;</span></div><div class="line">      <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/footer', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">    <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/mobile-nav', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">    <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/after-footer') %&gt;</span></span></div><div class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>而最常见的post和page都是在layout.ejs的基础上，补全了<strong><em>body</em></strong>部分。而且从源码来看，post和page的layout细节上是完全一致的，唯一的不同是hexo对于post和page这两类layout的处理方式不一样，具体可以去看看文档。    </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">post</span>.ejs源码：  </div><div class="line">    &lt;%- partial(<span class="string">'_partial/article'</span>, {<span class="built_in">post</span>: page, index: <span class="constant">false</span>}) %&gt;  </div><div class="line">page.ejs源码：  </div><div class="line">    &lt;%- partial(<span class="string">'_partial/article'</span>, {<span class="built_in">post</span>: page, index: <span class="constant">false</span>}) %&gt;</div></pre></td></tr></table></figure>
+
+
+
+<h3 id="3-_如何将wixo主题的layout添加进landscape主题？">3. 如何将wixo主题的layout添加进landscape主题？</h3>
+<hr>
+<p>通过大致分析了landscape主题layout的源码，具体怎么hack landscape主题就不难了。目前的实现方法如下：<br>a. 在layout文件夹中增加wiki-index.ejs这个layout，源码基本参照<a href="https://github.com/wzpan/hexo-theme-wixo/blob/master/layout/_partial/index.ejs" target="_blank" rel="external">wixo的index.ejs</a>；<br>b. 将wixo需要的CSS和JS都放到landscape的相应位置，然后在wiki-index.ejs中引用；<br>c. 为博客建一个layout是wiki-index.ejs的post，然后将它的链接放到导航栏中；<br>d. 从下面wiki-index.ejs的实现中，可以看到我使用了一个trick来生成wiki页面。wiki-index页面只会解析名字是以”wiki-“开头的category。这可能会对原始博客的categories widget造成干扰，有待进一步改善。  </p>
+<figure class="highlight title:"><figcaption><span>wiki-index.ejs源码  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/bootstrap-responsive.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/bootstrap.min.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/font-awesome.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/google-fonts.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/responsive.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/sidenav.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/style.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/highlight.css']) %&gt;</span></span></div><div class="line"></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery-2.0.3.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery.imagesloaded.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery.tableofcontents.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/gallery.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/main.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/bootstrap.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/tocgenerator.min.js') %&gt;</span></span></div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"row page"</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"col-md-12"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-group"</span> <span class="attribute">id</span>=<span class="value">"notebook"</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;% site.categories.sort(<span class="comment">'name').each(function(cat){ %&gt;</span></span></div><div class="line">      <span class="vbscript">&lt;% <span class="keyword">if</span>(cat.name.substring(<span class="number">0</span>, <span class="number">5</span>) == <span class="comment">'wiki-') { %&gt;</span></span></div><div class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel panel-default"</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-heading"</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">a</span> <span class="attribute">class</span>=<span class="value">"panel-title"</span> <span class="attribute">data-toggle</span>=<span class="value">"collapse"</span> <span class="attribute">data-parent</span>=<span class="value">"#notebook"</span> <span class="attribute">href</span>=<span class="value">"#&lt;%= cat.name %&gt;"</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">i</span> <span class="attribute">class</span>=<span class="value">"fa fa-folder"</span>&gt;</span><span class="tag">&lt;/<span class="title">i</span>&gt;</span> <span class="vbscript">&lt;%= cat.name %&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"&lt;%= cat.name %&gt;"</span> <span class="attribute">class</span>=<span class="value">"panel-collapse collapse"</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-body"</span>&gt;</span></div><div class="line">              <span class="vbscript">&lt;%- list_posts({orderby:<span class="string">"date"</span>,order:<span class="number">1</span>,count:<span class="number">65535</span>,query:{categories:cat.name}}) %&gt;</span>              <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;% } %&gt;</span></div><div class="line">      <span class="vbscript">&lt;% }); %&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span><span class="comment">&lt;!-- accordion --&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+
+<p>最后非常感谢Wixo的作者<a href="https://github.com/wzpan" target="_blank" rel="external">wzpan</a>实现了这么美观又实用的一个主题。  </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="http://hexo.io/docs/" target="_blank" rel="external">Hexo: Documentation</a><br><a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo - a wiki theme for Hexo</a><br><a href="http://hahack.tk/hexo-theme-wixo/#" target="_blank" rel="external">Wixo demo</a><br><a href="https://github.com/wzpan/hexo-theme-wixo" target="_blank" rel="external">Wixo source code</a><br><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">Hexo: theme list</a><br><a href=""></a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/" data-id="f13ff3ss95dnb99h" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/wixo/">wixo</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/01/20/ntp-ptp-intro/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          (no title)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/01/14/test-wiki/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">test-wiki</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/01/20/ntp-ptp-intro/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/17/how-to-hack-hexo/">如何为hexo主题添加新layout</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/14/test-wiki/">test-wiki</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/19/tcp-probe-intro/">tcpprobe, observe the TCP flow with kprobes</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/16/tshark-intro/">tshark, network protocol analyzer</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/16/tcp-design-and-implementation-phase1/">TCP ADI in Linux Phase 1</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/20/tcp-design-and-implementation-8/">TCP ADI in Linux(8): TCP receive</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/19/tcp-design-and-implementation-7/">TCP ADI in Linux(7): TCP send</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-6/">TCP ADI in Linux(6): Movement of sk_buff across protocol layers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/18/tcp-design-and-implementation-5/">TCP ADI in Linux(5): sk_buff and protocol headers</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
+          </li>
+        
+          <li>
+            <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
+          </li>
+        
+          <li>
+            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 13.33px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 13.33px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a><a href="/tags/wireshark/" style="font-size: 11.67px;">wireshark</a><a href="/tags/wixo/" style="font-size: 11.67px;">wixo</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

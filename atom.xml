@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2014-12-20T15:45:42.393Z</updated>
+  <updated>2015-01-20T12:33:55.199Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,157 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[]]></title>
+    <link href="http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/"/>
+    <id>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</id>
+    <published>2015-01-20T12:32:37.000Z</published>
+    <updated>2015-01-20T12:32:37.000Z</updated>
+    <content type="html"><![CDATA[<p>title: 网络时钟同步协议: NTP, PTP<br>date: 2015-01-20 16:50:43<br>categories:<br>tags:</p>
+<h2 id="tags:_[Linux,_NTP,_PTP]">tags: [Linux, NTP, PTP]</h2>
+<hr>
+<p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br><a id="more"></a>  </p>
+<h3 id="1-_NTP及PTP简介">1. NTP及PTP简介</h3>
+<hr>
+<p>NTP(Network Time Protocol)是用于不同计算机之间同步时钟的网络协议。<br>它的设计目标是使所有的互连的机器之间的时钟与UTC时间只相差若干<em>毫秒</em>。  </p>
+<p>目前NTP协议已经是有第4版了，如果不需要了解NTP太多细节的话，看看<a href="http://en.wikipedia.org/wiki/Network_Time_Protocol" target="_blank" rel="external">这个wiki页面</a>应该就足够了。需要注意的就是它有clock strata的概念。    </p>
+<p>PTP(Precision Time Protocol)看名字就知道是一个比NTP更精确的时钟同步协议了，PTP的设计目标是使机器之间的时钟偏差在sub-microsecond范围—这是<a href="http://en.wikipedia.org/wiki/Precision_Time_Protocol" target="_blank" rel="external">wiki页面</a>上提到的，有其他的地方说的是偏差若干微秒，本文搭建的环境中测量到的偏差也在微秒级别，没有到sub-microsecond级别。在使用PTP协议时，需要了解的主要概念点就是它的master/slave机制。  </p>
+<p>接下来我们就介绍我搭建NTP和PTP环境的过程，所用到的操作系统是CentOS6.5，内核版本是3.10。其他软件的版本会在用到时提及。  </p>
+<h3 id="2-_搭建NTP服务">2. 搭建NTP服务</h3>
+<hr>
+<p>配置环境：两台服务器，一台做NTP服务器，一台做NTP的客户端。同时这两台机器都未联网。<br>NTP服务器地址：192.168.0.11<br>NTP客户端地址：192.168.0.22  </p>
+<p>A. 在192.168.0.11中启动NTP服务  </p>
+<pre><code>$ service iptables stop <span class="comment"> // 首先把防火墙关了  </span>
+$ yum list |grep ntp    <span class="comment"> // 看下yum源中是否有ntp软件    </span>
+$ yum install -y ntp    
+$ ntpd <span class="comment">--version  </span>
+    ntpd <span class="number">4.2</span><span class="number">.6</span>p5  
+$ vim /etc/ntp.conf     <span class="comment"> // 修改配置文件  </span>
+    restrict <span class="number">192.168</span><span class="number">.0</span><span class="number">.11</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> nomodify nostrap <span class="comment"> // 限制作为局域网NTP服务器</span>
+   <span class="comment"> // 下面两句很关键。含义是如果这台NTP服务器的server地址无法访问，  </span>
+   <span class="comment"> // 则将本地时间作为NTP服务时间，这个IP地址也是固定的，不要修改  </span>
+    server <span class="number">127.127</span><span class="number">.1</span><span class="number">.0</span>  
+    fudge  <span class="number">127.127</span><span class="number">.1</span><span class="number">.0</span> stratum <span class="number">10</span>   
+$ ntpd -p /var/run/ntpd.pid <span class="comment"> // 启动ntpd  </span>
+$ service ntpd start         <span class="comment"> // 第二种启动ntpd服务的方法  </span><span class="comment">
+// 等待5分钟  </span>
+$ ntpstat<span class="comment"> // 从这条命令应该能看到NTP时钟同步好了，正常的显示结果应该与下面类似  </span>
+    synchronised <span class="built_in">to</span> <span class="built_in">local</span> net <span class="keyword">at</span> stratum <span class="number">11</span>
+        <span class="built_in">time</span> correct <span class="built_in">to</span> <span class="operator">within</span> <span class="number">11</span> ms  
+        polling server every <span class="number">64</span> s
+</code></pre><p>B. 在192.168.0.22上启动NTP服务，选择192.168.0.11为NTP服务器  </p>
+<pre><code><span class="char">$ </span>service iptables stop
+<span class="char">$ </span>yum install -y ntp
+<span class="char">$ </span>vim /etc/ntp.conf  // 添加下面这个server地址，把其他的都注释掉  
+    server <span class="number">192.168</span><span class="number">.0</span><span class="number">.11</span>  
+<span class="char">$ </span>service ntpd start
+<span class="char">$ </span>netstat  // 等待若干时间应该就能够显示同步成功了  
+</code></pre><p>我的这两台实验机器是在同一个Rack的，结果显示差不多同步的偏差在30ms左右。<br>每个版本的ntpd配置文件可能有少许的差别，不过好在注释都做的不错，所以别的细节就不啰嗦了。  </p>
+<h3 id="3-_搭建PTP服务">3. 搭建PTP服务</h3>
+<hr>
+<p>从<a href="http://en.wikipedia.org/wiki/List_of_PTP_implementations" target="_blank" rel="external">List of PTP implementations</a>可以看到PTP的实现有很多很多种，可以是硬件实现的，可以是软件实现的也可以是软硬件结合实现的。本文中搭建的PTP服务是基于软件<a href="http://en.wikipedia.org/wiki/PTPd" target="_blank" rel="external">PTPd</a>。如果没有特殊的硬件的话，这算是一种非常方便的方法了。  </p>
+<pre><code>$ service iptables <span class="operator"><span class="keyword">stop</span> // 关掉防火墙  
+$ yum list |grep ptp    // 检查yum源  
+$ yum <span class="keyword">install</span> -y ptpd
+$ ptpd2 <span class="comment">--version  </span>
+    ptpd2 <span class="keyword">version</span> <span class="number">2.3</span><span class="number">.0</span>  
+// 弄一个管理脚本，从serverfault找来的 ：）    
+// http://serverfault.com/questions/<span class="number">329127</span>/ptp-<span class="keyword">time</span>-synchronization-<span class="keyword">on</span>-centos6-rhel
+$ vim ptpd.sh  // 将PTPADRGS 改为 PTPD_EXTRA_OPTIONS  
+$ chmod +x ptpd.sh 
+$ vim /etc/ptpd2.conf  // 修改配置文件  
+    ptpengine:preset=masterslave    // 对于<span class="keyword">master</span>主机，不要选masteronly，具体原因请查看<span class="keyword">help</span>  
+    ptpengine:preset=slaveonly      // 对于<span class="keyword">slave</span>主机  
+    // 其他选项也可以根据需要进行调整，比如<span class="keyword">log</span>是否开启，是否绑定CPU。这些看配置文件的注释就好了  
+$ vim /etc/sysconfig/ptpd2  // 修改启动命令，主要就是指定PTPD的配置文件  
+    PTPD_EXTRA_OPTIONS=<span class="string">"-c /etc/ptpd2.conf"</span>  
+// 现在就可以使用下面三个命令来启动，查看和关闭ptpd服务了  
+$ ./ptpd.sh <span class="keyword">start</span>  
+$ ./ptpd.sh <span class="keyword">status</span>  
+$ ./ptpd.sh <span class="keyword">stop</span>  </span>
+</code></pre><p>如果遇到任何问题，首先一定要看看help，使用-H选项的话还能看到非常详细的配置（虽然大多我可看不懂，不过不能不看，理解的越多，遇到的问题就会越少）。<br>如果log里面的信息看不懂，可以把代码下下来，一个grep搞定。  </p>
+<p>经测试，在我的机器上使用PTPD软件搭建的服务，时钟偏移的平均值能够达到5us左右。这个粒度基本能满足我们的需求了。  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://en.wikipedia.org/wiki/Network_Time_Protocol" target="_blank" rel="external">Network Time Protocol</a><br><a href="http://blog.chinaunix.net/uid-20551990-id-4308732.html" target="_blank" rel="external">CentOS 6.3搭建NTP服务器</a><br><a href="http://blog.meinbergglobal.com/2013/09/14/ieee-1588-accurate/" target="_blank" rel="external">Why is IEEE 1588 so accurate?</a><br><a href="http://en.wikipedia.org/wiki/Precision_Time_Protocol" target="_blank" rel="external">Precision Time Protocol</a><br><a href="http://en.wikipedia.org/wiki/List_of_PTP_implementations" target="_blank" rel="external">List of PTP implementations</a><br><a href="http://sourceforge.net/projects/ptpd/?source=typ_redirect" target="_blank" rel="external">ptpd source code</a><br><a href="http://serverfault.com/questions/329127/ptp-time-synchronization-on-centos6-rhel" target="_blank" rel="external">ptpd manage scripts</a><br><a href="http://www.h3c.com.cn/products___technology/technology/system_management/other_technology/technology_recommend/201008/686476_30003_0.htm" target="_blank" rel="external">PTP技术介绍 by H3C</a><br><a href="http://sourceforge.net/p/ptpd/wiki/Home/" target="_blank" rel="external">PTP FAQ</a><br><a href="http://blog.meinbergglobal.com/2013/11/22/ntp-vs-ptp-network-timing-smackdown/" target="_blank" rel="external">More: NTP vs PTP</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>title: 网络时钟同步协议: NTP, PTP<br>date: 2015-01-20 16:50:43<br>categories:<br>tags:</p>
+<h2 id="tags:_[Linux,_NTP,_PTP]">tags: [Linux, NTP, PTP]</h2>
+<hr>
+<p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br>]]>
+    
+    </summary>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[如何为hexo主题添加新layout]]></title>
+    <link href="http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/"/>
+    <id>http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/</id>
+    <published>2015-01-17T08:09:48.000Z</published>
+    <updated>2015-01-17T10:25:40.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。<br>最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。<br>在找到<a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo</a>这个hexo的主题后，我就知道我想要的那个页面就是这个样子的。<br>但我暂时还不想完全改变博客的主题，所以就需要将Wixo主题实现的功能给融合进现有的<a href="https://github.com/hexojs/hexo-theme-landscape" target="_blank" rel="external">Landscape</a>主题中，整个过程记录成此文。<br><a id="more"></a>  </p>
+<h3 id="1-_Hexo主题的安装与使用">1. Hexo主题的安装与使用</h3>
+<hr>
+<p>Hexo安装一个主题的方法非常简单，只需要在<a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">theme list</a>中找准一个自己喜欢的主题，然后下载下来就可以了。<br>以默认landscape主题为例，具体步骤如下：  </p>
+<pre><code><span class="comment">// 将源码下载到你博客项目的themes目录下  </span>
+$ git <span class="keyword">clone</span> https:<span class="comment">//github.com/hexojs/hexo-theme-landscape.git themes/landscape</span>
+<span class="comment">// 编辑_config.yml，将theme设置为landscape  </span>
+$ vim _config.yml  
+  theme: landscape 
+</code></pre><h3 id="2-_Landscape主题的源码结构">2. Landscape主题的源码结构</h3>
+<hr>
+<p>关于hexo主题的源码结构，在<a href="http://hexo.io/docs/themes.html" target="_blank" rel="external">官方的文档:Themes</a>中有比较详细的介绍，_config.yml是主题的配置文件，scripts文件夹主要用于存放javascript脚本，source中主要存放CSS，图片等内容，layout中则实现了该主题支持的layout。<br>在layout文件夹中是一些ejs文件，EJS是Embedded JavsScript的缩写，这些ejs文件完成的功能我理解成整个博客框架的模板。  </p>
+<pre><code><span class="keyword">layout</span>.ejs：是整个博客的最基本的模板，所有的页面都在它基础上展开。  
+从源码可以到，它主要就是为每一个页面定义了一个统一的最基本的框架，比如head,sidebar,footer。      
+</code></pre><figure class="highlight title:"><figcaption><span>layout.ejs源码  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="vbscript">&lt;%- partial(<span class="comment">'_partial/head') %&gt;</span></span></div><div class="line"><span class="tag">&lt;<span class="title">body</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"container"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"wrap"</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/header', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">      <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"outer"</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">section</span> <span class="attribute">id</span>=<span class="value">"main"</span>&gt;</span><span class="vbscript">&lt;%- body %&gt;</span><span class="tag">&lt;/<span class="title">section</span>&gt;</span></div><div class="line">        <span class="vbscript">&lt;% <span class="keyword">if</span> (theme.sidebar && theme.sidebar !== <span class="comment">'bottom'){ %&gt;</span></span></div><div class="line">          <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/sidebar', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">        <span class="vbscript">&lt;% } %&gt;</span></div><div class="line">      <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/footer', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">    <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/mobile-nav', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">    <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/after-footer') %&gt;</span></span></div><div class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>而最常见的post和page都是在layout.ejs的基础上，补全了<strong><em>body</em></strong>部分。而且从源码来看，post和page的layout细节上是完全一致的，唯一的不同是hexo对于post和page这两类layout的处理方式不一样，具体可以去看看文档。    </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">post</span>.ejs源码：  </div><div class="line">    &lt;%- partial(<span class="string">'_partial/article'</span>, {<span class="built_in">post</span>: page, index: <span class="constant">false</span>}) %&gt;  </div><div class="line">page.ejs源码：  </div><div class="line">    &lt;%- partial(<span class="string">'_partial/article'</span>, {<span class="built_in">post</span>: page, index: <span class="constant">false</span>}) %&gt;</div></pre></td></tr></table></figure>
+
+
+
+<h3 id="3-_如何将wixo主题的layout添加进landscape主题？">3. 如何将wixo主题的layout添加进landscape主题？</h3>
+<hr>
+<p>通过大致分析了landscape主题layout的源码，具体怎么hack landscape主题就不难了。目前的实现方法如下：<br>a. 在layout文件夹中增加wiki-index.ejs这个layout，源码基本参照<a href="https://github.com/wzpan/hexo-theme-wixo/blob/master/layout/_partial/index.ejs" target="_blank" rel="external">wixo的index.ejs</a>；<br>b. 将wixo需要的CSS和JS都放到landscape的相应位置，然后在wiki-index.ejs中引用；<br>c. 为博客建一个layout是wiki-index.ejs的post，然后将它的链接放到导航栏中；<br>d. 从下面wiki-index.ejs的实现中，可以看到我使用了一个trick来生成wiki页面。wiki-index页面只会解析名字是以”wiki-“开头的category。这可能会对原始博客的categories widget造成干扰，有待进一步改善。  </p>
+<figure class="highlight title:"><figcaption><span>wiki-index.ejs源码  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/bootstrap-responsive.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/bootstrap.min.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/font-awesome.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/google-fonts.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/responsive.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/sidenav.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/style.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/highlight.css']) %&gt;</span></span></div><div class="line"></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery-2.0.3.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery.imagesloaded.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery.tableofcontents.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/gallery.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/main.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/bootstrap.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/tocgenerator.min.js') %&gt;</span></span></div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"row page"</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"col-md-12"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-group"</span> <span class="attribute">id</span>=<span class="value">"notebook"</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;% site.categories.sort(<span class="comment">'name').each(function(cat){ %&gt;</span></span></div><div class="line">      <span class="vbscript">&lt;% <span class="keyword">if</span>(cat.name.substring(<span class="number">0</span>, <span class="number">5</span>) == <span class="comment">'wiki-') { %&gt;</span></span></div><div class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel panel-default"</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-heading"</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">a</span> <span class="attribute">class</span>=<span class="value">"panel-title"</span> <span class="attribute">data-toggle</span>=<span class="value">"collapse"</span> <span class="attribute">data-parent</span>=<span class="value">"#notebook"</span> <span class="attribute">href</span>=<span class="value">"#&lt;%= cat.name %&gt;"</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">i</span> <span class="attribute">class</span>=<span class="value">"fa fa-folder"</span>&gt;</span><span class="tag">&lt;/<span class="title">i</span>&gt;</span> <span class="vbscript">&lt;%= cat.name %&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"&lt;%= cat.name %&gt;"</span> <span class="attribute">class</span>=<span class="value">"panel-collapse collapse"</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-body"</span>&gt;</span></div><div class="line">              <span class="vbscript">&lt;%- list_posts({orderby:<span class="string">"date"</span>,order:<span class="number">1</span>,count:<span class="number">65535</span>,query:{categories:cat.name}}) %&gt;</span>              <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;% } %&gt;</span></div><div class="line">      <span class="vbscript">&lt;% }); %&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span><span class="comment">&lt;!-- accordion --&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+
+<p>最后非常感谢Wixo的作者<a href="https://github.com/wzpan" target="_blank" rel="external">wzpan</a>实现了这么美观又实用的一个主题。  </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="http://hexo.io/docs/" target="_blank" rel="external">Hexo: Documentation</a><br><a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo - a wiki theme for Hexo</a><br><a href="http://hahack.tk/hexo-theme-wixo/#" target="_blank" rel="external">Wixo demo</a><br><a href="https://github.com/wzpan/hexo-theme-wixo" target="_blank" rel="external">Wixo source code</a><br><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">Hexo: theme list</a><br><a href=""></a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。<br>最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。<br>在找到<a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo</a>这个hexo的主题后，我就知道我想要的那个页面就是这个样子的。<br>但我暂时还不想完全改变博客的主题，所以就需要将Wixo主题实现的功能给融合进现有的<a href="https://github.com/hexojs/hexo-theme-landscape" target="_blank" rel="external">Landscape</a>主题中，整个过程记录成此文。<br>]]>
+    
+    </summary>
+    
+      <category term="hexo" scheme="http://perthcharles.github.com/tags/hexo/"/>
+    
+      <category term="wixo" scheme="http://perthcharles.github.com/tags/wixo/"/>
+    
+      <category term="博客搭建" scheme="http://perthcharles.github.com/categories/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[test-wiki]]></title>
+    <link href="http://perthcharles.github.com/2015/01/14/test-wiki/"/>
+    <id>http://perthcharles.github.com/2015/01/14/test-wiki/</id>
+    <published>2015-01-14T13:34:08.000Z</published>
+    <updated>2015-01-14T15:16:04.000Z</updated>
+    <content type="html"><![CDATA[]]></content>
+    <summary type="html">
+    <![CDATA[]]>
+    </summary>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[tcpprobe, observe the TCP flow with kprobes]]></title>
@@ -200,11 +351,11 @@ srtt        <span class="comment">// smoothed RTT  </span>
     <link href="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/"/>
     <id>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</id>
     <published>2014-11-20T08:17:45.000Z</published>
-    <updated>2014-11-27T14:18:37.000Z</updated>
+    <updated>2014-12-30T04:37:06.000Z</updated>
     <content type="html"><![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
 <ol>
 <li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
-<li>否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。  </li>
+<li>否则，in-sequence包会被放在receive queue中，out-of-order包会放置于out-of-order queue中。  </li>
 </ol>
 <a id="more"></a>  
 
@@ -370,7 +521,7 @@ Fast processing <span class="keyword">is</span> turned <span class="keyword">on<
     <![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
 <ol>
 <li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
-<li>否则，in-sequence包会被放在receive queue中，out-of-order包会房子啊out-of-order queue中。  </li>
+<li>否则，in-sequence包会被放在receive queue中，out-of-order包会放置于out-of-order queue中。  </li>
 </ol>
 ]]>
     
@@ -1425,7 +1576,7 @@ $reboot</span>
     <link href="http://perthcharles.github.com/2014/04/26/make-progress-everyday/"/>
     <id>http://perthcharles.github.com/2014/04/26/make-progress-everyday/</id>
     <published>2014-04-26T04:00:00.000Z</published>
-    <updated>2014-11-04T06:39:13.000Z</updated>
+    <updated>2015-01-12T06:53:33.000Z</updated>
     <content type="html"><![CDATA[<h2 id="目录">目录</h2>
 <ul>
 <li><a href="#blogger">优秀博主</a>  </li>
@@ -1516,6 +1667,7 @@ $reboot</span>
 <li><a href="http://blog.csdn.net/ww2000e/article/details/6609657" target="_blank" rel="external">让source insight支持AT&amp;T汇编语法高亮</a>  </li>
 <li><a href="http://www.atmos.albany.edu/deas/atmclasses/atm350/vi_cheat_sheet.pdf" target="_blank" rel="external">vi Editor Cheat Sheet</a>  </li>
 <li><a href="http://wgkgood.blog.51cto.com/1192594/917632" target="_blank" rel="external">GCC升级</a>  </li>
+<li><a href="http://blog.51osos.com/linux/linux-kernel-panic/" target="_blank" rel="external">Linux Kernel Panic报错解决思路</a>  </li>
 </ul>
 <hr>
 <p><h3 id="bigdata">大数据</h3></p>
@@ -1609,247 +1761,6 @@ $reboot</span>
 ]]>
     
     </summary>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[The Art of Readable Code]]></title>
-    <link href="http://perthcharles.github.com/2014/04/20/the-art-of-readable-code/"/>
-    <id>http://perthcharles.github.com/2014/04/20/the-art-of-readable-code/</id>
-    <published>2014-04-20T04:00:00.000Z</published>
-    <updated>2014-11-04T06:31:20.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="简介">简介</h2>
-<p>短小精悍的编程建议，常读常新。  </p>
-<h3 id="第一章：代码应当易于理解">第一章：代码应当易于理解</h3>
-<p>1.代码的写法应当使别人理解它所需的时间最小化<br>理解的要求就是别人看完你的代码后，能够动手改动或优化你的代码。<br>写代码的时候应该以能够像自然语言一样易于理解为目标。  </p>
-<p>2.代码并不是行数越少就越容易理解  </p>
-<a id="more"></a>
-
-<h2 id="第一部分：表面层次的改进">第一部分：表面层次的改进</h2>
-<h3 id="第二章：把信息装到名字里">第二章：把信息装到名字里</h3>
-<p>1.选择专业的词<br>举例：<br>    int size()     =&gt;  int Height()/NumNodes()/MemoryBytes()<br>简单的使用size不能直接反应出返回值使什么的size。<br>如果可以的话选用更具体、更符合情景的专业词汇对于可读性有较大的帮助。  </p>
-<p>2.避免使用tmp和retval这样泛泛的变量/函数名<br>除非有十分好的理由，比如常见的swap函数中的tmp。  </p>
-<p>3.用具体的名字代替抽象的名字<br>书中有一个插图很好的阐释了这点：动物和危险动物  </p>
-<p>4.给变量带上重要的细节<br>比如添加单位等，可以参考微软的“匈牙利表示法”  </p>
-<h3 id="第三章：不要误解的名字">第三章：不要误解的名字</h3>
-<p>1.推荐用min和max来表示（包含）极限<br>2.推荐用first和last来表示包含的范围<br>3.推荐用begin和end来表示包含／排除范围<br>4.要小心用户对特定词的期望。例如，用户会期望get（）<br>或者size（）是轻量的方法。  </p>
-<p>这章讲的内容感觉需要有较多的实践应验才能区分哪些名字会产生误解<br>所以这里仅列出了书中强调的几条经验  </p>
-<h3 id="第四章：审美">第四章：审美</h3>
-<p>1.三条大原则：<br><em>使用一致的布局，让读者很快就习惯这种风格  
-</em>让相似的代码看上去相似<br>*把相关的代码行分组，形成代码块  </p>
-<p>2.如果代码中存在大量的重复代码，或许该考虑添加一个函数了。<br>一个合适的小函数能有效提高代码的视觉美感  </p>
-<p>3.在需要时使用列对齐  </p>
-<p>4.选一个有意思的顺序，始终一致地使用它<br>常见的顺序：重要性、字母序  </p>
-<p>5.把声明按块组织起来<br>这点对于类或者较大的结构体尤为重要  </p>
-<p>6.个人风格与一致性<br>一个人的代码风格如果能够保持一致，这比“正确”的风格更重要。<br>最好的学习代码风格的资料就是Linux源码！<br>推荐一些我了解的一些代码风格的资料：<br><a href="http://www.m5sim.org/Coding_Style" target="_blank" rel="external">Gem5 Coding Style</a><br><a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml" target="_blank" rel="external">Google C++ Style Guide</a>  </p>
-<h3 id="第五章：该写什么样的注释">第五章：该写什么样的注释</h3>
-<p>1.关键思想：注释的目的时尽量帮助读者了解得和作者一样多  </p>
-<p>2.最好的注释就是代码本身，不要为了注释而注释<br>自解释的代码比任何的注释都要好，好代码&gt;坏代码＋好注释  </p>
-<p>3.不要给不好的名字加注释—应该把名字改好  </p>
-<p>4.为代码的瑕疵写注释<br>如果阅读过Linux源码会发现里面有很多’TODO’的注释，这点很值得学习<br>很多时候第一版的代码是想尽快的完成某个功能，在实现过程中想到的一些可能<br>的优化如果暂时不便实现，加上一个’TODO’的注释或许是一个不错的选择。<br>书中列出了一些流行的标记类的注释。  </p>
-<p>5.给常量加注释<br>常量的值往往不是重点，而为什么常量被设置为这个值才是重点。<br>添加合适的注释解释这些信息，对代码的可读性有较大的帮助。  </p>
-<p>6.站在读者的角度<br>这点比较有意思，这类注释更像是对于某个问题的解答。<br>对于一些意料之中的问题，添加注释进行回答能节省许多不必要的时间  </p>
-<p>7.公布可能的陷阱<br>这点的出发点与第6条类似  </p>
-<p>8.全局观的注释：用注释来总结代码块，使读者不致迷失在细节中。<br>注释的目的是帮助读者更好更快的理解你的代码，<br>给出一些总结性的注释能够省去读者很多的时间。<br>对于一个较复杂的函数，如果能一针见血的指出函数完成的功能、输入和输出，<br>读者就可以根据需要要选择性的阅读你的代码。这点对于复杂的大项目尤为重要。  </p>
-<h3 id="第6章：写出言简意赅的注释">第6章：写出言简意赅的注释</h3>
-<p>这章的内容看下章首的插图就能一目了然，就不多解释了。  </p>
-<h2 id="第二部分：简化循环和逻辑">第二部分：简化循环和逻辑</h2>
-<p>用更加清晰的方式来实现代码的逻辑至关重要，<br>对于一段时候后重新来阅读或调试这段代码尤其重要。  </p>
-<h3 id="第7章：把控制流变得易读">第7章：把控制流变得易读</h3>
-<p>关键思想：把条件、循环以及其他对控制流的改变做的越自然越好。<br>运用一种方式使读者不用停下来重读你的代码。  </p>
-<p>1.条件语句中参数的顺序<br>代码同样需要符合人阅读的习惯<br>指导原则：<br><em>比较的左侧：“被问询的”表达式，它的值更倾向于不断变化  
-</em>比较的右侧：用来做比较的表达式，它的值更倾向于常量  </p>
-<p>2.if/else的顺序<br><em>首先处理正逻辑而不是负逻辑的情况，例如：用if(debug)而不用if(!debug)  
-</em>先处理掉简单的情况。这种方式可能还会使得if和else在屏幕之内都可见，这很好<br>*先处理有趣或者是可以的情况  </p>
-<p>3.代码行数越少不一定越好，更好的度量方法是最小化人们理解它所需要的时间  </p>
-<p>4.尽量减少代码的嵌套层数<br>嵌套的层次越多，之后代码的优化和修改就越复杂。<br>书中提到了一些有效的方法避免过多的嵌套，如提前从函数中返回或使用break  </p>
-<h3 id="第8章：拆分超长的表达式">第8章：拆分超长的表达式</h3>
-<p>关键思想：把你的超长表达式拆分成更容易理解的小块<br>人脑能同时处理的信息量有限，就好比巨星乌贼一次吃多了就容易伤到大脑  </p>
-<p>1.拆分表达式最简单的方法就是引入一个额外的变量，让它来表示一个小一点<br>的子表达式。这个额外的变量有时叫做“解释变量”，因为它可以帮助解释<br>子表达式的含义。  </p>
-<p>2.使用德摩根定理对复杂的逻辑表达式简化<br>如果使用此方法简化了逻辑表达式，那么最好添加相应的注释。<br>因为转换过后的表达式理解起来没那么直接。  </p>
-<p>3.找到更优雅的方式<br>一个复杂的逻辑，如果考虑它的反面或许就没有那么复杂了。<br>书中的例子就是两个区间的重叠的判断，值得一读  </p>
-<h3 id="第9章：变量与可读性">第9章：变量与可读性</h3>
-<p>1.减少没有价值的临时变量<br>至于判断是否存在价值，这需要常年的积累。  </p>
-<p>2.减少控制流变量<br>还是那个理由：人脑同时能够处理的事情有限  </p>
-<p>3.缩小变量的作用域<br>缩小了变量的作用域，同样减少了读代码时需要记在脑海中的信息<br>同时还避免了变量冲突  </p>
-<p>4.只写一次的变量更好<br>基于的思想：操作一个变量的地方越多，越难确定它的当前值  </p>
-<h2 id="第三部分：重新组织代码">第三部分：重新组织代码</h2>
-<h3 id="第10章：抽取不相关的子问题">第10章：抽取不相关的子问题</h3>
-<p>核心思想：把一般代码和项目专有的代码分开<br>书中指出 ：大部分的代码都是一般代码。通过建立一个大组库和辅助函数来<br>解决一般问题，剩下的只是让你的程序与众不同的核心部分。    </p>
-<p>1.创建大量通用代码<br>如果字符串需要以某种格式输出，而这种格式经常被用到，那么你该考虑<br>用一个类似format_pretty()的函数专门负责将字符串转换成特定格式。  </p>
-<h3 id="第11章：一次只做一件事">第11章：一次只做一件事</h3>
-<p>关键思想：应该把代码组织得一次只做一件事  </p>
-<p>下面是用于使代码“一次只做一件事”所用到的流程：<br><em>列出代码所做的所有“任务”。这里的任务没有很严格的定义—它可以很小  
-</em>尽量把这些任务拆分到不同的函数中，或者至少是代码中不同的段落中  </p>
-<h3 id="第12章：把想法变成代码">第12章：把想法变成代码</h3>
-<p>1.清晰地描述逻辑<br>把一个想法用“自然语言”解释是一个很有价值的能力<br>代码不仅仅是写给机器执行的，更多的时候是写给人读的，所以代码的逻辑<br>能够像“自然语言”那般的描述出来，对于代码的理解有莫大的帮助  </p>
-<p>2.了解库函数很有帮助和必要<br>了解库函数避免重复造轮子，不仅能够提高效率，而且库函数的使用很大程度<br>的保障了正确性。<br>当然要想完全了解库函数每个函数的具体用法，将是一个十分巨大的工程。<br>我们能够做的就是常常翻翻主要库的文档，在实现某项功能的时候能够想到<br>库函数中好像有类似的实现就可以了  </p>
-<p>3.在动手写代码之前，先尝试用自然语言描述解决方法是一个很好的习惯  </p>
-<h3 id="第13章：少写代码">第13章：少写代码</h3>
-<p>1.在项目开始时写的代码只有很少的代码留到最终版本中  </p>
-<p>2.写代码前，需要反复考虑和质疑的你需求<br>很多时候你认为需要的功能，到最后都没有实现的必要  </p>
-<p>3.用最合适的方式实现你的需求<br>书中有一个关于缓存的例子。如果数据的重复访问只处在一行，那么没有必要<br>实现一个复杂的LRU策略。  </p>
-<p>4.使用UNIX工具而非编写代码<br>这点我的体会最深。跑实验的时候处理数据，如果每次都要写代码的话，<br>就不用跑实验了。使用一些常用的文本处理命令能有效地提高效率，<br>比如cat、awk、cut等。  </p>
-<h2 id="第四部分：精选话题">第四部分：精选话题</h2>
-<p>这部分主要是一些关于测试和一个小功能的具体实现举例，具体还是看书比较好。  </p>
-<h2 id="总结">总结</h2>
-<p>本书很多的内容都需要通过大量的实践才能透彻的领悟，常读常新。<br>本书的可读性也很强，书中又有许多有趣的插图，<br>能够让你一下子就体会到整个一章的精髓。  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h2 id="简介">简介</h2>
-<p>短小精悍的编程建议，常读常新。  </p>
-<h3 id="第一章：代码应当易于理解">第一章：代码应当易于理解</h3>
-<p>1.代码的写法应当使别人理解它所需的时间最小化<br>理解的要求就是别人看完你的代码后，能够动手改动或优化你的代码。<br>写代码的时候应该以能够像自然语言一样易于理解为目标。  </p>
-<p>2.代码并不是行数越少就越容易理解  </p>
-]]>
-    
-    </summary>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Markdown中插入Latex代码]]></title>
-    <link href="http://perthcharles.github.com/2013/12/22/insert-latex-to-markdown/"/>
-    <id>http://perthcharles.github.com/2013/12/22/insert-latex-to-markdown/</id>
-    <published>2013-12-22T04:00:01.000Z</published>
-    <updated>2014-11-04T06:29:45.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="配置">配置</h2>
-<p>Markdown解析器：rdiscount  </p>
-<h2 id="举例">举例</h2>
-<p>1.行内代码<br>效果:<code>$W_{i}$</code>在行内。  </p>
-<p>2.独占一行代码<br>效果:<code>$$W_{i}$$</code>独占一行。  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h2 id="配置">配置</h2>
-<p>Markdown解析器：rdiscount  </p>
-<h2 id="举例">举例</h2>
-<p>1.行内代码<br>效果:<code>$W_{i}$</code>在行内。  </p>
-<p>2.独占一行代码<br>效果:<cod]]>
-    </summary>
-    
-      <category term="markdown" scheme="http://perthcharles.github.com/tags/markdown/"/>
-    
-      <category term="latex" scheme="http://perthcharles.github.com/tags/latex/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[数学之美[吴军 著]]]></title>
-    <link href="http://perthcharles.github.com/2013/12/14/beauty-of-mathematics/"/>
-    <id>http://perthcharles.github.com/2013/12/14/beauty-of-mathematics/</id>
-    <published>2013-12-14T04:00:00.000Z</published>
-    <updated>2014-11-04T06:27:28.000Z</updated>
-    <content type="html"><![CDATA[<h1 id="作者寄语">作者寄语</h1>
-<p>愿科学之精神在国民中得到普及，愿中国年轻的一代涌现更多的杰出专业人才。  </p>
-<a id="more"></a>
-
-<h1 id="名人语录">名人语录</h1>
-<p>除那些真实而已足够说明其现象者外，不必去寻找自然界事物的其他原因。<br>—牛顿  </p>
-<p>简单性和模块化是软件工程的基石；分布式和容错性是互联网的声明。<br>—蒂姆 伯纳斯 李  </p>
-<p>纯数学使我们能够发现概念和联系这些概念的规律，这些概念和规律给了我们了解自然<br>现象的钥匙。<br>—爱因斯坦  </p>
-<h1 id="相关读物">相关读物</h1>
-<p>《从一到无穷大》  — 乔治 伽莫夫 (George Gamow)  </p>
-<h2 id="第一章：文字和语言_vs_数字的信息">第一章：文字和语言 vs 数字的信息</h2>
-<p>1.信息的冗余是信息安全的保障。罗塞塔石碑上的内容是同一信息重复三次  </p>
-<p>2.阿拉伯数字的发明人是古印度人，只不过这种计数方式是由阿拉伯人传入欧洲的  </p>
-<p>3.关于古文与白话文的信息论解释：<br>如果信道较宽，信息不必压缩就可以直接传递；如果信道很窄，信息在传递前需要尽可<br>能的压缩，然后在接收端解压缩。<br>在古代，两个人讲话说得快，是一个宽信道，无需压缩；书写则是一个慢而代价昂贵的<br>窄信道，需要压缩。  </p>
-<p>4.这章主要是帮助读者感受语言和数学天然、内在的联系。  </p>
-<h2 id="第二章：自然语言处理_—_从规律到统计">第二章：自然语言处理 — 从规律到统计</h2>
-<p>1.今天，机器翻译和语音识别已经做得不错，并且有上亿人使用过，但是大部分这个领<br>域之外的人依然错误地认为这两个应用是靠计算机理解自然语言完成的。事实上，他们<br>全部都都靠的是数学，更准确的说是靠统计。  </p>
-<p>2.描述自然语言的文法和计算机高级程序语言的文法不同。自然语言在演变的过程中，<br>产生了词义和上下文相关的特性。因此，它的文法是比较复杂的上下文有关文法，而程<br>序语言是我们认为设计的，为了便于计算机解码的上下文无关文法，相比自然语言而言<br>简单的多。对于上下文无关文法，算法的复杂度基本上是语句长度的二次方，而对于上<br>下文有关文法，计算复杂度基本上是语句长度的六次方。  </p>
-<p>3.基于统计的自然语言处理方法，在数学模型上和通信是相通的，甚至就是相通的。因<br>此，在数学意义上自然语言处理又和语言的初衷 — 通信联系在一起了。但是，科学家<br>们认识到这个联系却花了几十年的时间。  </p>
-<h2 id="第三章：统计语言模型">第三章：统计语言模型</h2>
-<p>1.19世纪到20世纪初，俄罗斯有个数学家叫马尔科夫，他给了个偷懒但还颇为有效的方<br>法，也就是每当遇到这种情况时，就假设任意一个词<code>$W_{i}$</code>出现的概率只同它前面的<br>词<code>$W_{i-1}$</code>有关，于是问题就变简单了。这种假设在数学上成为马尔科夫假设。  </p>
-<p>2.也可以假设一个词由前面N-1个词决定，对应的模型稍微复杂些，被称为N元模型。  </p>
-<p>3.在实际工程中，还需要考虑零概率问题和平滑的方法，细节可参考原书。  </p>
-<h2 id="第四章：谈谈中文分词">第四章：谈谈中文分词</h2>
-<p>1.利用统计语言模型进行自然语言处理是建立在<em>词</em>的基础上的，因为词是表达语义的<br>最小单位。对于西方拼音语言来讲，词之间有明确的分界符(Delimit)，统计和使用语言<br>模型非常直接。而对于中、日、韩、泰等语言，需要首先对句子进行分词，才能做进一<br>步的自然语言处理。  </p>
-<p>2.最容易想到的分词方法，也是最简单的办法，就是查字典(最早由北航的梁南元教授提<br>出)。”查字典”的办法，其实就是把一个句子扫描一遍，遇到字典里有的词就标识出来，<br>遇到复合词就找最长的词匹配，遇到不认识的字串就分割成单字词。  </p>
-<p>3.利用统计语言模型分词的方法，基本的想法就是：最好的一种分词方法应该保证分完词<br>后这个句子出现的概率最大。  </p>
-<p>4.中文分词以统计语言模型为基础，通过几十年的发展和完善，今天基本可以看做是一个<br>已经解决的问题。当然不同的人做的分词器有好有坏，这里面的差别主要在于数据的使用<br>和工程实现的精度。  </p>
-<h2 id="第五章：隐含马尔科夫模型">第五章：隐含马尔科夫模型</h2>
-<p>1.马尔科夫假设：随机过程中各个状态<code>$S_{t}$</code>的概率分布，只与它的前一个状态<code>$S_{t-1}$</code><br>有关。  </p>
-<p>2.隐含马尔科夫模型是上述马尔科夫链的一个扩展：任一时刻t的状态<code>$S_{t}$</code>是不可见<br>的。所以观察者无法通过观察到一个状态序列<code>$S_{1}, S_{2}, S_{3}, ..., S_{T}$</code>来<br>推测转移概率等参数。但是隐含马尔科夫模型在每个时刻t会输出一个符号<code>$O_{t}$</code>，而<br>且<code>$O_{t}$</code>和<code>$S_{t}$</code>相关且仅和<code>$S_{t}$</code>相关。这个被称为独立输出假设。其中隐<br>含的状态是一个典型的马尔科夫链。  </p>
-<p>3.围绕着隐含马尔科夫模型有三个基本问题：<br>a.给定一个模型，如何计算某个特定的输出序列的概率；<br>Forward-Backward算法<br>b.给定一个模型和某个特定的输出序列，如何找到最可能产生这个输出的状态序列；<br>解码算法：维特比算法<br>c.给定足够的观测数据，如何估计隐含马尔科夫模型的参数。<br>训练算法：鲍姆-韦尔奇算法  </p>
-<h2 id="第六章：信息的度量和作用">第六章：信息的度量和作用</h2>
-<p>1.信息量就等于不确定性的多少。  </p>
-<p>2.<a href="http://zh.wikipedia.org/wiki/%E4%BF%A1%E6%81%AF%E7%86%B5" target="_blank" rel="external">WIKI：信息熵</a>  </p>
-<p>3.变量的不确定越大，熵也就越大，把它搞清楚所需要的信息量也就越大。  </p>
-<p>4.合理利用信息，而不是玩弄什么公式和机器学习算法，是做好搜索的关键。  </p>
-<h2 id="第七章：贾里尼克和现代语言处理">第七章：贾里尼克和现代语言处理</h2>
-<p>1.每当弗莱德和我谈起我们各自少年时的教育，我们都同意这样几个观点(博主也很同意)：  </p>
-<p>a.小学生和中学生其实没有必要花那么多时间读书，而他们的社会经验、生活能力以及在<br>那时树立起的志向将帮助他们一生。<br>b.中学阶段化很多时间比同伴多读的课程，在大学以后用非常短的时间就可以读完，因为<br>在大学阶段，人的理解力要强的多。<br>c.学习和教育是一个人一辈子的过程，很多中学成绩好的亚裔学生进入名校后表现明显不<br>如那些因为兴趣而读书的美国同伴，因为前者不断读书的动力不足。<br>d.书本的内容可以早学，也可以晚学，但是错过了成长阶段却是无法补回来的。  </p>
-<p>2.贾里尼克最初的理想在他十来岁时就建立起来了，他原本想成为一个律师，为他父亲那<br>样的冤屈者辩护，但是到美国后，他很快意识到他那弄弄的外国口音将使他在法庭上的辩<br>护很吃力。贾里尼克的第二个理想是成为医生，也算是子承父业。他想进哈弗大学医学院，<br>但他无力承担医学院8年高昂的学费。而恰恰此时麻省理工学院给了他一份为东欧一名设的<br>全额奖学金。贾里尼克决定到麻省理工学电机工程。贾里尼克的理想在不断的改变，但是<br>他通过努力走向成功的志向一直没有改变。  </p>
-<h2 id="第八章：简单之美_—_布尔代数和搜索引擎的索引">第八章：简单之美 — 布尔代数和搜索引擎的索引</h2>
-<p>1.布尔代数非常简单，但是对数学和计算机发展的意义重大，它不仅把逻辑和数学合二为<br>一，而且给了我们一个全新的视角看待世界，开创了今天数字化的时代。</p>
-<p>2.Truth is ever to be found in simplicity, and not in the multiplicity and<br>confusion of things.    —by Sir Isaac Newton(艾萨克 牛顿爵士)  </p>
-<h2 id="第九章：图论和网络爬虫">第九章：图论和网络爬虫</h2>
-<p>1.欧拉七桥问题  </p>
-<p>2.网路爬虫在工程实现上要考虑的细节非常多，其中大的方面有这样几点：<br>a.用BFS还是DFS<br>从理论上讲，这两个算法能够在大致相同的时间里，爬下整个<em>静态</em>互联网的内容。<br>但是互联网是动态更新的，所以网络爬虫问题更应该定义成：如何在有限时间里最多的爬<br>下最重要的网页。<br>显然各个网站最重要的网页是它的首页。<br>如果爬虫非常小，只能下载非常有限的网页，那么应该下载的是所有网页的首页。BFS  </p>
-<p>但是互联网又是分布式的，BFS必然导致大量的各个网站直接的跳转与跳回，效率会降低。<br>而且爬虫器基本也是分布式的，所以更好的方式是总体上选用BFS，然而针对某个网站，<br>某个爬虫服务器应该尽量一次爬完所有的页面，这样就是DFS的策略。  </p>
-<h2 id="第十章：PageRank_—_Google的民主表决式网页排名技术">第十章：PageRank — Google的民主表决式网页排名技术</h2>
-<p>1.<a href="http://en.wikipedia.org/wiki/PageRank" target="_blank" rel="external">WIKI: PageRank</a>  </p>
-<h2 id="第十一章：如何确定网页和查询的相关性">第十一章：如何确定网页和查询的相关性</h2>
-<p>1.<a href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf" target="_blank" rel="external">WIKI: TF-IDF</a>  </p>
-<p>2.TF: Term Frequency  IDF: Iverse Document Frequency  </p>
-<p>3.词的权重：如果一个关键词只在很少的网页中出现，通过它就容易确定搜索目标，它的<br>权重也就应该大。反之，如果一个词在大量网页中出现，看到它依然不清楚要找什么内容，<br>因此它的权重就应该小。  </p>
-<p>4.IDF就是一个词的权重的指标。公式：<code>$\log \left( \dfrac {D}{D_{w}}\right)$</code><br>其中D是全部网页数，关键词w在<code>$D_{w}$</code>个网页中出现过。  那么<code>$D_{w}$</code>越大，IDF<br>就会越小。  </p>
-<h2 id="第十二章：地图和本地搜索的最基本技术_—_有限状态机和动态规划">第十二章：地图和本地搜索的最基本技术 — 有限状态机和动态规划</h2>
-<p>1.地址分析用到有限状态机  </p>
-<p>2.导航路线用到动态规划  </p>
-<h2 id="第十三章：Google_AK-47的设计者_—_阿米特_辛格博士">第十三章：Google AK-47的设计者 — 阿米特 辛格博士</h2>
-<p>1.许多失败并不是因为人不优秀，而是做事情的方法不对，一开始追求大而全的解决方案，<br>之后长时间不能完成，最后不了了之。  </p>
-<p>2.在Google里，辛格一直坚持寻找简单有效的解决方案。  </p>
-<p>3.当然，辛格之所以总是能找到那些简单有效的方法，不是靠直觉，更不是撞大运，这首<br>先是靠他丰富的研究经验。辛格早年师从于搜索大师萨尔顿(Salton)教授，毕业后就职于<br>AT&amp;T实验室。  </p>
-<h2 id="第十四章：余弦定理和新闻的分类">第十四章：余弦定理和新闻的分类</h2>
-<p>1.首先找到一组来描述新闻主题的数字：对于一篇新闻中的所有诗词，计算出他们的TF-IDF<br>值，把这些值按照对应的实词在词汇表的位置一次排序，就得到一个向量。  </p>
-<p>2.余弦定理就是计算两个向量夹角的方法。运用到新闻分类问题中，就可以认为夹角越小，<br>新闻越相似，反之则越不同。  </p>
-<h2 id="第十五章：矩阵运算和文本处理中的两个分类问题">第十五章：矩阵运算和文本处理中的两个分类问题</h2>
-<p>1.<a href="http://zh.wikipedia.org/wiki/%E5%A5%87%E5%BC%82%E5%80%BC%E5%88%86%E8%A7%A3" target="_blank" rel="external">WIKI: 奇异值分解</a>  </p>
-<p>2.相比上一章介绍的利用文本特征向量余弦的举例自底向上的分类方法，奇异值分解的<br>优点是能较快地得到结果，因为它不需要一次次地迭代。但是用这种方法得到的分类结果<br>略显粗略，因此，它适合处理超大规模文本的粗分类。在实际工作中，先使用奇异值分解<br>进行粗分类，然后使用向量余弦得到比较精确的结果。  </p>
-<h2 id="第十六章：信息指纹及其应用">第十六章：信息指纹及其应用</h2>
-<p>1.产生信息指纹的关键算法：伪随机数产生器算法(Pseudo-Random Number Generator, PRNG),<br>通过它将任意很长的整数转换成特定长度的伪随机数。  </p>
-<p>2.现在常用的梅森旋转算法(Mersenne Twister)要好得多。  </p>
-<p>3.信息指纹的用途远不止网址的消重，它的孪生兄弟是密码。信息指纹的一个特征是其不<br>可逆性。  </p>
-<h2 id="第十七章：由电视剧《暗算》所想到的_—_谈谈密码学的数学原理">第十七章：由电视剧《暗算》所想到的 — 谈谈密码学的数学原理</h2>
-<p>1.类似凯撒大帝式的加密方式，使用统计学的方法能够轻松解密。  </p>
-<p>2.信息论时代的密码学，就我现在的简单理解就是倒腾大素数的过程。  </p>
-<h2 id="第十八章：闪光的不一定是金子_—_谈谈搜索引擎反作弊问题">第十八章：闪光的不一定是金子 — 谈谈搜索引擎反作弊问题</h2>
-<p>1.网页搜索反作弊对于搜索引擎公司来讲是一项长期的任务。作弊的本质是在网页排名信<br>号中加入噪音，因此反作弊的关键是去噪音。沿着这个思路可以从根本上提高搜索算法抗<br>作弊的能力，事半功倍。而如果只是根据作弊的具体特征头痛医头，脚痛医脚，则很容易<br>被作弊者牵着鼻子走。  </p>
-<h2 id="第十九章：谈谈数学模型的重要性">第十九章：谈谈数学模型的重要性</h2>
-<p>1.一个正确的数学模型应该在形式上是简单的。  </p>
-<p>2.一个正确的模型一开始可能还不如一个精雕细琢的错误模型来的准确，但是，如果我们<br>认定大方向是对的，就应该坚持下去。  </p>
-<p>3.大量准确的数据对研发很重要。  </p>
-<p>4.正确的模型也可能受噪音干扰，而显得不准确；这时不应该用一种凑合的修正方法来弥<br>补它，而是要找到噪音的根源，这也许能通往重大的发现。  </p>
-<h2 id="第二十章：不要把鸡蛋放到一个篮子里_—_谈谈最大熵模型">第二十章：不要把鸡蛋放到一个篮子里 — 谈谈最大熵模型</h2>
-<p>1.最大熵模型说白了，就是要保留全部的不确定性，将风险降到最小。  </p>
-<p>2.最大熵原理指出，需要对一个随机事件的概率分布进行预测时，我们的预测应当满足全<br>部已知的条件，而对未知的情况不要做任何主观假设。在这种情况下，概率分布最均匀，<br>预测的风险最小。因为这是概率分布的信息熵最大，所以人们称这种模型叫：最大熵模型。  </p>
-<p>3.最原始的最大熵模型的训练方法是一种称为通用迭代算法GIS(Generalized Iterative<br>Scaling)的迭代算法。GIS的原理并不复杂，大致可以概括为一下几个步骤：<br>a.假定第零次迭代的初始模型为等概率的均匀分布<br>b.通过第N次迭代的模型来估算每种信息特征在训练数据中的分布。如果超过了实际的，<br>就把相应的模型参数变小。否则，将他们变大。<br>c.重复步骤2直到收敛  </p>
-<p>4.达拉皮垂孪生兄弟在IBM对GIS算法做了两方面的改进，提出了改进迭代算法IIS(Improved<br>Iterative Scaling)。  </p>
-<h2 id="第二十一章：拼音输入法的数学原理">第二十一章：拼音输入法的数学原理</h2>
-<p>1.和任何事物的发展一样，螺旋式的回归不是简单的重复，而是一种升华。  </p>
-<p>2.香农第一定理：对于一个信息，任何编码的长度都不小于它的信息熵。  </p>
-<h2 id="第二十二章：自然语言处理的教父马库斯和他的优秀弟子们">第二十二章：自然语言处理的教父马库斯和他的优秀弟子们</h2>
-<p>1.宾夕法尼亚大学LDC语料库以及他的优秀弟子是马库斯对自然语言处理领域的重大贡献。  </p>
-<p>2.柯林斯：追求完美  </p>
-<p>3.布莱尔：简单才美  </p>
-<h2 id="第二十三章：布隆过滤器">第二十三章：布隆过滤器</h2>
-<p>1.基本流程：对于一个需要处理的元素，使用多个随机数产生器产生多个数，将各个数对<br>应的位标为1。在使用时，使用同样的随机数产生器得到多个数，然后判断响应位是否为1<br>即可。布隆过滤器的优点是快速和节省空间，确定就是有一定的误识别率。常见的补救方<br>法是再建立一个小的白名单，存储哪些可能被误判的元素。  </p>
-<p>2.布隆过滤器背后的数学原理在于两个完全随机的数字冲突的概率很小，因此，可以在很<br>小的误识别率的条件下，用很好的空间存储大量信息。  </p>
-<h2 id="第二十四章：马尔科夫链的扩展_—_贝叶斯网络">第二十四章：马尔科夫链的扩展 — 贝叶斯网络</h2>
-<p>1.假定在这个图中马尔科夫假设成立，即每个状态只和它直接相连的状态有关，而和它间<br>接相连的状态没有直接关系，那么它就是贝叶斯网络。  </p>
-<h2 id="后几章由于技术层次较高，还是看原书比较好。">后几章由于技术层次较高，还是看原书比较好。</h2>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h1 id="作者寄语">作者寄语</h1>
-<p>愿科学之精神在国民中得到普及，愿中国年轻的一代涌现更多的杰出专业人才。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
     
   </entry>
   

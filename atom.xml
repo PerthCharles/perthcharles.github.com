@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-01-20T12:35:24.843Z</updated>
+  <updated>2015-01-20T13:11:32.541Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,14 +15,12 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
-    <title><![CDATA[]]></title>
+    <title><![CDATA[网络时钟同步协议-- NTP, PTP]]></title>
     <link href="http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/"/>
     <id>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</id>
-    <published>2015-01-20T12:32:37.000Z</published>
-    <updated>2015-01-20T12:32:37.000Z</updated>
-    <content type="html"><![CDATA[<p>title: 网络时钟同步协议: NTP, PTP<br>date: 2015-01-20 16:50:43<br>categories:<br>tags:</p>
-<h2 id="tags:_[Linux,_NTP,_PTP]">tags: [Linux, NTP, PTP]</h2>
-<hr>
+    <published>2015-01-20T08:50:43.000Z</published>
+    <updated>2015-01-20T13:11:22.000Z</updated>
+    <content type="html"><![CDATA[<hr>
 <p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br><a id="more"></a>  </p>
 <h3 id="1-_NTP及PTP简介">1. NTP及PTP简介</h3>
 <hr>
@@ -88,12 +86,16 @@ $ ./ptpd.sh <span class="keyword">stop</span>  </span>
 <p><a href="http://en.wikipedia.org/wiki/Network_Time_Protocol" target="_blank" rel="external">Network Time Protocol</a><br><a href="http://blog.chinaunix.net/uid-20551990-id-4308732.html" target="_blank" rel="external">CentOS 6.3搭建NTP服务器</a><br><a href="http://blog.meinbergglobal.com/2013/09/14/ieee-1588-accurate/" target="_blank" rel="external">Why is IEEE 1588 so accurate?</a><br><a href="http://en.wikipedia.org/wiki/Precision_Time_Protocol" target="_blank" rel="external">Precision Time Protocol</a><br><a href="http://en.wikipedia.org/wiki/List_of_PTP_implementations" target="_blank" rel="external">List of PTP implementations</a><br><a href="http://sourceforge.net/projects/ptpd/?source=typ_redirect" target="_blank" rel="external">ptpd source code</a><br><a href="http://serverfault.com/questions/329127/ptp-time-synchronization-on-centos6-rhel" target="_blank" rel="external">ptpd manage scripts</a><br><a href="http://www.h3c.com.cn/products___technology/technology/system_management/other_technology/technology_recommend/201008/686476_30003_0.htm" target="_blank" rel="external">PTP技术介绍 by H3C</a><br><a href="http://sourceforge.net/p/ptpd/wiki/Home/" target="_blank" rel="external">PTP FAQ</a><br><a href="http://blog.meinbergglobal.com/2013/11/22/ntp-vs-ptp-network-timing-smackdown/" target="_blank" rel="external">More: NTP vs PTP</a>  </p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>title: 网络时钟同步协议: NTP, PTP<br>date: 2015-01-20 16:50:43<br>categories:<br>tags:</p>
-<h2 id="tags:_[Linux,_NTP,_PTP]">tags: [Linux, NTP, PTP]</h2>
-<hr>
+    <![CDATA[<hr>
 <p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br>]]>
     
     </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="NTP" scheme="http://perthcharles.github.com/tags/NTP/"/>
+    
+      <category term="PTP" scheme="http://perthcharles.github.com/tags/PTP/"/>
     
   </entry>
   

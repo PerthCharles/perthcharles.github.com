@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-01-20T13:23:05.487Z</updated>
+  <updated>2015-02-05T09:31:39.148Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,128 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Network stack specialization for performance]]></title>
+    <link href="http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/"/>
+    <id>http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/</id>
+    <published>2015-02-05T08:44:16.000Z</published>
+    <updated>2015-02-05T09:31:17.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>这篇文章是剑桥大学的Marinos发表在SIGCOMM 2014上的一篇关于网络协议栈优化的工作。<br>主要的argue就是指出，现有通用协议栈已经成为performance和scaling方面的主要瓶颈，是时候考虑做network stack specialization了。  </p>
+<a id="more"></a>  
+
+<h3 id="1-_Motivation">1. Motivation</h3>
+<hr>
+<p>首先，数据中心和大规模应用的出现，一定程度上改变了传统的服务需求。从之前的一台机器负责完成多个功能(1 machine n functions)变成了多台机器完成一件事情(n machines 1 function)。  </p>
+<p>同时，数据中心中低延迟和高带宽的特点，使得endhost的软件协议栈的开销逐步的成为新的瓶颈。而这些部署在数据中心中的应用又是如此的在意performance。  </p>
+<p>在对performance的更高准求的驱动下，作者认为针对n machines 1 function的应用场景有必要优化现有的软件协议栈（作者成为general-purpose stacks）。  </p>
+<p>论文中的主要例子就是conventional stacks对于短流的性能不太好，同时又拿Yahoo! CDN的观测数据证明短流的普遍存在。  </p>
+<h3 id="2-_Problem_and_Goals">2. Problem and Goals</h3>
+<hr>
+<p>本文想要解决的一大问题就是：短流在数据中心里<em>低</em>带宽利用率和<em>高</em>CPU使用率的问题。  </p>
+<p>问题存在的主要原因就是：memory copy/move，context switch等。  </p>
+<p>因此文章的主要目标就是设计一个定制化的协议栈，它能够更完美的做到zero-copy，更高效的做到数据的传输和响应，更聪明的利用应用的特点。<br>具体例子就是文章提到的sandstorm，对具体实现感兴趣的可以看下论文或PPT。  </p>
+<h3 id="3-_Highlights">3. Highlights</h3>
+<hr>
+<ul>
+<li>使用netmap，将应用层与NIC相关联，减少memory copy/move；  </li>
+<li>利用了体系结构方面的技术：DDIO(Direct Data I/O)；  </li>
+<li>对于短流，有2-10x的性能提升，同时CPU使用率也较低，对比对象为Linux + Ngnix和FreeBSD + Nginx。  </li>
+</ul>
+<h3 id="4-_My_Notes">4. My Notes</h3>
+<hr>
+<p>sandstorm一定程度上是提前准备好的数据，并且放在了DRAM中，作者对比的时候好像并未评测这个因素。因为Nginx从disk发数据，而sandstorm是从DRAM发数据。<br>本文创新方面也有待商榷，主要贡献就是利用一个demo重新在学术界呼吁了一下network stack specialization的重要性和可行性。论文最后一个作者是真神，有兴趣的可以去看下他的Google scholar。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>这篇文章是剑桥大学的Marinos发表在SIGCOMM 2014上的一篇关于网络协议栈优化的工作。<br>主要的argue就是指出，现有通用协议栈已经成为performance和scaling方面的主要瓶颈，是时候考虑做network stack specialization了。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="wiki-paper" scheme="http://perthcharles.github.com/categories/wiki-paper/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[OSI模型]]></title>
+    <link href="http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/"/>
+    <id>http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/</id>
+    <published>2015-01-26T08:57:56.000Z</published>
+    <updated>2015-02-05T09:31:26.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>OSI model是Open System Interconnection reference model的缩写/简称，<br>是由国际标准化组织ISO提出，一个试图使各种计算机在世界范围内互连为网络的标准框架。<br>OSI model将计算机网络体系结构划分为七层，分别是Application Layer, Presentation Layer, Session Layer, Transport Layer, Network Layer, Data link Layer 和 Physical Layer。<br>这个页面主要简单介绍一下各个层次的功能。<br><a id="more"></a>  </p>
+<h3 id="1-_层次划分">1. 层次划分</h3>
+<hr>
+<p>下表来自wikipedia，但经过了一定的缩减。  </p>
+<table>
+<thead>
+<tr>
+<th>layer</th>
+<th>function</th>
+<th>examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Application</td>
+<td>High-level APIs, including resource sharing, remote file access, derectory services and virtual terminals</td>
+<td>HTTP, FTP, SMTP</td>
+</tr>
+<tr>
+<td>Presentation</td>
+<td>Translation of data between a networking service and an application, including character encoding and data compression</td>
+<td>ASCII, JPEG</td>
+</tr>
+<tr>
+<td>Session</td>
+<td>Managing communication sessions</td>
+<td>RPC</td>
+</tr>
+<tr>
+<td>Transport</td>
+<td>Reliable transmission of data segments between hosts</td>
+<td>TCP, UDP</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>Structing and managing a multi-node network, including addressing and routing</td>
+<td>IPv4, IPv6</td>
+</tr>
+<tr>
+<td>Data link</td>
+<td>reliable transmission of data frames between two nodes connected by a physical layer</td>
+<td>PPP, IEEE 802.2</td>
+</tr>
+<tr>
+<td>Physical</td>
+<td>Transmission and reception of raw bit streams over a physical medium</td>
+<td>DSL</td>
+</tr>
+</tbody>
+</table>
+<p>Physical layer负责解决如何使用物理信号（如电信号，光信号）表达数字信号的问题，工作在这一层的设备主要有集线器；  </p>
+<p>Data link layer则通过使用CRC等技术将物理层提供的可能出错的信息进行校验检错和封装。MAC地址是这一层最具代表性的标志，交换机是这层的代表性网络设备；  </p>
+<p>Network layer的作用主要是决定如何将发送发的数据传到接收方，IP和routing是这一层最核心的技术，路由器则是最典型的三层设备；  </p>
+<p>Transport layer是两台计算机经过网络进行数据通信时，具有端到端connection概念的层次。有诸如TCP的可靠的端到端协议和UDP这中不可靠的端到端协议。一般在这一层还会做一些流量控制，拥塞控制和差错检验的工作；  </p>
+<p>Session layer的session一词就直接道出了这层的功能：会话。这层需要负责建立，管理和关闭所有涉及到的connections。  </p>
+<p>Presentation layer负责定义数据的呈现方式以及解析方式，如果把session layer比作一次中美双边会谈，那么那些个翻译官就好比是工作在presentation layer；  </p>
+<p>Application layer直接与User打交道的一层，它的任务也就是提供一些API，应用层序只需要使用这些API接口与负责网络通信的部分进行交互。  </p>
+<p>当然，由于OSI是一个比较抽象的框架，所以现实世界中还会存在一些cross-layer的东西存在，一个最简单地例子就是ARP/RARP。同时目前应用最广的TCP/IP stack也不是完全符合OSI模型的。    </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="http://en.wikipedia.org/wiki/OSI_model#Description_of_OSI_layers" target="_blank" rel="external">OSI model</a>   </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>OSI model是Open System Interconnection reference model的缩写/简称，<br>是由国际标准化组织ISO提出，一个试图使各种计算机在世界范围内互连为网络的标准框架。<br>OSI model将计算机网络体系结构划分为七层，分别是Application Layer, Presentation Layer, Session Layer, Transport Layer, Network Layer, Data link Layer 和 Physical Layer。<br>这个页面主要简单介绍一下各个层次的功能。<br>]]>
+    
+    </summary>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[网络时钟同步协议-- NTP, PTP]]></title>
@@ -1534,235 +1656,6 @@ $reboot</span>
       <category term="tcpdump" scheme="http://perthcharles.github.com/tags/tcpdump/"/>
     
       <category term="tcptrace" scheme="http://perthcharles.github.com/tags/tcptrace/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Setup Nginx server in linux]]></title>
-    <link href="http://perthcharles.github.com/2014/06/05/setup-nginx-sever/"/>
-    <id>http://perthcharles.github.com/2014/06/05/setup-nginx-sever/</id>
-    <published>2014-06-05T05:00:00.000Z</published>
-    <updated>2014-12-05T08:45:12.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="Installation">Installation</h3>
-<p>By default, Nginx will be installed in /usr/local/nginx.  </p>
-<pre><code>./configure  
-<span class="keyword">make</span>  
-<span class="keyword">make</span> install  
-</code></pre><h3 id="Configuration">Configuration</h3>
-<p>The configuration file is /usr/local/nginx/conf/nginx.conf.<br><a href="http://blog.martinfjordvald.com/2010/07/nginx-primer/" target="_blank" rel="external">Here</a> is an<br>excellent simple tutorial, and <a href="http://wiki.nginx.org/FullExample" target="_blank" rel="external">here</a><br>is a full example.<br>If you want to show all the files in the root directory, you can turn<br>on autoindex like this:  </p>
-<pre><code><span class="title">location</span> / {  
-    <span class="title">autoindex</span> <span class="built_in">on</span>;  
-    <span class="title">root</span> /home;  
-}  
-</code></pre><h3 id="Running_Nginx">Running Nginx</h3>
-<pre><code>/usr/<span class="built_in">local</span>/nginx/sbin/nginx         <span class="comment"> //start nginx  </span>
-/usr/<span class="built_in">local</span>/nginx/sbin/nginx -s quit <span class="comment"> //stop nginx  </span>
-</code></pre><h3 id="Problems">Problems</h3>
-<p>If you do not need the rewrite module and gzip module, you can ignore the<br>errors with PCRE and gzip when configuring.  </p>
-<h3 id="References">References</h3>
-<p><a href="http://wiki.nginx.org/Install" target="_blank" rel="external">Install - Nginx Community</a><br><a href="http://blog.martinfjordvald.com/2010/07/nginx-primer/" target="_blank" rel="external">Nginx Configuration Primer</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h3 id="Installation">Installation</h3>
-<p>By default, Nginx will be installed in /usr/local/nginx.  </p>
-<pre><code>./configure  
-<span cla]]>
-    </summary>
-    
-      <category term="nginx" scheme="http://perthcharles.github.com/tags/nginx/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[知识积累]]></title>
-    <link href="http://perthcharles.github.com/2014/04/26/make-progress-everyday/"/>
-    <id>http://perthcharles.github.com/2014/04/26/make-progress-everyday/</id>
-    <published>2014-04-26T04:00:00.000Z</published>
-    <updated>2015-01-12T06:53:33.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="目录">目录</h2>
-<ul>
-<li><a href="#blogger">优秀博主</a>  </li>
-<li><a href="#views">百家争鸣</a>  </li>
-<li><a href="#coding">编程与算法</a>  </li>
-<li><a href="#network">网络</a>  </li>
-<li><a href="#tools">实用工具</a>  </li>
-<li><a href="#bigdata">大数据</a>  </li>
-<li><a href="#linux">UNIX/Linux相关</a>  </li>
-<li><a href="#projects">优秀项目主页</a>  </li>
-<li><a href="#reference">参考手册</a>  </li>
-<li><a href="#online-books">在线图书</a>  </li>
-<li><a href="#others">其它</a>  </li>
-</ul>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">注：此文所有链接均是外链</div></pre></td></tr></table></figure>
-
-<a id="more"></a>
-
-<hr>
-<p><h3 id="blogger">优秀博主</h3></p>
-<ul>
-<li><a href="http://www.vimer.cn/" target="_blank" rel="external">Vimer的程序世界</a>  </li>
-<li><a href="http://blog.csdn.net/caopengcs" target="_blank" rel="external">曹鹏博士</a>  </li>
-<li><a href="http://blog.csdn.net/v_july_v" target="_blank" rel="external">July</a>  </li>
-<li><a href="http://www.matrix67.com/blog/" target="_blank" rel="external">matrix67</a>  </li>
-<li><a href="http://blog.chinaunix.net/uid-20940095-id-373614.html" target="_blank" rel="external">少帅的天空</a>  </li>
-<li><a href="http://blog.csdn.net/aimingoo/" target="_blank" rel="external">周爱民CSDN专栏</a>  </li>
-<li><a href="http://blog.csdn.net/dgq8211" target="_blank" rel="external">nyist_xiaod</a>  </li>
-<li><a href="http://hawstein.com/" target="_blank" rel="external">Hawstein</a>  </li>
-<li><a href="http://coolshell.cn/" target="_blank" rel="external">CoolShell</a>  </li>
-<li><a href="http://zhedahht.blog.163.com/" target="_blank" rel="external">何海涛</a>  </li>
-<li><a href="http://blog.csdn.net/hackbuteer1" target="_blank" rel="external">Hackbuterr1</a>  </li>
-<li><a href="http://blog.csdn.net/Solstice" target="_blank" rel="external">陈硕的Blog</a>  </li>
-<li><a href="http://www.cnblogs.com/graphics/" target="_blank" rel="external">Graphics:关注DirectX</a>  </li>
-<li><a href="http://www.cnblogs.com/promise6522/" target="_blank" rel="external">One Step Further</a>  </li>
-<li><a href="https://www.centos.bz/" target="_blank" rel="external">LINUX服务器运维日志</a>  </li>
-<li><a href="http://zh.lucida.me/" target="_blank" rel="external">Lucida: Life Love Tech</a>  </li>
-</ul>
-<hr>
-<p><h3 id="views">百家争鸣</h3></p>
-<ul>
-<li><a href="http://blog.jobbole.com/821/" target="_blank" rel="external">程序员的本质</a>  </li>
-</ul>
-<hr>
-<p><h3 id="coding">编程与算法</h3></p>
-<ul>
-<li><a href="http://cloud.github.com/downloads/chenshuo/documents/LearningNetworkProgramming.pdf" target="_blank" rel="external">谈一谈网络编程学习经验</a>  </li>
-<li><a href="http://blog.jobbole.com/28219/" target="_blank" rel="external">为什么转置512<em>512矩阵，会比513</em>513慢很多</a>  </li>
-<li><a href="http://zh.lucida.me/blog/on-learning-algorithms/" target="_blank" rel="external">Lucida:我的算法学习之路</a>  </li>
-<li><a href="http://www.m5sim.org/Coding_Style" target="_blank" rel="external">Coding Style for gem5</a>  </li>
-<li><a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml" target="_blank" rel="external">Google C++ Style Guide</a>  </li>
-<li><a href="http://coolshell.cn/articles/27.html" target="_blank" rel="external">如何自己写一个网络爬虫</a>  </li>
-<li><a href="http://blog.csdn.net/zhl1224/article/details/5735747" target="_blank" rel="external">段间跳转指令jmpi和实模式寻址</a>  </li>
-<li><a href="http://www.cnblogs.com/jffifa/archive/2011/12/17/2291072.html" target="_blank" rel="external">n个骰子得到点数和的概率分布</a>  </li>
-<li><a href="http://hrinterviews.blogspot.com/" target="_blank" rel="external">HR Interviews</a>  </li>
-<li><a href="http://www.felix021.com/blog/read.php?2040" target="_blank" rel="external">Manacher算法：O(n)时间求字符串的最长回文子串</a>  </li>
-<li><a href="http://blog.csdn.net/superdiablo/article/details/6173001" target="_blank" rel="external">Prim算法与Dijkstra算法的区别</a>  </li>
-<li><a href="http://www.cnblogs.com/skynet/archive/2010/10/30/1865267.html" target="_blank" rel="external">Linux多线程编程举例</a>  </li>
-<li><a href="http://www.topcoder.com/" target="_blank" rel="external">TopCoder</a>  </li>
-<li><a href="http://www.codechef.com/" target="_blank" rel="external">CodeChef</a>  </li>
-<li><a href="https://codility.com/train/" target="_blank" rel="external">Codility</a>  </li>
-<li><a href="http://www.nocow.cn/index.php/%E9%A6%96%E9%A1%B5" target="_blank" rel="external">NOCOW: A Nest Of Coding Wisdom</a>  </li>
-<li><a href="http://leetcode.com/" target="_blank" rel="external">LeetCode</a>  </li>
-<li><a href="http://www.cs.cmu.edu/~gilpin/tutorial/" target="_blank" rel="external">Debugging Under Unix: gdb Tutorial</a>    </li>
-<li><a href="http://www.cnblogs.com/promise6522/archive/2012/03/03/2377935.html" target="_blank" rel="external">浅谈TCP/IP网络编程中socket的行为</a>  </li>
-<li><a href="http://publib.boulder.ibm.com/infocenter/macxhelp/v6v81/index.jsp?topic=%2Fcom.ibm.vacpp6m.doc%2Fproguide%2Fref%2Ftvopi_o.htm" target="_blank" rel="external">Coding Your Application to Improve Performance</a>  </li>
-<li><a href="http://nlp.stanford.edu/IR-book/html/htmledition/web-crawling-and-indexes-1.html" target="_blank" rel="external">Web crawling and indexes</a>  </li>
-<li><a href="http://dingdongsheng.cool.blog.163.com/blog/static/1186187552009431405995/" target="_blank" rel="external">二分匹配总结:匈牙利算法+最大权+最小权</a>  </li>
-<li><a href="http://dongxicheng.org/knowledges-carding/" target="_blank" rel="external">面试基础知识整理</a>  </li>
-</ul>
-<hr>
-<p><h3 id="network">网络</h3></p>
-<ul>
-<li><a href="http://www.beej.us/guide/bgnet/output/html/multipage/index.html" target="_blank" rel="external">Guide to Network Programming Using Internet Sockets</a>  </li>
-<li><a href="http://www.cnblogs.com/aixingfou/archive/2011/07/29/2120956.html" target="_blank" rel="external">关于send(),recv()函数的理解</a>  </li>
-<li><a href="http://blog.csdn.net/shanshanpt/article/category/1926563" target="_blank" rel="external">Linux 内核之网络协议栈</a> </li>
-</ul>
-<hr>
-<p><h3 id="tools">实用工具</h3></p>
-<ul>
-<li><a href="http://daringfireball.net/projects/markdown/syntax#precode" target="_blank" rel="external">Markdown: syntax</a>  </li>
-<li><a href="http://www.upanok.com/" target="_blank" rel="external">U盘装系统工具</a>  </li>
-<li><a href="http://www.upanok.com/help.html" target="_blank" rel="external">U盘装系统教程</a>  </li>
-<li><a href="http://www.vimer.cn/2010/06/%E6%9C%AC%E5%8D%9A%E4%BD%BF%E7%94%A8%E7%9A%84vimgvim%E7%9B%B8%E5%85%B3%E6%8F%92%E4%BB%B6%E6%95%B4%E7%90%86.html" target="_blank" rel="external">Vim 插件</a>  </li>
-<li><a href="https://github.com/wklken/k-vim" target="_blank" rel="external">Vim 插件2</a>  </li>
-<li><a href="https://github.com/gmarik/Vundle.vim" target="_blank" rel="external">Vim插件管理:Vundle</a>  </li>
-<li><a href="http://blog.sina.com.cn/s/blog_4cbfbaa30100ioy2.html" target="_blank" rel="external">Matlab中plot用法</a>  </li>
-<li><a href="http://blog.csdn.net/ww2000e/article/details/6609657" target="_blank" rel="external">让source insight支持AT&amp;T汇编语法高亮</a>  </li>
-<li><a href="http://www.atmos.albany.edu/deas/atmclasses/atm350/vi_cheat_sheet.pdf" target="_blank" rel="external">vi Editor Cheat Sheet</a>  </li>
-<li><a href="http://wgkgood.blog.51cto.com/1192594/917632" target="_blank" rel="external">GCC升级</a>  </li>
-<li><a href="http://blog.51osos.com/linux/linux-kernel-panic/" target="_blank" rel="external">Linux Kernel Panic报错解决思路</a>  </li>
-</ul>
-<hr>
-<p><h3 id="bigdata">大数据</h3></p>
-<ul>
-<li><a href="http://hadooptutorial.wikispaces.com/Hadoop" target="_blank" rel="external">Hadoop tutorial</a>  </li>
-</ul>
-<hr>
-<p><h3 id="linux">UNIX/Linux相关</h3></p>
-<ul>
-<li><a href="http://www.pixelbeat.org/cmdline_zh_CN.html" target="_blank" rel="external">linux常见命令的列表</a>  </li>
-<li><a href="http://www.linux-tutorial.info/" target="_blank" rel="external">Linux Knowledge Base and Tutorial</a>  </li>
-<li><a href="http://www.92csz.com/study/linux/11.htm" target="_blank" rel="external">安装RPM包或者安装源码包</a>  </li>
-<li><a href="http://linux-mm.org/LinuxMM" target="_blank" rel="external">Linux Memory Management</a>  </li>
-<li><a href="http://blog.csdn.net/emtribe/article/details/8915884" target="_blank" rel="external">git获取linux内核源码及分支管理</a>  </li>
-<li><a href="http://www.linux-tutorial.info/index.php" target="_blank" rel="external">Linux Knowledge Base and Tutorial</a>  </li>
-<li><a href="http://linux.die.net/man/" target="_blank" rel="external">Linux Man pages:可查询命令、函数或文件</a>  </li>
-<li><a href="http://www.linuxjournal.com/article/6345?page=0,0" target="_blank" rel="external">Zero Copy I: User-Mode Perspective</a>  </li>
-<li><a href="http://baruch.siach.name/blog/posts/linux_kernel_module_parameters/" target="_blank" rel="external">Setting Linux kernel module parameters</a>  </li>
-<li><a href="http://www.cyberciti.biz/howto/question/linux/linux-rpm-cheat-sheet.php" target="_blank" rel="external">rpm command examples</a>  </li>
-<li><a href="http://blog.csdn.net/hansel/article/details/5097262" target="_blank" rel="external">Linux下二进制文件的查看和编辑</a>  </li>
-<li><a href="http://www.cnblogs.com/killkill/archive/2010/06/23/1763785.html" target="_blank" rel="external">在Linux下使用vim配合xxd查看并编辑二进制文件</a>  </li>
-<li><a href="http://www.qycn.com/news/11669.html" target="_blank" rel="external">CentOS 6安装JDK及系统配置</a>  </li>
-<li><a href="http://noops.me/?p=271" target="_blank" rel="external">centos kvm部署和常用命令</a>  </li>
-<li><a href="http://dbanotes.net/tech-memo/shell_shortcut.html" target="_blank" rel="external">Bash Shell 快捷键的学习使用</a>  </li>
-<li><a href="http://www.lishiming.net/thread-3624-1-1.html" target="_blank" rel="external">iptables 实现centos内网机器访问外网</a>  </li>
-<li><a href="http://wiki.centos.org/zh/HowTos/JavaOnCentOS" target="_blank" rel="external">如何在 CentOS 4 及 CentOS 5 上安装 Java</a>  </li>
-<li><a href="http://ohyeahbbs.blog.51cto.com/1775490/865107" target="_blank" rel="external">CentOS 6.2 挂载 NTFS格式的硬盘</a>  </li>
-<li><a href="http://blog.csdn.net/yayong/article/details/139983" target="_blank" rel="external">Linux AT&amp;T 汇编语言开发指南</a>  </li>
-<li><a href="http://iso.linuxquestions.org/" target="_blank" rel="external">Linux ISO 镜像列表</a>  </li>
-<li><a href="http://www.rpmfind.net/" target="_blank" rel="external">查找RPM包1</a>  </li>
-<li><a href="http://rpm.pbone.net/" target="_blank" rel="external">查找RPM包2：推荐</a>  </li>
-<li><a href="http://tldp.org/LDP/tlk/tlk.html" target="_blank" rel="external">在线文档：The linux kernel</a>  </li>
-</ul>
-<hr>
-<p><h3 id="projects">优秀项目主页</h3></p>
-<ul>
-<li><a href="http://www.gnu.org/software/wget/" target="_blank" rel="external">GNU Wget</a>  </li>
-<li><a href="http://www.latex-project.org/" target="_blank" rel="external">Latex</a>  </li>
-<li><a href="http://www.tldp.org/" target="_blank" rel="external">The Linux Documentation Project</a>  </li>
-<li><a href="http://www.linux-kvm.org/page/Main_Page" target="_blank" rel="external">KVM</a>  </li>
-</ul>
-<hr>
-<p><h3 id="reference">参考手册</h3></p>
-<ul>
-<li><a href="http://man.chinaunix.net/develop/c&amp;c++/linux_c/default.htm" target="_blank" rel="external">Linux 常用C函数</a>  </li>
-<li><a href="http://man.chinaunix.net/" target="_blank" rel="external">ChinaUnix.net 手册中心</a>  </li>
-<li><a href="http://www.x.org/releases/X11R7.5/doc/man/man3/" target="_blank" rel="external">X11R7.5 Manual Pages: Section 3: Library Functions</a>  </li>
-<li><a href="http://people.cs.nctu.edu.tw/~yslin/library/linuxc/main.htm" target="_blank" rel="external">Linux 常用C函数</a>  </li>
-<li><a href="http://www.cplusplus.com/reference/" target="_blank" rel="external">C++ Reference</a>  </li>
-<li><a href="http://clc-wiki.net/wiki/C_standard_library" target="_blank" rel="external">C standard library</a>  </li>
-<li><a href="http://www.gnu.org/software/libc/manual/html_mono/libc.html" target="_blank" rel="external">The GNU C Library</a>  </li>
-<li><a href="http://cursuri.cs.pub.ro/~apc/2003/resources/pthreads/uguide/document.htm" target="_blank" rel="external">Pthreads APIs</a>  </li>
-<li><a href="http://vimcdoc.sourceforge.net/doc/usr_toc.html#usr_toc.txt" target="_blank" rel="external">VIM User Manual</a>  </li>
-<li><a href="http://blog.51yip.com/manual/shell/" target="_blank" rel="external">Shell在线手册</a>  </li>
-<li><a href="https://computing.llnl.gov/tutorials/pthreads/" target="_blank" rel="external">POSIX Threads Programming</a>  </li>
-<li><a href="http://tldp.org/HOWTO/Program-Library-HOWTO/" target="_blank" rel="external">Program Library HOWTO</a>  </li>
-<li><a href="http://capone.mtsu.edu/csdept/FacilitiesAndResources/make.htm" target="_blank" rel="external">An Introduction to the UNIX Make Utility</a>  </li>
-<li><a href="http://fanqiang.chinaunix.net/a4/b8/20010601/170400310_b.html" target="_blank" rel="external">X Window 程式設計入門</a>  </li>
-</ul>
-<hr>
-<p><h3 id="online-books">在线图书</h3></p>
-<ul>
-<li><a href="http://www.ibiblio.org/g2swap/byteofpython/read/index.html" target="_blank" rel="external">A Byte of Python</a>  </li>
-<li><a href="http://www.diveintopython.net/toc/index.html" target="_blank" rel="external">Dive Into Python</a>  </li>
-<li><a href="http://idns.blog.163.com/blog/static/2004533772011111945928615/" target="_blank" rel="external">C++ Primer, Fourth Edition</a>  </li>
-<li><a href="http://www.makelinux.net/ldd3/" target="_blank" rel="external">Linux Device Drivers, 3th Edition</a>  </li>
-</ul>
-<hr>
-<p><h3 id="others">其它</h3></p>
-<ul>
-<li><a href="http://archive.org/web/web.php" target="_blank" rel="external">Internet Archive</a>  </li>
-</ul>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h2 id="目录">目录</h2>
-<ul>
-<li><a href="#blogger">优秀博主</a>  </li>
-<li><a href="#views">百家争鸣</a>  </li>
-<li><a href="#coding">编程与算法</a>  </li>
-<li><a href="#network">网络</a>  </li>
-<li><a href="#tools">实用工具</a>  </li>
-<li><a href="#bigdata">大数据</a>  </li>
-<li><a href="#linux">UNIX/Linux相关</a>  </li>
-<li><a href="#projects">优秀项目主页</a>  </li>
-<li><a href="#reference">参考手册</a>  </li>
-<li><a href="#online-books">在线图书</a>  </li>
-<li><a href="#others">其它</a>  </li>
-</ul>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">注：此文所有链接均是外链</div></pre></td></tr></table></figure>
-
-]]>
-    
-    </summary>
     
   </entry>
   

@@ -71,6 +71,151 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-linux-using-9" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/31/linux-using-9/" class="article-date">
+  <time datetime="2013-08-31T03:23:42.000Z" itemprop="datePublished">8月 31 2013</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Shell/">Shell</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/31/linux-using-9/">linux命令学习（九）:eval,tail,head,seq</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="eval">eval</h2>
+<p>查看系统自带的解释：  </p>
+<pre><code>#eval [arg ...]
+    The  <span class="keyword">args</span>  are <span class="keyword">read</span> <span class="built_in">and</span> concatenated together into <span class="keyword">a</span> single  
+    <span class="keyword">command</span>.  This <span class="keyword">command</span> <span class="keyword">is</span> then <span class="keyword">read</span> <span class="built_in">and</span> executed by the <span class="keyword">shell</span>,  
+    <span class="built_in">and</span> its  <span class="keyword">exit</span> status <span class="keyword">is</span> returned <span class="keyword">as</span> the value of <span class="built_in">eval</span>.   
+    If there are <span class="keyword">no</span> <span class="keyword">args</span>, <span class="built_in">or</span> <span class="keyword">only</span> null arguments, <span class="built_in">eval</span> returns <span class="number">0</span>.
+</code></pre><p>可以看出eval给shell提供了一种”根据变量的值，运行时确定所执行命令”的机制。<br>实践过程中遇到的一种情况就是”包含变量的变量名的赋值”操作。如下面这段代码：  </p>
+<pre><code>//用一个<span class="keyword">for</span>循环，给名称为test_1,test_2等变量赋值
+<span class="comment">#cat val_in_val.sh</span>
+<span class="shebang">#!/bin/bash</span>
+array=(<span class="number">11</span> <span class="number">22</span> <span class="number">33</span>)
+<span class="keyword">for</span> i <span class="keyword">in</span> $(seq <span class="number">3</span>)
+<span class="keyword">do</span>
+    <span class="comment">#下行等价于： test_1=${array[0]}   (i=0时)</span>
+    <span class="built_in">eval</span> test_<span class="variable">${i}</span>=<span class="variable">${array[$((i-1))]}</span>
+
+    <span class="comment">#下面命令原理类似。其中'\'的作用是在eval执行时，</span>
+    <span class="comment">#直接保留'$'符号而不作为求值符号处理</span>
+    <span class="comment">#执行eval后，脚本中执行的等价于</span>
+    <span class="comment">#echo "test_1=$test_1" (i=0时)</span>
+    <span class="built_in">eval</span> <span class="built_in">echo</span> <span class="string">"test_<span class="variable">${i}</span>=\$test_<span class="variable">${i}</span>"</span>
+<span class="keyword">done</span>
+<span class="comment">#sh val_in_val.sh</span>
+test_1=<span class="number">11</span>
+test_2=<span class="number">22</span>
+test_3=<span class="number">33</span>
+</code></pre><h3 id="head">head</h3>
+<p>用于输出文件的起始的部分数据  </p>
+<pre><code><span class="array">#head </span>-n <span class="number">2</span> file      <span class="comment">//输出file文件的前两行</span>
+<span class="array">#head </span>-n -<span class="number">2</span> file    <span class="comment">//显示除最后2行之外的其他行</span>
+<span class="array">#head </span>-c <span class="number">2</span> file        <span class="comment">//显示文件的头两个byte</span>
+<span class="array">#head </span>-c -<span class="number">2</span> file    <span class="comment">//显示除最后两个byte之外的所有内容</span>
+</code></pre><h3 id="tail">tail</h3>
+<p>基本用法与head类似，但是也有更多高级的用法，详细内容请查看man tail<br>单纯就输出而言，没有’-‘符号的作用，而是’+’符号的应用。注意与head区分开。  </p>
+<pre><code><span class="array">#tail </span>-n <span class="number">2</span> file        <span class="comment">//输出file文件的最后2行</span>
+<span class="array">#tail </span>-n +<span class="number">2</span> file    <span class="comment">//输出文件除其实2行之外的内容</span>
+<span class="array">#tail </span>-c <span class="number">2</span> file        <span class="comment">//输出file文件的最后2个byte</span>
+<span class="array">#tail </span>-c +<span class="number">2</span> file    <span class="comment">//输出file文件除起始2字节之外的内容</span>
+</code></pre><h3 id="seq">seq</h3>
+<p>打印一连串的数字，命令比较简单，直接上实例  </p>
+<pre><code><span class="comment">#seq 4</span>
+1
+2
+3
+4
+<span class="comment">#seq -s '#' 3 6        //替换默认的分隔符\n为'#'</span>
+3<span class="comment">#4#5#6</span>
+<span class="comment">#seq -f s%3g -s ' ' 3 0.5 4 //以步长0.5，按指定格式输出</span>
+s  3 s3.5 s  4
+<span class="comment">#seq -f %f -s ' ' 3 0.5 4 //浮点格式输出</span>
+3.000000 3.500000 4.00000
+<span class="comment">#seq -s '' 10 |sed 's/[0-9]/*/g'    //输出11个*</span>
+<span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span>
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/31/linux-using-9/" data-id="9yltzeu9y6saf442" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/31/linux-using-9/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-c-setbuf" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/08/28/c-setbuf/" class="article-date">
+  <time datetime="2013-08-28T13:02:42.000Z" itemprop="datePublished">8月 28 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/28/c-setbuf/">[C语言函数] 使用setbuf减少写文件操作I/O的操作</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="问题背景">问题背景</h2>
+<p>在日常的工作中，经常会需要使用fprint、fwrite之类的函数写文件。<br>当需要写或读的数据量较大时，使用操作系统默认的策略可能就不够高效。<br>通常的做法就是使用自定义的缓冲区减少I/O操作。下面分二进制文件和文本文件的读写进行说明。  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/08/28/c-setbuf/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/08/28/c-setbuf/" data-id="ozekdyn6ftqz8won" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/08/28/c-setbuf/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C-C/">C/C++</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-kvm-storage" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2013/08/26/kvm-storage/" class="article-date">
@@ -234,112 +379,6 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
 
 
   
-    <article id="post-linux-using-8" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/08/24/linux-using-8/" class="article-date">
-  <time datetime="2013-08-24T04:00:12.000Z" itemprop="datePublished">8月 24 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Shell/">Shell</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/24/linux-using-8/">linux命令学习（八）：top，pidof, wall</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="top命令">top命令</h2>
-<p>top命令用于显示当前系统中所有的任务，结合pidof能够满足比较常用的需求。<br>网上有说法top就是读取/proc/stat /proc/$PID/stat相关的信息，基本认同吧。<br>画不多说，直接在应用场景中介绍参数<br>    //利用pidof得到进程名的进程号，-p参数可以指定top只显示该进程号的信息</p>
-<pre><code>#top -p <span class="code">`pidof process-name`</span>                      //process-name对应一个进程号
-#top -p <span class="smartquote">`pidof process-name |sed '</span>s/ /,/g'<span class="smartquote">`      //对应多个进程号，将空格换成'</span>,'
-<span class="comment">//对于多线程程序，可使用-H参数查看每个线程的情况，可以知道有多少个线程被创建</span>
-#top -H -p <span class="code">`pidof process-name`</span>
-</code></pre>
-        
-          <p class="article-more-link">
-            <a href="/2013/08/24/linux-using-8/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/24/linux-using-8/" data-id="fhprqa15ip7wpwf0" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/08/24/linux-using-8/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-bfs-and-dfs-pseudo-code" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/08/16/bfs-and-dfs-pseudo-code/" class="article-date">
-  <time datetime="2013-08-16T15:32:00.000Z" itemprop="datePublished">8月 16 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/面试题/">面试题</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/16/bfs-and-dfs-pseudo-code/">BFS和DFS算法温习</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="广度优先搜索BFS">广度优先搜索BFS</h2>
-<p>给定无向图G和源点s，遍历图。<br>    BFS(G,s)<br>    for each vertex u in G<br>        u.color = white  //所有点置为未扫描<br>    endif<br>    s.color = black  //设置源点s为当前扫描点<br>    Q = new queue   //新建空队列<br>    Q.add(s)      //加入源点s<br>    while(Q)<br>        u = Q.dequeue  //取队列首节点<br>        for each vertex v connect with u<br>            if(v.color == white)<br>                Q.add(v)<br>                v.color = black<br>        endif<br>    endwhile<br><a href="http://sjjg.js.zwu.edu.cn/SFXX/sf1/gdyxbl.html" target="_blank" rel="external">广度优先遍历演示地址</a>  </p>
-
-        
-          <p class="article-more-link">
-            <a href="/2013/08/16/bfs-and-dfs-pseudo-code/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/16/bfs-and-dfs-pseudo-code/" data-id="uqm82wfal1l4j4sj" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/08/16/bfs-and-dfs-pseudo-code/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BFS/">BFS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/DFS/">DFS</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/page/7/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/17/">17</a><a class="extend next" rel="next" href="/page/9/">Next &raquo;</a>
@@ -353,7 +392,7 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">11</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -363,6 +402,14 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/02/05/wiki-network-paper-stack-specialization/">Network stack specialization for performance</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/26/wiki-network-osi-model/">OSI模型</a>
+          </li>
         
           <li>
             <a href="/2015/01/20/ntp-ptp-intro/">网络时钟同步协议-- NTP, PTP</a>
@@ -416,14 +463,6 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
             <a href="/2014/11/04/change-to-hexo/">使用hexo搭建博客</a>
           </li>
         
-          <li>
-            <a href="/2014/10/23/tcp-design-and-implementation-3/">TCP ADI in Linux(3): Implementation of Sockets</a>
-          </li>
-        
-          <li>
-            <a href="/2014/10/23/tcp-design-and-implementation-2/">TCP ADI in Linux(2): Protocol Fundamentals</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -443,7 +482,7 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

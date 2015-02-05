@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/</loc>
+    <lastmod>2015-02-05T09:31:26.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/</loc>
+    <lastmod>2015-02-05T09:31:17.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</loc>
     <lastmod>2015-01-20T13:11:22.000Z</lastmod>
   </url>

@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-02-10T03:23:28.646Z</updated>
+  <updated>2015-06-16T10:24:09.245Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,11 +15,910 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[TCP FRTO机制]]></title>
+    <link href="http://perthcharles.github.com/2015/06/16/wiki-network-tcp-frto/"/>
+    <id>http://perthcharles.github.com/2015/06/16/wiki-network-tcp-frto/</id>
+    <published>2015-06-16T10:16:18.000Z</published>
+    <updated>2015-06-16T10:23:07.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>下图是根据参考文献整理的FRTO选项的工作机制流程图<br><img src="/resources/TCP-FRTO.png" alt="">  </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="http://blog.csdn.net/zhangskd/article/details/7446441" target="_blank" rel="external">FRTO—虚假超时剖析</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>下图是根据参考文献整理的FRTO选项的工作机制流程图<br><img src="/resources/TCP-FRTO.png" alt="">  </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="http://blog.]]>
+    </summary>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[服务器负载压力测试相关工具]]></title>
+    <link href="http://perthcharles.github.com/2015/06/15/server-load-test/"/>
+    <id>http://perthcharles.github.com/2015/06/15/server-load-test/</id>
+    <published>2015-06-15T02:30:56.000Z</published>
+    <updated>2015-06-15T03:32:22.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h2 id="工具列表">工具列表</h2>
+<hr>
+<p>下面这些工具都比较小巧，用法也比较简单。<br>基本看看—help就知道怎么用了。  </p>
+<pre><code><span class="attribute">HTTP_LOAD</span>: <span class="string">multiprocessing http test client  </span>
+<span class="attribute">SIEGE</span>: <span class="string">http load testing and benchmarking utility</span>
+<span class="attribute">webbench</span>: <span class="string">据文档描述，可以monitor3万个并发连接去测试网站的负载能力  </span>
+<span class="attribute">ab</span>: <span class="string">apache benchmark，Apache自带的测试工具  </span>
+</code></pre><h2 id="参考资料">参考资料</h2>
+<hr>
+<p><a href="http://acme.com/software/http_load/" target="_blank" rel="external">HTTP_LOAD homepage</a><br><a href="https://www.joedog.org/siege-home/" target="_blank" rel="external">SIEGE homepage</a><br><a href="http://home.tiscali.cz/~cz210552/webbench.html" target="_blank" rel="external">Web Bench 1.5</a><br><a href="http://httpd.apache.org/docs/2.2/programs/ab.html" target="_blank" rel="external">ab - Apache HTTP server benchmarking tool</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h2 id="工具列表">工具列表</h2>
+<hr>
+<p>下面这些工具都比较小巧，用法也比较简单。<br>基本看看—help就知道怎么用了。  </p>
+<pre><code><span class="attribute">HTTP_LOAD</span>: <s]]>
+    </summary>
+    
+      <category term="http_load, test" scheme="http://perthcharles.github.com/tags/http-load-test/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[TC 实践]]></title>
+    <link href="http://perthcharles.github.com/2015/06/12/tc-tutorial/"/>
+    <id>http://perthcharles.github.com/2015/06/12/tc-tutorial/</id>
+    <published>2015-06-12T01:32:51.000Z</published>
+    <updated>2015-06-15T02:30:38.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h2 id="TC简介">TC简介</h2>
+<hr>
+<p>TC全称为Traffic Control，是Linux进行流量控制的工具。<br>更多的内容可阅读参考资料中的第一篇文章。<br><a id="more"></a>  </p>
+<h2 id="队列类型">队列类型</h2>
+<hr>
+<p>Linux内核中支持的常见队列有：  </p>
+<ol>
+<li>pfifo_fast: 先进先出队列<br><img src="/resources/tc-fifo-qdisc.png" alt=""><br><img src="/resources/tc-pfifo_fast-qdisc.png" alt="">  </li>
+<li>TBF(Token Bucket Filter): 令牌桶过滤器<br><img src="/resources/tc-tbf-qdisc.png" alt="">  </li>
+<li>SFQ(Stochastic Fairness Queueing): 随机公平队列<br><img src="/resources/tc-sfq-qdisc.png" alt="">  </li>
+<li>HTB(Hierarchy Token Bucket): 分层令牌桶<br><img src="/resources/tc-htb-borrow.png" alt="">  </li>
+</ol>
+<h2 id="TC应用场景">TC应用场景</h2>
+<hr>
+<p>本节摘抄自<a href="http://tldp.org/HOWTO/Traffic-Control-HOWTO/overview.html" target="_blank" rel="external">Traffic Control HOWTO</a>.  </p>
+<pre><code>Common traffic control solutions  
+  <span class="number">1.</span> Limit total bandwidth <span class="built_in">to</span> <span class="operator">a</span> known rate; TBF, HTB <span class="operator">with</span> child class(es).
+  <span class="number">2.</span> Limit <span class="operator">the</span> bandwidth <span class="operator">of</span> <span class="operator">a</span> particular user, service <span class="operator">or</span> client; HTB classes <span class="operator">and</span> classifying <span class="operator">with</span> <span class="operator">a</span> <span class="built_in">filter</span>. traffic.
+  <span class="number">3.</span> Maximize TCP throughput <span class="command"><span class="keyword">on</span> <span class="title">an</span> <span class="title">asymmetric</span> <span class="title">link</span>; <span class="title">prioritize</span> <span class="title">transmission</span> <span class="title">of</span> <span class="title">ACK</span> <span class="title">packets</span>, <span class="title">wondershaper</span>.</span>
+  <span class="number">4.</span> Reserve bandwidth <span class="keyword">for</span> <span class="operator">a</span> particular application <span class="operator">or</span> user; HTB <span class="operator">with</span> children classes <span class="operator">and</span> classifying.
+  <span class="number">5.</span> Prefer latency sensitive traffic; PRIO inside <span class="operator">an</span> HTB class.
+  <span class="number">6.</span> Managed oversubscribed bandwidth; HTB <span class="operator">with</span> borrowing.
+  <span class="number">7.</span> Allow equitable distribution <span class="operator">of</span> unreserved bandwidth; HTB <span class="operator">with</span> borrowing.
+  <span class="number">8.</span> Ensure that <span class="operator">a</span> particular type <span class="operator">of</span> traffic is dropped; policer attached <span class="built_in">to</span> <span class="operator">a</span> <span class="built_in">filter</span> <span class="operator">with</span> <span class="operator">a</span> drop action.
+</code></pre><h2 id="实践案例">实践案例</h2>
+<hr>
+<h3 id="pfifo_fast">pfifo_fast</h3>
+<p>pfifo_fast是系统默认的队列类型，只起到调度的作用，不对数据流量进行控制。<br>其中pfifo中的p是packet的缩写，表示queue的大小计量单位为packet。<br>可以通过ip命令查看当前网络队列设置  </p>
+<pre><code><span class="preprocessor"># ip link list</span>
+</code></pre><h3 id="TBF">TBF</h3>
+<p>TBF队列通过设置令牌的产生速度来限制数据包的发送。  </p>
+<pre><code><span class="comment">// 在eth0上设置一个tbf队列，网络带宽为200kbit，延迟50ms，缓冲区为1540个字节</span>
+<span class="comment">// rate表示令牌的产生速率</span>
+<span class="comment">// latency表示数据包在队列中的最长等待时间</span>
+<span class="comment">// 对burst参数解释一下：</span>
+<span class="comment">//   burst means the maximum amount of bytes that tokens can be available for instantaneously.</span>
+<span class="comment">//   如果数据包的到达速率与令牌的产生速率一致，即200kbit，则数据不会排队，令牌也不会剩余</span>
+<span class="comment">//   如果数据包的到达速率小于令牌的产生速率，则令牌会有一定的剩余。</span>
+<span class="comment">//   如果后续某一会数据包的到达速率超过了令牌的产生速率，则可以一次性的消耗一定量的令牌。</span>
+<span class="comment">//   burst就是用于限制这“一次性”消耗的令牌的数量的，以字节数为单位。</span>
+<span class="preprocessor"># tc qdisc add dev eth0 root tbf rate 200kbit latency 50ms burst 1540  </span>
+
+<span class="preprocessor"># tc qdisc ls dev eth0 // 查看eth0上的队列规则  </span>
+</code></pre><h3 id="SFQ">SFQ</h3>
+<p>SFQ队列通过一个hash函数将不同会话(如TCP流)分到不同的FIFO队列中，从而保证<br>数据流的公平性。  </p>
+<pre><code><span class="comment">// perturb表示每10秒更新一次hash函数  </span>
+<span class="preprocessor"># tc qdisc add dev eth0 root sfq perturb 10  </span>
+</code></pre><h3 id="HTB">HTB</h3>
+<pre><code><span class="comment">// handle是一组用户指定的标示符，格式为major:minor。  </span>
+<span class="comment">// 如果是一条queueing discipline，minor需要一直为0。  </span>
+<span class="preprocessor"># tc qdisc add dev eth0 root handle 1:0 htb  </span>
+
+<span class="comment">// parent指明该新增的class添加到那一个父handle上去  </span>
+<span class="comment">// classid指明该class handle的唯一ID，minor需要是非零值  </span>
+<span class="comment">// ceil定义rate的上界  </span>
+<span class="preprocessor"># tc class add dev eth0 parent 1:1 classid 1:6 htb rate 256kbit ceil 512kbit</span>
+
+<span class="comment">// 新建一个带宽为100kbps的root class, 其classid为1:1</span>
+<span class="preprocessor"># tc class add dev eth0 parent 1: classid 1:1 htb rate 100kbps ceil 100kbps</span>
+<span class="comment">// 接着建立两个子class，指定其parent为1:1，ceil用来限制子类最大的带宽</span>
+<span class="preprocessor"># tc class add dev eth0 parent 1:1 classid 1:10 htb rate 40kbps ceil 100kbps</span>
+<span class="preprocessor"># tc class add dev eth0 parent 1:1 classid 1:11 htb rate 60kbps ceil 100kbps</span>
+<span class="comment">// 随后建立filter指定哪些类型的packet进入那个class</span>
+<span class="preprocessor"># tc filter add dev eth0 protocol ip parent 1:0 prio 1 u32 match ip src 1.2.3.4 match ip dport 80 0xffff flowid 1:10</span>
+<span class="preprocessor"># tc filter add dev eth0 protocol ip parent 1:0 prio 1 u32 match ip src 1.2.3.4 flow 1:11</span>
+<span class="comment">// 最后为这些class添加queuing disciplines</span>
+<span class="preprocessor"># tc qdisc add dev eth0 parent 1:10 handle 20: pfifo limit 5</span>
+<span class="preprocessor"># tc qdisc add dev eth0 parent 1:11 handle 30: sfq perturb 10</span>
+</code></pre><h3 id="其他">其他</h3>
+<pre><code><span class="comment">// 同时模拟20Mbps带宽，50msRTT和0.1%丢包率  </span>
+<span class="preprocessor"># tc qdisc add dev eth5 root handle 1:0 tbf rate 20mbit burst 10kb limit 300000  </span>
+<span class="preprocessor"># tc qdisc add dev eth5 parent 1:0 handle 10:0 netem delay 50ms loss 0.1 limit 300000  </span>
+</code></pre><h2 id="Rules,_Guidelines_and_Approaches">Rules, Guidelines and Approaches</h2>
+<hr>
+<p>‘’’<br>A device can only shape traffic in transmits<br>HTB is an ideal qdisc to use on a link with a know bandwidth<br>In theory, the PRIO scheduler is an ideal match for links with variable bandwidth<br>Sharing/splitting bandwidth based on flows or IP<br>‘’’</p>
+<h2 id="参考资料">参考资料</h2>
+<hr>
+<p><a href="http://www.turbolinux.com.cn/turbo/wiki/doku.php?id=traffic-control:tc%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%E7%AE%80%E4%BB%8B" target="_blank" rel="external">traffic-control:tc流量管理简介</a><br><a href="http://tldp.org/HOWTO/Traffic-Control-HOWTO/index.html" target="_blank" rel="external">Traffic Control HOWTO</a><br><a href="http://luxik.cdi.cz/~devik/qos/htb/manual/userg.htm" target="_blank" rel="external">HTB Linux queuing discipline manual - user guide</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h2 id="TC简介">TC简介</h2>
+<hr>
+<p>TC全称为Traffic Control，是Linux进行流量控制的工具。<br>更多的内容可阅读参考资料中的第一篇文章。<br>]]>
+    
+    </summary>
+    
+      <category term="tc" scheme="http://perthcharles.github.com/tags/tc/"/>
+    
+      <category term="Networking" scheme="http://perthcharles.github.com/categories/Networking/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[技艺培养(基于知道创宇技能表v2.2)]]></title>
+    <link href="http://perthcharles.github.com/2015/05/07/skill-list/"/>
+    <id>http://perthcharles.github.com/2015/05/07/skill-list/</id>
+    <published>2015-05-07T10:36:53.000Z</published>
+    <updated>2015-05-10T15:46:01.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<pre><code>说明：  
+<span class="bullet">1. </span>该checklist主要基于知道创宇的研发技能表v2.2制作，算是个人技能发展的一个roadmap吧。  
+
+<span class="bullet">2. </span>该清单需要逐步的结合自身的经历和经验，进行调整。毕竟这并不是通用列表。  
+
+<span class="bullet">3. </span>个人重点关注网络相关领域。    
+</code></pre><a id="more"></a>  
+
+<h3 id="通用技能">通用技能</h3>
+<h4 id="公司与个人">公司与个人</h4>
+<ul>
+<li>[X] 公司是盈利组织  </li>
+<li>[X] 个人与公司必须双赢  </li>
+<li>[X] 个人：在认同公司理念且能够为公司创造足够价值的基础上，<strong>为个人发展而工作</strong>    </li>
+</ul>
+<h4 id="沟通、反馈、责任">沟通、反馈、责任</h4>
+<ul>
+<li>[X] 一个无沟通能力的人，要么是天才，要么是不可爱的人  </li>
+<li>[X] 反馈要及时  <ul>
+<li>[X] 避免出问题不反馈，影响进度  </li>
+<li>[X] 方式  <ul>
+<li>[X] 正式的：邮件  </li>
+<li>[X] 临时的：QQ等即时通信  </li>
+<li>[X] 礼貌的：给个电话，短信  </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[X] 工作有大小，责任心无大小  </li>
+<li>[X] 周报的透明  <ul>
+<li>[X] 意义：大家互相了解工作与心得，有利于自己的判断与成长  </li>
+<li>[X] 不是单纯的给领导汇报工作  </li>
+</ul>
+</li>
+</ul>
+<h4 id="任务四象限，决定优先级">任务四象限，决定优先级</h4>
+<ul>
+<li>[X] 紧急重要  </li>
+<li>[X] 重要不紧急  </li>
+<li>[X] 紧急不重要  </li>
+<li>[X] 不紧急不重要  </li>
+</ul>
+<h4 id="新事物的敏感性">新事物的敏感性</h4>
+<ul>
+<li>[X] 保持好奇心  </li>
+<li>[X] 不要局限在自己的圈子，适当跨界吸收灵感  </li>
+<li>[X] 订阅国内外优秀博客/资源（详见附录一）  <ul>
+<li>[X] 鲜果RSS，Readkit，Pocket和Evernote等工具  </li>
+<li>[X] 英文很重要  </li>
+</ul>
+</li>
+<li>[X] 选择性的参与一些必要的回忆，听必要的主题，讨论必要的话题  </li>
+</ul>
+<h4 id="成长">成长</h4>
+<ul>
+<li>[X] 对知识的渴望程度决定了前进动力的大小  <ul>
+<li>[X] 对知识保持狂热和贪婪。为避免过度，因此也需要学会甄别和取舍。</li>
+</ul>
+</li>
+<li>[X] 不要矫情，不要浮夸  </li>
+<li>[X] 和比你厉害的人在一起，和一流的人工作  <ul>
+<li>[X] 指点往往是精华  </li>
+<li>[X] 杜绝笨蛋爆炸：二流的人招进来的人不太可能是一流的  </li>
+</ul>
+</li>
+<li>[X] 思考  <ul>
+<li>[X] 批判性思考  </li>
+<li>[X] 换位思考  </li>
+</ul>
+</li>
+<li>[X] 提问的智慧     <ul>
+<li>[X] 遇到问题先独立思考，尽最大努力后再提问  </li>
+</ul>
+</li>
+<li>[X] 小事心态  <ul>
+<li>[X] 越基础的事越关键，需要越细心  </li>
+<li>[X] 不要一味盲目追求”高级感”，而忽视”小事”/“简单事”/“基础事”</li>
+<li>[X] 基础不牢，地动山摇  </li>
+<li>[X] 小事做不好，别提大事  </li>
+</ul>
+</li>
+<li>[ ] 任务拆分  — 逐步领会<ul>
+<li>[X] 成长过程会经历：能力越大、责任越大、事情越多  </li>
+<li>[X] 思路  <ul>
+<li>[X] 拆分细化为多个点  </li>
+<li>[X] 排好优先级  — 参考”任务四象限”  </li>
+<li>[X] 加入时间维度：何时完成什么  — 参考”完成的定义”</li>
+<li>[X] 是否需要寻求帮助，谁能帮你，自己单干？ — 参考”沟通、反馈、责任”  </li>
+<li>[X] 任务是否可以切换/并发  </li>
+<li>[X] 自己缺陷什么，立马发现  </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] 方法论  — 逐步领会<ul>
+<li>[X] 完成一件事有好几条途径，优秀的人能选出最短的一条  </li>
+<li>[X] 任务拆分很容易得出做事的方法论  </li>
+<li>[X] 好的”方法论”会让你具备更强的”创造力”  </li>
+</ul>
+</li>
+</ul>
+<h4 id="牛人姿态">牛人姿态</h4>
+<ul>
+<li>[X] 即使现在不是牛人，也得具备这样的姿态  </li>
+<li>[X] 这种感觉只能意会  </li>
+<li>[X] 没有一定扎实内功与远见的人，很少有这样的姿态  </li>
+</ul>
+<h4 id="完成的定义">完成的定义</h4>
+<ul>
+<li>[ ] 比如写个POC  </li>
+<li>搞懂了目标WEB应用漏洞的原理  </li>
+<li>熟练运用Python各相关模块和机制  </li>
+<li>熟练了解了HTTP协议：HTTP请求，HTTP相应  </li>
+<li>代码写的够规范，让人看起来就是爽  </li>
+<li>程序经过足够的测试：黑/白测试  </li>
+<li>及时反馈进度  <ul>
+<li>我遇到困难了</li>
+<li>我搞定了  </li>
+</ul>
+</li>
+<li>更新相关文档，沉淀  </li>
+</ul>
+<h4 id="熟练的定义">熟练的定义</h4>
+<ul>
+<li>[ ] 比如熟练SQL注入  <ul>
+<li>SQL语句这门”语言”能脱离文档顺手写出  </li>
+<li>主流数据库的SQL特有函数、存储过程、机制我都了如指掌  <ul>
+<li>MySQL/MSSQL/Oracal/Postgre/Access/SQLite/…  </li>
+</ul>
+</li>
+<li>牛逼的工具我不仅用的顺其自然，源码还读过几遍，我能修改  <ul>
+<li>sqlmap/…  </li>
+</ul>
+</li>
+<li>我具备创造性，而不仅仅是跟在大牛身后  <ul>
+<li>研究出了几个不错的技巧  </li>
+<li>发了几篇不错的paper  </li>
+<li>对外会议/沙龙等进行了几次分享  </li>
+<li>写出了自己的相关工具，爽  </li>
+</ul>
+</li>
+<li>我实战了N回，遇到了许多奇葩环境，我有足够的信心饶过  </li>
+<li>以上这些之后，这才叫熟练！其他同理  </li>
+</ul>
+</li>
+</ul>
+<h4 id="好书推荐">好书推荐</h4>
+<ul>
+<li>[X] 推荐理由  <ul>
+<li>[X] 打通任督二脉的书，怎能不看？  </li>
+<li>[X] 任何科学研究最终必须至少到哲学层面，触碰到上帝的脚  </li>
+<li>[X] 具体技术类书籍请见”专业技能”相关部分  </li>
+</ul>
+</li>
+<li>[ ] 鸡汤类  <ul>
+<li>[ ] 黑客与画家  </li>
+<li>[X] 浪潮之巅</li>
+<li>[X] MacTalk</li>
+</ul>
+</li>
+<li>[ ] 洁癖类  <ul>
+<li>[ ] 重构  </li>
+<li>[ ] 代码整洁之道  </li>
+<li>[ ] 代码大全2  </li>
+<li>[X] 数学之美</li>
+<li>[X] 编写可读代码的艺术  </li>
+</ul>
+</li>
+<li>[ ] 敏捷类  <ul>
+<li>[ ] Rework中文版：37signals团队的敏捷经验  </li>
+<li>[ ] 高效程序员的45个习惯  </li>
+</ul>
+</li>
+<li>[ ] 产品类  <ul>
+<li>[ ] 人人都是产品经理  </li>
+<li>[ ] 结网  </li>
+</ul>
+</li>
+<li>[ ] 神书  <ul>
+<li>[ ] 自私的基因  </li>
+<li>[ ] 失控  </li>
+<li>[ ] 万物由来  </li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="专业技能">专业技能</h3>
+<h4 id="原则">原则</h4>
+<ul>
+<li>[X] 至少完整看完与练习好一本书  </li>
+<li>[X] 至少过一遍官方文档  </li>
+</ul>
+<h4 id="基础必备">基础必备</h4>
+<p>HTTP抓包与调试  </p>
+<ul>
+<li>[ ] Fiddler: 浏览器代理神器  </li>
+<li>[X] wireshark + tshark(terminal wireshark， 脚本分析trace利器)  </li>
+<li>[X] tcpdump  </li>
+</ul>
+<p>编码规范  </p>
+<ul>
+<li>[X] C/C++  </li>
+<li>[ ] Python  </li>
+</ul>
+<p>office能力  </p>
+<ul>
+<li>[X] Word文档编写，看上去要专业，尤其对外的  </li>
+<li>[X] Excel里面大量的统计、图标功能，需要善于使用  </li>
+<li>[X] PPT演讲，培训等必备，如何做好PPT？Google一下。。。  </li>
+<li>[X] 进一步：Visio，FreeMind, Latex, Markdown  </li>
+</ul>
+<p>熟练VIM  </p>
+<p>算法  </p>
+<ul>
+<li>[X] 详见<a href="http://en.wikipedia.org/wiki/List_of_algorithms" target="_blank" rel="external">List of algorithms</a>  </li>
+<li>[X] 熟练掌握常见算法和数据结构  </li>
+<li>[X] 了解常见高级算法和数据结构，如红黑树，跳表，bloom filter等  </li>
+</ul>
+<p>正则表达式  </p>
+<ul>
+<li>[ ] 调试工具：Kodos，RegexBuddy</li>
+<li>[ ] 各种正则表达式入门资料，自行Google。。。  </li>
+</ul>
+<p>研发能力  </p>
+<ul>
+<li>[X] 瀑布模型：需求-&gt;需求分析-&gt;设计-&gt;开发-&gt;测试-&gt;上线-&gt;运维/运营  </li>
+<li>[X] 需求分析能力  <ul>
+<li>[X] 给你一个需求，如何给出一个优美的执行思路  — 方法论  </li>
+<li>[X] 这个能力非常非常的关键  </li>
+</ul>
+</li>
+<li>[X] 调试能力  <ul>
+<li>[X] 只要能定位，就没有解决不了的BUG  </li>
+<li>[X] 肉眼看到的都是假象  <ul>
+<li>[X] 一定要专业的工具与经验配合  </li>
+</ul>
+</li>
+<li>[X] BUG在哪出现，最终就在哪进行真实模拟调试  </li>
+<li>[X] 缩小范围  <ul>
+<li>[X] 构建自己的测试样例：排除网络复杂未知情况  </li>
+<li>[X] 关联模块一个个排除  </li>
+<li>[X] 单步调试</li>
+<li>[X] 粗暴调试：print  </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[X] 敏捷思想  <ul>
+<li>[X] 快速迭代  </li>
+<li>[X] 任务拆细  </li>
+<li>[X] V1原则：定义好V1的目标，快速完成V1为优先  </li>
+<li>[X] 习惯WIKI记录，利于沉淀和分享  — 个人选择：博客  </li>
+</ul>
+</li>
+</ul>
+<p>翻墙  </p>
+<ul>
+<li>[X] Goagent, VPN, VPS, SSH Tunnel, shadowsock…  </li>
+</ul>
+<h4 id="Web安全">Web安全</h4>
+<ul>
+<li>[ ] 书  <ul>
+<li>[ ] 黑客攻防技术宝典（WEB实战篇）  </li>
+<li>[ ] 白帽子讲WEB安全  </li>
+<li>[ ] WEB前端黑客技术揭秘  </li>
+<li>[ ] SQL注入攻击与防御  </li>
+</ul>
+</li>
+<li>[ ] Papers  <ul>
+<li>[ ] <a href="https://www.exploit-db.com/papers/" target="_blank" rel="external">Offensive security exploit database archive</a>  </li>
+</ul>
+</li>
+</ul>
+<h4 id="研发清单">研发清单</h4>
+<p>编码环境  </p>
+<ul>
+<li>[ ] pip  </li>
+<li>[ ] vagrant  </li>
+<li>[X] tmux/screen  </li>
+<li>[X] vim  </li>
+<li>[ ] zsh + oh-my-zsh  </li>
+<li>[X] python 2.7  </li>
+<li>[ ] &gt;Django 1.4  </li>
+<li>[ ] web.py  </li>
+<li>[ ] node.js  </li>
+<li>[X] ubuntu/gentoo/centos  </li>
+<li>[ ] ipython  </li>
+<li>[X] 版本控制：git/svn  </li>
+<li>[ ] nginx + uWSGI  </li>
+</ul>
+<p>Python: 官方手册  </p>
+<ul>
+<li>[X] 至少过一遍，这都没过一遍，视野会局限  </li>
+<li>[X] 行之说：”我没看过Python的书，却熟读官方手册”  </li>
+</ul>
+<p>Linux：熟练使用常见命令和shell脚本  </p>
+<ul>
+<li>[ ] 高级Bash脚本编程指南 Mendel Cooper  </li>
+<li>[ ] Linux设备驱动第三版  </li>
+</ul>
+<p>前端：JavaScript DOM编程艺术  </p>
+<p>爬虫进阶  </p>
+<ul>
+<li>[ ] 代理池：爬虫”稳定”需要  </li>
+<li>[ ] 网络请求  <ul>
+<li>[X] wget/curl  </li>
+<li>[ ] urllib2/httplib2/requests  </li>
+<li>[ ] scrapy  </li>
+</ul>
+</li>
+<li>[ ] 验证码破解：pytesser  </li>
+</ul>
+<p>调度  </p>
+<ul>
+<li>[X] crontab是最原生的定时调度  </li>
+<li>[ ] 基于redis实现的分布式调度  </li>
+<li>[ ] 就rpyc实现的分布式调度  </li>
+<li>[ ] celery/gearman等调度框架  </li>
+</ul>
+<p>并发  </p>
+<ul>
+<li>[X] 线程池：进程内优美的并发方案  </li>
+<li>[ ] 协程：进程内另一种优美的并发方案  </li>
+<li>[X] 多线程：os.fork, multiprocessing  </li>
+</ul>
+<p>数据结构  </p>
+<ul>
+<li>[X] JSON</li>
+<li>[ ] cPickle  </li>
+<li>[ ] protobuf  </li>
+</ul>
+<p>数据库  </p>
+<ul>
+<li>[ ] MySQL  </li>
+<li>[ ] MongoDB  </li>
+<li>[ ] Cassandra  </li>
+<li>[ ] Hadoop体系  </li>
+<li>[ ] Redis  </li>
+<li>[ ] Sqlite  </li>
+</ul>
+<p>调试  </p>
+<ul>
+<li>[ ] gdb, pdb  </li>
+<li>[X] logging  </li>
+<li>[ ] Sentry  </li>
+<li>[ ] strace/ltrace  </li>
+<li>[X] lsof  </li>
+<li>[X] 性能  <ul>
+<li>[ ] Python性能分析指南  </li>
+<li>[X] top/htop/free/iostat/vmstat/ifconfig…  </li>
+</ul>
+</li>
+</ul>
+<p>持续集成  </p>
+<ul>
+<li>[ ] 自测试：nose  </li>
+<li>[ ] Jenkins  </li>
+</ul>
+<p>协作：Trello, WeiXin  </p>
+<h4 id="设计思想">设计思想</h4>
+<ul>
+<li>[ ] 人人都是架构师：具备架构思想是一件多酷的事  </li>
+<li>[X] 实战出真知  — 100%认同啊，且适用于任何技术领域  </li>
+<li>[ ] 如何设计  <ul>
+<li>[ ] 松耦合，紧内聚  </li>
+<li>[ ] 单元与单元属性  </li>
+<li>[X] 生产者与消费者  </li>
+<li>[X] 结构：队列/LRU  </li>
+<li>[ ] 分布式：存储、计算</li>
+<li>[X] 资源考虑：CPU, 内存，带宽  </li>
+</ul>
+</li>
+</ul>
+<h4 id="牛人1，2，3">牛人1，2，3</h4>
+<ul>
+<li>[X] 1研究：研究东西，有足够的洞察力，研究水准不错  </li>
+<li>[X] 2研发：hack idea自己有魄力实现，不懂研发的黑客如同不会游泳的海盗  </li>
+<li>[X] 3工程：研发出来的需要实战、需要工程化，否则只是玩具，而不能成为真正的武器  </li>
+</ul>
+<hr>
+<hr>
+<h3 id="附录一：国内外优秀博客/资源">附录一：国内外优秀博客/资源</h3>
+<hr>
+<p>说道这个点，首先必须吐槽一下Google reader的关闭，其次吐槽一下现在快消费讯息的泛滥！  </p>
+<ul>
+<li>阮一峰的网络日志  </li>
+<li>Vimer的程序世界  </li>
+<li>阳志平的网志  </li>
+<li>[推荐]弯曲评论  </li>
+<li>酷壳CoolShell.cn  </li>
+<li>[推荐]伯乐在线-博客  </li>
+<li>月光博客  </li>
+<li>IT技术博客大学习  </li>
+<li>WooYun知识库  </li>
+<li>PingWest  </li>
+</ul>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<pre><code>说明：  
+<span class="bullet">1. </span>该checklist主要基于知道创宇的研发技能表v2.2制作，算是个人技能发展的一个roadmap吧。  
+
+<span class="bullet">2. </span>该清单需要逐步的结合自身的经历和经验，进行调整。毕竟这并不是通用列表。  
+
+<span class="bullet">3. </span>个人重点关注网络相关领域。    
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="wiki-编程技艺" scheme="http://perthcharles.github.com/categories/wiki-%E7%BC%96%E7%A8%8B%E6%8A%80%E8%89%BA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Linux内核编码风格]]></title>
+    <link href="http://perthcharles.github.com/2015/05/06/coding-style/"/>
+    <id>http://perthcharles.github.com/2015/05/06/coding-style/</id>
+    <published>2015-05-06T09:49:38.000Z</published>
+    <updated>2015-05-10T04:59:31.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<pre><code>Coding style <span class="keyword">is</span> <span class="keyword">all</span> about readability <span class="built_in">and</span> maintainability using commonly available tools.  
+</code></pre><p><a id="more"></a>  </p>
+<h3 id="缩进">缩进</h3>
+<hr>
+<p>所有的缩进均应是8字符格式。</p>
+<pre><code><span class="keyword">If</span> you need more than <span class="number">3</span> levels indentation, you<span class="attribute">'re</span> screwed anyway, <span class="keyword">and</span> should 
+fix your program.
+</code></pre><p>注：关于这点保留意见，目前我(也)比较习惯用4字符格式的TAB。  </p>
+<pre><code>Don't <span class="keyword">put</span> multiple assignments <span class="function_start"><span class="keyword">on</span></span> a single line.
+
+Get a decent editor <span class="keyword">and</span> don't leave whitespace <span class="keyword">at</span> <span class="keyword">the</span> <span class="keyword">end</span> <span class="keyword">of</span> lines.
+</code></pre><h3 id="换行">换行</h3>
+<hr>
+<p>每行的长度限制在80各字符</p>
+<pre><code>However， never <span class="keyword">break</span> user-visible strings such <span class="keyword">as</span> printk <span class="keyword">messages</span>, because 
+that breaks the ability <span class="keyword">to</span> <span class="keyword">grep</span> <span class="keyword">for</span> them.  
+</code></pre><h3 id="括号和空格">括号和空格</h3>
+<hr>
+<pre><code>As shown <span class="built_in">to</span> us <span class="keyword">by</span> <span class="operator">the</span> prophets Kernighan <span class="operator">and</span> Ritchie, <span class="operator">the</span> preferred way is <span class="built_in">to</span> 
+<span class="built_in">put</span> <span class="operator">the</span> opening brace <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">line</span>, <span class="title">and</span> <span class="title">push</span> <span class="title">the</span> <span class="title">closing</span> <span class="title">brace</span> <span class="title">first</span>, <span class="title">thusly</span>:</span>
+<span class="keyword">if</span> (x is <span class="constant">true</span>) {
+        we <span class="built_in">do</span> y
+}
+</code></pre><p>上面的规则适用于所有的代码块，除了函数。  </p>
+<pre><code><span class="keyword">Do</span> <span class="keyword">not</span> unnecessarily use braces <span class="keyword">where</span> a <span class="built_in">single</span> statement will <span class="keyword">do</span>.
+
+        <span class="keyword">if</span> (condition)
+                action();
+
+<span class="keyword">and</span>
+        <span class="keyword">if</span> (condition)
+                do_this();
+        <span class="keyword">else</span>
+                do_that();
+
+This does <span class="keyword">not</span> apply <span class="keyword">if</span> only one branch <span class="keyword">of</span> a conditional statement <span class="keyword">is</span> a <span class="built_in">single</span> 
+statement; <span class="keyword">in</span> the latter <span class="keyword">case</span> use braces <span class="keyword">in</span> both braches.
+</code></pre><p>注：这个规则我保留意见。由于任何under-developing的代码片段都没办法保证在“现在和将来”都仅包含一条语句。因此我的选择是：在任何代码片段/分支处，均使用括号。  </p>
+<p>在Linux kernel的编程风格中，空格的使用主要依赖于function-versus-keyword的使用。</p>
+<pre><code><span class="operator"><span class="keyword">Use</span> a <span class="keyword">space</span> <span class="keyword">after</span> (most) keywords.
+The notable exceptions <span class="keyword">are</span> sizeof, typeof, alignof, <span class="keyword">and</span> __attribute__,
+which look somewhat <span class="keyword">like</span> functions.
+
+<span class="keyword">Do</span> <span class="keyword">not</span> <span class="keyword">add</span> spaces around (inside) parenthesized expressions.
+
+<span class="keyword">When</span> declaring pointer <span class="keyword">data</span> <span class="keyword">or</span> a <span class="keyword">function</span> that <span class="keyword">returns</span> a pointer type, the 
+preferred usd <span class="keyword">of</span> <span class="string">'*'</span> <span class="keyword">is</span> adjacent <span class="keyword">to</span> the <span class="keyword">data</span> name <span class="keyword">or</span> <span class="keyword">function</span> name <span class="keyword">and</span> <span class="keyword">not</span> 
+adjacent <span class="keyword">to</span> the type name. Examples:
+    <span class="built_in">char</span> *line_banner;</span>
+    char *match__strdup(substring_t *s);
+
+<span class="operator"><span class="keyword">Use</span> one <span class="keyword">space</span> around (<span class="keyword">on</span> <span class="keyword">each</span> side <span class="keyword">of</span>) most <span class="built_in">binary</span> <span class="keyword">and</span> ternary operators, 
+but <span class="keyword">no</span> <span class="keyword">space</span> <span class="keyword">after</span> unary operators.</span>
+</code></pre><h3 id="命名">命名</h3>
+<hr>
+<pre><code>GLOBAL variables need to have descriptive names, as <span class="operator"><span class="keyword">do</span> <span class="keyword">global</span> functions.
+
+Encoding the types <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">into</span> the name (so-called Hungarian notaion) 
+<span class="keyword">is</span> brain damaged - the compiler knows the types anyway <span class="keyword">and</span> can <span class="keyword">check</span> those, <span class="keyword">and</span> 
+it <span class="keyword">only</span> confuses the programmer. <span class="keyword">No</span> wonder MicroSoft makes buggy programs.
+=.= 黑的漂亮  
+
+<span class="keyword">LOCAL</span> variable <span class="keyword">names</span> should be short, <span class="keyword">and</span> <span class="keyword">to</span> the point.</span>
+</code></pre><h3 id="自定义类型">自定义类型</h3>
+<hr>
+<p>typedefs应尽量少用。仅在满足一下条件之一时，typedefs才算是能适当提高可读性的选择。</p>
+<ul>
+<li>totally opaque objects (where the typedef is actively used to _hide_ what the<br>object is).  </li>
+<li>clear integer types, where the abstaction _helps_ avoid confusion whether it<br>is ‘int’ or ‘long’. 例如 u8/u16/u32就是很好的抽象  </li>
+<li>when you use sparse to literally create a _new_ type for type-checking.<br>— 暂时不太理解:-(  </li>
+<li>New types which are identical to standard C99 types, in certain exceptional<br>circumstances.  </li>
+<li>Types safe for use in userspace. — 暂时不太理解:-(  </li>
+</ul>
+<h3 id="函数">函数</h3>
+<hr>
+<pre><code>Functions should be short and sweet, and <span class="operator"><span class="keyword">do</span> just one thing. 
+They should fit <span class="keyword">on</span> one <span class="keyword">or</span> two screenfuls <span class="keyword">of</span> <span class="built_in">text</span>.
+
+The maximum length <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">is</span> inversely proportional <span class="keyword">to</span> the complexity 
+<span class="keyword">and</span> indentation <span class="keyword">level</span> <span class="keyword">of</span> that <span class="keyword">function</span>.
+<span class="comment">-- 当函数逻辑简单时，稍微长一点没有关系；</span>
+<span class="comment">-- 当函数逻辑复杂时，可以通过helper函数缩短函数的长度。同时如果需要考虑性能，inline是个不错的选择。</span>
+
+Another measure <span class="keyword">of</span> the <span class="keyword">function</span> <span class="keyword">is</span> the <span class="built_in">number</span> <span class="keyword">of</span> <span class="keyword">local</span> <span class="keyword">variables</span>. 
+They shouldn<span class="string">'t exceed 5-10, or you'</span>re doing something wrong.
+依据：A human brain can generally easily keep track about <span class="number">7</span> different things.
+
+<span class="keyword">In</span> source file, seperate functions <span class="keyword">with</span> one blank line.
+
+<span class="keyword">If</span> the <span class="keyword">function</span> <span class="keyword">is</span> exported, the EXPORT macro <span class="keyword">for</span> it should follow immediately 
+<span class="keyword">after</span> the closing <span class="keyword">function</span> brace line.
+
+<span class="keyword">In</span> <span class="keyword">function</span> prototype, include parameter <span class="keyword">names</span> <span class="keyword">with</span> their <span class="keyword">data</span> types.</span>
+</code></pre><h3 id="集中管理函数的退出条件">集中管理函数的退出条件</h3>
+<hr>
+<p>这部分主要是讨论goto的实用技巧(goto反对党请绕道)。  </p>
+<pre><code>The <span class="keyword">goto</span> statement comes <span class="keyword">in</span> handy <span class="keyword">when</span> a <span class="keyword">function</span> exits <span class="keyword">from</span> multiple locations 
+<span class="keyword">and</span> some common works such <span class="keyword">as</span> cleanup has <span class="keyword">to</span> be done.
+
+Choose label names which say what the <span class="keyword">goto</span> does <span class="keyword">or</span> why the <span class="keyword">goto</span> exits.
+</code></pre><p>goto语句在以下情况下，可以合理的使用：  </p>
+<ul>
+<li>unconditional statements are easier to understand and follow  </li>
+<li>nesting is reduced  </li>
+<li>errors by not updating individual exit points when making modifications are prevented — 暂时不理解:-(  </li>
+<li>save the compiler work to optimize redundant code away  </li>
+</ul>
+<h3 id="注释">注释</h3>
+<hr>
+<p>这部分主要是一些避免over-commenting的原则。  </p>
+<pre><code>NEVER <span class="keyword">try</span> <span class="keyword">to</span> explain HOW your code works <span class="keyword">in</span> a commment:
+<span class="keyword">it</span>'s much better <span class="keyword">to</span> <span class="command">write</span> <span class="keyword">the</span> code so <span class="keyword">the</span> \_working\_ <span class="keyword">is</span> obvious, <span class="keyword">and</span> <span class="keyword">it</span>'s a 
+waste <span class="keyword">of</span> <span class="property">time</span> <span class="keyword">to</span> explain badly written code.
+
+Generally, you want your comments <span class="keyword">to</span> <span class="keyword">tell</span> WHAT your code <span class="keyword">does</span>, <span class="keyword">not</span> HOW. <span class="comment">--发人深省啊！</span>
+
+Try <span class="keyword">to</span> avoid putting comments inside a function body.
+Instead, <span class="keyword">put</span> <span class="keyword">the</span> comments <span class="keyword">at</span> <span class="keyword">the</span> head <span class="keyword">of</span> <span class="keyword">the</span> function, telling people what <span class="keyword">it</span> <span class="keyword">does</span>,
+<span class="keyword">and</span> possibly WHY <span class="keyword">it</span> <span class="keyword">does</span> <span class="keyword">it</span>.  
+
+Linux style <span class="keyword">for</span> comments <span class="keyword">is</span> <span class="keyword">the</span> C89 <span class="string">"/* ... */"</span> style.
+Don't use C99-style <span class="string">"// ..."</span> comments.
+
+The preferred style <span class="keyword">for</span> long (multi-line) comments <span class="keyword">is</span>:
+/*
+ * This <span class="keyword">is</span> <span class="keyword">the</span> preferred style <span class="keyword">for</span> multi-line
+ * comments <span class="keyword">in</span> <span class="keyword">the</span> Linux kernel source code.
+ * Please use <span class="keyword">it</span> consistently.
+ */
+</code></pre><h3 id="宏，枚举">宏，枚举</h3>
+<hr>
+<pre><code>Names <span class="operator">of</span> macros defining constants <span class="operator">and</span> labels <span class="operator">in</span> enums are capitalized.
+
+Enums are preferred when defining serveral related constants.
+
+CAPITALIZED macro names are appreciated but macros resembling functions may be  
+named <span class="operator">in</span> <span class="built_in">lower</span> <span class="keyword">case</span>.
+
+Generally, inline functions are preferable <span class="built_in">to</span> macros resembling functions. <span class="comment">-- 个人更认同这一原则。</span>
+
+Macros <span class="operator">with</span> multiple statements should be eclosed <span class="operator">in</span> <span class="operator">a</span> <span class="built_in">do</span>-which block.
+</code></pre><h3 id="打印内核消息">打印内核消息</h3>
+<pre><code>Make the messages concise, clear, <span class="keyword">and</span> unambiguous.
+
+<span class="keyword">For</span> messages that aren<span class="comment">'t associated with a particular device, <span class="xmlDocTag">&lt;linux/printk.h&gt;</span> </span>
+defines pr_notice(), pr_info(), pr_warn(), pr_err(), etc.
+</code></pre><h3 id="inline的使用">inline的使用</h3>
+<hr>
+<pre><code>Abundant use <span class="operator">of</span> <span class="operator">the</span> inline keyword leads <span class="built_in">to</span> <span class="operator">a</span> much bigger kernel, which <span class="operator">in</span> turn 
+slows <span class="operator">the</span> <span class="keyword">system</span> <span class="keyword">as</span> <span class="operator">a</span> <span class="keyword">whole</span> down, due <span class="built_in">to</span> <span class="operator">a</span> bigger icache footprint <span class="keyword">for</span> <span class="operator">the</span> CPU 
+<span class="operator">and</span> simply because there is less memory available <span class="keyword">for</span> <span class="operator">the</span> pagecache.
+
+A reasonable rule <span class="operator">of</span> thumb is <span class="built_in">to</span> <span class="operator">not</span> <span class="built_in">put</span> inline <span class="keyword">at</span> functions that have more 
+than <span class="number">3</span> <span class="keyword">lines</span> <span class="operator">of</span> code <span class="operator">in</span> them.  <span class="comment">--即，inline应限制用于小函数 </span>
+</code></pre><h3 id="函数返回值">函数返回值</h3>
+<hr>
+<pre><code><span class="keyword">If</span> the name <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">is</span> an action <span class="keyword">or</span> an imperative command, the <span class="keyword">function</span> 
+should <span class="keyword">return</span> an <span class="keyword">error</span>-code <span class="built_in">integer</span>.
+<span class="keyword">If</span> the name <span class="keyword">is</span> a predicate, the <span class="keyword">function</span> should <span class="keyword">return</span> a <span class="string">"succeeded"</span> <span class="built_in">boolean</span>.
+</code></pre><h3 id="不要重复发明内核宏定义">不要重复发明内核宏定义</h3>
+<pre><code>The header <span class="built_in">file</span> <span class="built_in">include</span>/linux/kernel.h <span class="operator">contains</span> <span class="operator">a</span> <span class="built_in">number</span> <span class="operator">of</span> macros that you 
+should use, rather than explicitly coding some variant <span class="operator">of</span> them yourself.
+</code></pre><h3 id="条件编译">条件编译</h3>
+<hr>
+<pre><code>Wherever possible, don't <span class="operator"><span class="keyword">use</span> preprocessor conditional (#<span class="keyword">if</span>, #ifdef) <span class="keyword">in</span> .c files, 
+doing so makes code harder <span class="keyword">to</span> <span class="keyword">read</span> <span class="keyword">and</span> logic harder <span class="keyword">to</span> follow.
+
+Prefer <span class="keyword">to</span> compile out entire functions, rather than portions <span class="keyword">of</span> functions <span class="keyword">or</span> 
+portions <span class="keyword">of</span> expressions.
+
+Within code, <span class="keyword">where</span> possible, <span class="keyword">use</span> the IS_ENABLED macro <span class="keyword">to</span> <span class="keyword">convert</span> a Kconfig 
+symbol <span class="keyword">into</span> a C <span class="built_in">boolean</span> expression, <span class="keyword">and</span> <span class="keyword">use</span> it <span class="keyword">in</span> a normal C conditional.
+
+<span class="keyword">At</span> the <span class="keyword">end</span> <span class="keyword">of</span> <span class="keyword">any</span> non-trivial #<span class="keyword">if</span> <span class="keyword">or</span> #ifdef block (more than a few <span class="keyword">lines</span>), 
+place a comment <span class="keyword">after</span> the #endif <span class="keyword">on</span> the same line, noting the conditional 
+expression used. <span class="keyword">For</span> instance:
+    #ifdef CONFIG_SOMETHING
+    ...
+    #endif <span class="comment">/* CONFIG_SOMETHING */</span></span>
+</code></pre><h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="https://www.kernel.org/doc/Documentation/CodingStyle" target="_blank" rel="external">Linux kernel coding style</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<pre><code>Coding style <span class="keyword">is</span> <span class="keyword">all</span> about readability <span class="built_in">and</span> maintainability using commonly available tools.  
+</code></pre><p>]]>
+    
+    </summary>
+    
+      <category term="wiki-编程技艺" scheme="http://perthcharles.github.com/categories/wiki-%E7%BC%96%E7%A8%8B%E6%8A%80%E8%89%BA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Alfred 使用记录]]></title>
+    <link href="http://perthcharles.github.com/2015/03/27/alfred/"/>
+    <id>http://perthcharles.github.com/2015/03/27/alfred/</id>
+    <published>2015-03-27T07:34:58.000Z</published>
+    <updated>2015-05-10T04:57:03.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>最早是在MacTalk 中了解到的Alfred，但一直仅仅是把它当做一个启动软件的快捷方式来用。<br>趁着在网上看到了几个比较精彩的帖子，发现之前真实太浪费Alfred了。<br>本文就记录一下我从中学到的一些使用Alfred的技巧。<br>Alfred官网：<a href="http://www.alfredapp.com/" target="_blank" rel="external">http://www.alfredapp.com/</a><br><a id="more"></a>  </p>
+<hr>
+<h3 id="1-_搜索">1. 搜索</h3>
+<hr>
+<p>Alfred的核心功能之一就是搜索，所以先简单介绍一下。<br>默认的热键组合是：option + space。<br>比如你想打开chrome浏览器，就可以直接在Alfred中输入chrome了。<br>相比于Spotlight它的显示结果更简单，更易于操作（特别是你想要的结果不是第一个结果时）。  </p>
+<p>下面查找文件的方法来自<a href="http://macshuo.com/?p=625" target="_blank" rel="external">http://macshuo.com/?p=625</a>, 其实就是先输个空格，囧。  </p>
+<pre><code>简单查找文件：用快捷键呼出Alfred，键入空格，输入你要查找文件名，
+即可定位文件，回车打开，<span class="command"><span class="keyword">command</span>+回车打开文件所在文件夹。</span>
+</code></pre><h3 id="2-_自定义搜索">2. 自定义搜索</h3>
+<hr>
+<p>上面只是搜索本地的资源，如果你想在某个特定网站进行搜索呢？<br>Alfred同样提供的custom search的功能，具体的方法可参考<a href="http://zhuanlan.zhihu.com/pinapps/19985861" target="_blank" rel="external">如何使用Alfred提升操作效率</a><br>我自己的案例就是用这个功能实现了在github中进行搜索。具体步骤如下：  </p>
+<pre><code><span class="number">1</span>. 进入github页面，在输入框中随便输入一个关键字  
+<span class="number">2</span>. 在得到的页面链接中，将你的关键字替换为{query}  
+   如：https:<span class="comment">//github.com/search?utf8=%E2%9C%93&amp;q={query}  </span>
+<span class="number">3</span>. 依次进入：Alfred的配置-&gt;Features -&gt;Web Search -&gt; Add custom search  
+<span class="number">4</span>. 将search URL填写为第二步中得到的链接，其他表项也比较直观。  
+   如：我的keyword设为了git, 这样我以后只要在Alfred中输入<span class="string">"git keyword"</span>
+       就能直接在默认浏览器中打开github上面的搜索结果。  
+</code></pre><h3 id="3-_我还是太年轻了">3. 我还是太年轻了</h3>
+<hr>
+<p>Alfred真是过于强大了，而且有不少作者总结的很好。这篇文章就写到这里吧，把参考资料都大概瞄一瞄，跟着学一遍基本差不多了。  </p>
+<h3 id="4-_我的需求">4. 我的需求</h3>
+<hr>
+<p>算是TODO list吧，等学完了再回来填坑。  </p>
+<pre><code><span class="number">0</span>. 学会用Python写workflow
+<span class="number">1</span>. workflo<span class="variable">w:</span> <span class="keyword">open</span>/<span class="keyword">close</span> VPN
+<span class="number">2</span>. workflo<span class="variable">w:</span> <span class="keyword">open</span>/<span class="keyword">close</span> wifi AP
+</code></pre><h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="http://zhuanlan.zhihu.com/pinapps/19985861" target="_blank" rel="external">如何使用Alfred提升操作效率</a><br><a href="http://zhuanlan.zhihu.com/pinapps/19986749" target="_blank" rel="external">用Alfred大幅提升操作效率 - workflow</a><br><a href="https://github.com/hzlzh/AlfredWorkflow.com" target="_blank" rel="external">Alfred workflow collection</a><br><a href="http://wellsnake.com/jekyll/update/2014/06/15/001/" target="_blank" rel="external">丢掉鼠标－Mac神软Alfred使用手册1</a><br><a href="http://www.alfredworkflow.com/" target="_blank" rel="external">Alfred workflow list</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>最早是在MacTalk 中了解到的Alfred，但一直仅仅是把它当做一个启动软件的快捷方式来用。<br>趁着在网上看到了几个比较精彩的帖子，发现之前真实太浪费Alfred了。<br>本文就记录一下我从中学到的一些使用Alfred的技巧。<br>Alfred官网：<a href="http://www.alfredapp.com/" target="_blank" rel="external">http://www.alfredapp.com/</a><br>]]>
+    
+    </summary>
+    
+      <category term="Tools" scheme="http://perthcharles.github.com/tags/Tools/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Full Stack developer是怎样的一种存在？]]></title>
+    <link href="http://perthcharles.github.com/2015/03/06/what-is-a-full-stack-developer/"/>
+    <id>http://perthcharles.github.com/2015/03/06/what-is-a-full-stack-developer/</id>
+    <published>2015-03-06T06:53:15.000Z</published>
+    <updated>2015-05-09T17:06:32.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>总体上讲：  </p>
+<pre><code>A Full Stack Developer is someone <span class="operator">with</span> familiarity <span class="operator">in</span> <span class="keyword">each</span> layer, 
+<span class="keyword">if</span> <span class="operator">not</span> mastery <span class="operator">in</span> many <span class="operator">and</span> <span class="operator">a</span> genuine interest <span class="operator">in</span> all software technology.  
+
+Good developers who are familiar <span class="operator">with</span> <span class="operator">the</span> entire stack know how <span class="built_in">to</span> 
+make life easier <span class="keyword">for</span> those around them.  
+</code></pre><a id="more"></a>  
+
+<p>上面提到的“each layer”大体分为以下几个方面：  </p>
+<pre><code><span class="bullet">1. </span>Server, Network, and Hosting Environment.  
+
+<span class="bullet">2. </span>Data Modeling  
+
+<span class="bullet">3. </span>Business Logic  
+
+<span class="bullet">4. </span>API layer / Action Layer / MVC  
+
+<span class="bullet">5. </span>User Interfaces  
+<span class="code">    implementing a good visual design is key  </span>
+
+<span class="bullet">6. </span>User Experience  
+
+<span class="bullet">7. </span>Understanding what the customer and the business need
+</code></pre><p>其他的内容还包括：  </p>
+<pre><code><span class="number">1.</span> Ability <span class="keyword">to</span> <span class="command">write</span> quality unit tests.  
+
+<span class="number">2.</span> Understanding <span class="keyword">of</span> repeatable automated processes <span class="keyword">for</span> building <span class="keyword">the</span> 
+<span class="type">application</span>, testing <span class="keyword">it</span>, documenting <span class="keyword">it</span>, <span class="keyword">and</span> deploying <span class="keyword">it</span> <span class="keyword">at</span> scale.  
+
+<span class="number">3.</span> An awareness <span class="keyword">of</span> security concerns <span class="keyword">is</span> important, <span class="keyword">as</span> each layer 
+presents <span class="keyword">its</span> own possible valnerabilities.  
+</code></pre><p>作者总结：  </p>
+<pre><code>I’m <span class="operator">not</span> sure you can call yourself <span class="operator">a</span> full stack developer <span class="keyword">until</span> you 
+have worked <span class="operator">in</span> multiple languages, platforms, <span class="operator">and</span> even industries 
+<span class="operator">in</span> your professional career.   
+
+Full stack goes beyond <span class="operator">a</span> <span class="string">'senior engineer'</span>, <span class="keyword">as</span> <span class="keyword">it</span> is along <span class="operator">the</span> same 
+<span class="keyword">lines</span> <span class="keyword">as</span> <span class="operator">a</span> polyglot programmer but <span class="operator">with</span> <span class="operator">a</span> higher view <span class="operator">of</span> all <span class="operator">the</span> 
+connecting pieces. Note that <span class="command"><span class="keyword">on</span> <span class="title">my</span> <span class="title">list</span>, <span class="title">only</span> <span class="title">items</span> <span class="title">3-5</span> <span class="title">involve</span> <span class="title">writing</span> <span class="title">code</span>.</span>
+</code></pre><p>我的理解：  </p>
+<pre><code><span class="bullet">1. </span>为了达到自己的某个目标，能够主动的分析问题，尽力设计出较实现方案。  
+
+<span class="bullet">2. </span>如果需要去学习新的技能和知识时，也能积极主动的去学习。
+这就需要有一定的甄别能力，哪个是真正需要的，哪个是更合适的。  
+
+<span class="bullet">3. </span>Full Stack并不意味着work alone，重点应该是get things done. 
+如果有更合适的更优秀的人，会愿意与他合作。  
+
+<span class="bullet">4. </span>Full stack不是为了工作本身，而是为了实现自己的Dream。  
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.laurencegellert.com/2012/08/what-is-a-full-stack-developer/" target="_blank" rel="external">原文：What is a Full Stack developer</a><br><a href="http://www.zhihu.com/question/22420900" target="_blank" rel="external">怎样成为全栈工程师（Full Stack Developer）？</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>总体上讲：  </p>
+<pre><code>A Full Stack Developer is someone <span class="operator">with</span> familiarity <span class="operator">in</span> <span class="keyword">each</span> layer, 
+<span class="keyword">if</span> <span class="operator">not</span> mastery <span class="operator">in</span> many <span class="operator">and</span> <span class="operator">a</span> genuine interest <span class="operator">in</span> all software technology.  
+
+Good developers who are familiar <span class="operator">with</span> <span class="operator">the</span> entire stack know how <span class="built_in">to</span> 
+make life easier <span class="keyword">for</span> those around them.  
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="好文共享" scheme="http://perthcharles.github.com/categories/%E5%A5%BD%E6%96%87%E5%85%B1%E4%BA%AB/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[linux命令学习（十一）：lsof, vnstat, fuser, host, at, cron]]></title>
     <link href="http://perthcharles.github.com/2015/02/06/linux-using-11/"/>
     <id>http://perthcharles.github.com/2015/02/06/linux-using-11/</id>
     <published>2015-02-06T07:07:07.000Z</published>
-    <updated>2015-02-10T03:16:19.000Z</updated>
+    <updated>2015-05-10T05:02:14.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>这次介绍一些系统使用和状态方面的一些命令，继续学习Linux命令  </p>
 <a id="more"></a>  
@@ -96,7 +995,7 @@
     <link href="http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/"/>
     <id>http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/</id>
     <published>2015-02-05T08:44:16.000Z</published>
-    <updated>2015-02-05T09:31:17.000Z</updated>
+    <updated>2015-05-10T05:07:48.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>这篇文章是剑桥大学的Marinos发表在SIGCOMM 2014上的一篇关于网络协议栈优化的工作。<br>主要的argue就是指出，现有通用协议栈已经成为performance和scaling方面的主要瓶颈，是时候考虑做network stack specialization了。  </p>
 <a id="more"></a>  
@@ -139,7 +1038,7 @@
     <link href="http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/"/>
     <id>http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/</id>
     <published>2015-01-26T08:57:56.000Z</published>
-    <updated>2015-02-05T09:31:26.000Z</updated>
+    <updated>2015-05-10T05:07:41.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>OSI model是Open System Interconnection reference model的缩写/简称，<br>是由国际标准化组织ISO提出，一个试图使各种计算机在世界范围内互连为网络的标准框架。<br>OSI model将计算机网络体系结构划分为七层，分别是Application Layer, Presentation Layer, Session Layer, Transport Layer, Network Layer, Data link Layer 和 Physical Layer。<br>这个页面主要简单介绍一下各个层次的功能。<br><a id="more"></a>  </p>
 <h3 id="1-_层次划分">1. 层次划分</h3>
@@ -218,7 +1117,7 @@
     <link href="http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/"/>
     <id>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</id>
     <published>2015-01-20T08:50:43.000Z</published>
-    <updated>2015-01-20T13:11:22.000Z</updated>
+    <updated>2015-05-10T05:03:31.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br><a id="more"></a>  </p>
 <h3 id="1-_NTP及PTP简介">1. NTP及PTP简介</h3>
@@ -303,7 +1202,7 @@ $ ./ptpd.sh <span class="keyword">stop</span>  </span>
     <link href="http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/"/>
     <id>http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/</id>
     <published>2015-01-17T08:09:48.000Z</published>
-    <updated>2015-01-17T10:25:40.000Z</updated>
+    <updated>2015-05-10T08:13:33.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。<br>最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。<br>在找到<a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo</a>这个hexo的主题后，我就知道我想要的那个页面就是这个样子的。<br>但我暂时还不想完全改变博客的主题，所以就需要将Wixo主题实现的功能给融合进现有的<a href="https://github.com/hexojs/hexo-theme-landscape" target="_blank" rel="external">Landscape</a>主题中，整个过程记录成此文。<br><a id="more"></a>  </p>
 <h3 id="1-_Hexo主题的安装与使用">1. Hexo主题的安装与使用</h3>
@@ -337,7 +1236,7 @@ $ vim _config.yml
 <p>最后非常感谢Wixo的作者<a href="https://github.com/wzpan" target="_blank" rel="external">wzpan</a>实现了这么美观又实用的一个主题。  </p>
 <h3 id="参考资料">参考资料</h3>
 <hr>
-<p><a href="http://hexo.io/docs/" target="_blank" rel="external">Hexo: Documentation</a><br><a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo - a wiki theme for Hexo</a><br><a href="http://hahack.tk/hexo-theme-wixo/#" target="_blank" rel="external">Wixo demo</a><br><a href="https://github.com/wzpan/hexo-theme-wixo" target="_blank" rel="external">Wixo source code</a><br><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">Hexo: theme list</a><br><a href=""></a>  </p>
+<p><a href="http://hexo.io/docs/" target="_blank" rel="external">Hexo: Documentation</a><br><a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo - a wiki theme for Hexo</a><br><a href="http://hahack.tk/hexo-theme-wixo/#" target="_blank" rel="external">Wixo demo</a><br><a href="https://github.com/wzpan/hexo-theme-wixo" target="_blank" rel="external">Wixo source code</a><br><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">Hexo: theme list</a><br><a href="http://kevinsfork.info/2015/02/25/hexo-lightum-enhance/" target="_blank" rel="external">Hexo折腾笔记（二）博客优化与定制</a>  </p>
 ]]></content>
     <summary type="html">
     <![CDATA[<hr>
@@ -358,7 +1257,7 @@ $ vim _config.yml
     <link href="http://perthcharles.github.com/2015/01/14/test-wiki/"/>
     <id>http://perthcharles.github.com/2015/01/14/test-wiki/</id>
     <published>2015-01-14T13:34:08.000Z</published>
-    <updated>2015-01-14T15:16:04.000Z</updated>
+    <updated>2015-05-10T05:06:05.000Z</updated>
     <content type="html"><![CDATA[]]></content>
     <summary type="html">
     <![CDATA[]]>
@@ -371,7 +1270,7 @@ $ vim _config.yml
     <link href="http://perthcharles.github.com/2014/12/19/tcp-probe-intro/"/>
     <id>http://perthcharles.github.com/2014/12/19/tcp-probe-intro/</id>
     <published>2014-12-19T02:49:23.000Z</published>
-    <updated>2014-12-20T15:45:26.000Z</updated>
+    <updated>2015-05-10T05:05:48.000Z</updated>
     <content type="html"><![CDATA[<p>这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.<br>主要说说这个内核模块：  </p>
 <ol>
 <li>tcpprobe是什么？  </li>
@@ -512,7 +1411,7 @@ srtt        <span class="comment">// smoothed RTT  </span>
     <link href="http://perthcharles.github.com/2014/12/16/tshark-intro/"/>
     <id>http://perthcharles.github.com/2014/12/16/tshark-intro/</id>
     <published>2014-12-16T09:17:05.000Z</published>
-    <updated>2014-12-16T10:08:23.000Z</updated>
+    <updated>2015-05-10T05:06:26.000Z</updated>
     <content type="html"><![CDATA[<p>分析过网络trace的同学一定对tcpdump和wireshark比较熟悉，但是wireshark毕竟是一个图形界面，如果想对整个抓包和分析包的过程都脚本化，wireshark可能就不能满足需求了。<br>Google找到了tshark，terminal wireshark，果断用起来啊，当然类似的工具还有tcptrace。<br>基本的用法Google一下就能找到，tshark能做的事情还是听多的。结合shell和gunplot用起来的话基本上能满足基本需求了。  </p>
 <hr>
 <p><a href="https://www.wireshark.org/docs/man-pages/tshark.html" target="_blank" rel="external">tshark man page</a><br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>  </p>
@@ -532,7 +1431,7 @@ srtt        <span class="comment">// smoothed RTT  </span>
     <link href="http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/"/>
     <id>http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/</id>
     <published>2014-12-16T08:11:42.000Z</published>
-    <updated>2014-12-16T08:26:54.000Z</updated>
+    <updated>2015-05-10T05:05:37.000Z</updated>
     <content type="html"><![CDATA[<p>对Linux TCP implementation的阅读暂时先告一段落。以后有需求的时候再来加深理解。<br>顺道分享一个总结性的<a href="http://vdisk.weibo.com/s/B_gfVkmzsvB60" target="_blank" rel="external">PPT</a>。  </p>
 ]]></content>
     <summary type="html">
@@ -552,7 +1451,7 @@ srtt        <span class="comment">// smoothed RTT  </span>
     <link href="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/"/>
     <id>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</id>
     <published>2014-11-20T08:17:45.000Z</published>
-    <updated>2014-12-30T04:37:06.000Z</updated>
+    <updated>2015-05-10T05:05:13.000Z</updated>
     <content type="html"><![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
 <ol>
 <li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
@@ -741,7 +1640,7 @@ Fast processing <span class="keyword">is</span> turned <span class="keyword">on<
     <link href="http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/"/>
     <id>http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/</id>
     <published>2014-11-19T11:30:22.000Z</published>
-    <updated>2014-11-20T08:10:24.000Z</updated>
+    <updated>2015-05-10T05:05:08.000Z</updated>
     <content type="html"><![CDATA[<p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
 <a id="more"></a>  
 
@@ -834,7 +1733,7 @@ All SKB<span class="comment">'s seen here are completely headerless.  </span>
     <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/"/>
     <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/</id>
     <published>2014-11-18T13:50:50.000Z</published>
-    <updated>2014-11-19T11:30:56.000Z</updated>
+    <updated>2015-05-10T05:05:02.000Z</updated>
     <content type="html"><![CDATA[<p>这章主要是从宏观上来理解整个TCP/IP协议栈道额工作机制。在整个讨论的过程中，涉及到以下的层次划分：  </p>
 <pre><code><span class="keyword">socket</span> layer  
 tcp    layer  
@@ -873,7 +1772,7 @@ transmission/reception
     <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/"/>
     <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</id>
     <published>2014-11-18T06:22:06.000Z</published>
-    <updated>2014-11-21T12:15:32.000Z</updated>
+    <updated>2015-05-10T05:04:48.000Z</updated>
     <content type="html"><![CDATA[<p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
 <a id="more"></a>  
 
@@ -944,742 +1843,6 @@ transmission/reception
       <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
     
       <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Guide for Technical Development by Google]]></title>
-    <link href="http://perthcharles.github.com/2014/11/13/guide-for-technical-development/"/>
-    <id>http://perthcharles.github.com/2014/11/13/guide-for-technical-development/</id>
-    <published>2014-11-13T06:27:15.000Z</published>
-    <updated>2014-11-13T10:16:41.000Z</updated>
-    <content type="html"><![CDATA[<p>网上偶尔发现的一篇好文，读完顺手推荐给大家。<br><a href="https://www.google.com/edu/tools-and-solutions/guide-for-technical-development/index.html" target="_blank" rel="external">英文原版</a><br><a href="http://mooc.guokr.com/post/610231/" target="_blank" rel="external">中文翻译版</a><br>另外在推荐一下孙志刚老师在知乎的回答<a href="http://www.zhihu.com/question/26594660" target="_blank" rel="external">Google发布了程序员养成指南，国内互联网巨头是否也有类似的指南和课程推荐？</a><br><a id="more"></a></p>
-<h3 id="Recommendations_for_Academic_Learnings">Recommendations for Academic Learnings</h3>
-<hr>
-<h4 id="Introduction_to_CS_Course">Introduction to CS Course</h4>
-<p><a href="https://www.udacity.com/course/cs101" target="_blank" rel="external">Intro to Computer Science</a><br><a href="https://www.coursera.org/course/cs101" target="_blank" rel="external">Computer Science 101</a>  </p>
-<h4 id="Code_in_at_least_one_object_oriented_programming_language">Code in at least one object oriented programming language</h4>
-<p>这里根据自己的兴趣选择了相关的几门。<br><em>入门</em><br><a href="https://www.coursera.org/course/programming1" target="_blank" rel="external">Learn to Program: The fundamentals</a><br><a href="https://developers.google.com/edu/python/" target="_blank" rel="external">Google’s Python Class</a><br><a href="https://www.coursera.org/course/interactivepython" target="_blank" rel="external">An Introduction to Interactive Programing in Python</a><br><a href="http://www.openbookproject.net/thinkcs/python/english2e/" target="_blank" rel="external">How to Think Like a Compter Scientist</a>  </p>
-<p><em>高阶</em><br><a href="https://www.udacity.com/course/cs212" target="_blank" rel="external">Design of Computer Programs</a><br><a href="https://www.coursera.org/course/programming2" target="_blank" rel="external">Learn to Program: Crafting Quality Code</a>  </p>
-<p>更多地其他语言的课程，可以上w3cschool.com和codeacademy.com上去自己找。  </p>
-<h4 id="Test_Your_Code">Test Your Code</h4>
-<p><a href="https://www.udacity.com/course/cs258" target="_blank" rel="external">Software Testing: How to make software fail</a><br><a href="https://www.udacity.com/course/cs259" target="_blank" rel="external">Software Debugging: Automating the Boring Tasks</a>  </p>
-<h4 id="Develop_logical_reasoning_and_knowledge_of_discrete_math">Develop logical reasoning and knowledge of discrete math</h4>
-<p><a href="http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-042j-mathematics-for-computer-science-fall-2010/index.htm" target="_blank" rel="external">Mathematics for Computer Science</a><br><a href="https://www.coursera.org/course/intrologic" target="_blank" rel="external">Introduction to Logic</a><br><a href="https://www.coursera.org/course/linearopt" target="_blank" rel="external">Linear and Discrete Optimization</a><br><a href="https://www.coursera.org/course/pgm" target="_blank" rel="external">Probabilistic Graphical Models</a><br><a href="https://www.coursera.org/course/gametheory" target="_blank" rel="external">Game Theory</a><br><a href="https://www.coursera.org/course/gametheory2" target="_blank" rel="external">Game Theory II: Advanced Applications</a>  </p>
-<h4 id="Algorithms_and_Data_Structures">Algorithms and Data Structures</h4>
-<p><a href="http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-006-introduction-to-algorithms-spring-2008/index.htm" target="_blank" rel="external">Introduction to Algorithms</a><br><a href="https://www.coursera.org/course/algs4partI" target="_blank" rel="external">Algorithms, Part I</a><br><a href="https://www.coursera.org/course/algs4partII" target="_blank" rel="external">Algorithms, Part II</a><br><a href="http://en.wikipedia.org/wiki/List_of_algorithms" target="_blank" rel="external">List of algorithms</a><br><a href="http://en.wikipedia.org/wiki/List_of_data_structures" target="_blank" rel="external">List of data structures</a><br><a href="http://book.douban.com/subject/3072383/" target="_blank" rel="external">The Algorithm Design Manual</a>  </p>
-<h4 id="Develop_a_strong_knowledge_of_operating_systems">Develop a strong knowledge of operating systems</h4>
-<p>注：下面这个链接是YouTube上的，请首先学会科学上网。<br><a href="http://www.youtube.com/watch?v=XgQo4JkN4Bw&amp;list=PL3289DD0D0F0CD4A3" target="_blank" rel="external">UC Berkeley Computer Science 162</a><br>另课件PPT<a href="http://cs162.eecs.berkeley.edu/" target="_blank" rel="external">在这里</a>  </p>
-<h4 id="AI,_Compilers_和Cryptography暂略过">AI, Compilers 和Cryptography暂略过</h4>
-<h4 id="Learn_Parallel_Programming">Learn Parallel Programming</h4>
-<p><a href="https://www.coursera.org/course/hetero" target="_blank" rel="external">Heterogeneous Parallel Programming</a>  </p>
-<h3 id="Recommendations_for_Non-Academic_Learnings">Recommendations for Non-Academic Learnings</h3>
-<hr>
-<p>这部分是一些实践相关的建议，赞啊！<br>Work on project outsides of the classroom.  </p>
-<pre><code><span class="operator"><span class="keyword">Create</span> <span class="keyword">and</span> maintain a website  
-Build your own <span class="keyword">server</span>  
-Build a robot  </span>
-</code></pre><p>Work on a small piece of a large system, read and understand existing code, track down documentation, and debug things.  </p>
-<pre><code>Github <span class="keyword">is</span> a great way <span class="keyword">to</span> read other people<span class="attribute">'s</span> code <span class="keyword">or</span> contribute <span class="keyword">to</span> a project.  
-</code></pre><p>Work on project with other programmmers.  </p>
-<p>Practice your algorithmic knowledge and coding skills.  </p>
-<pre><code><span class="title">CodeJam</span>  
-ACM  
-我补充几个：leetcode, hackrank, codeforces.   
-</code></pre><p>Become a Teaching Assistant  </p>
-<p>Intership experience in software engineering  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>网上偶尔发现的一篇好文，读完顺手推荐给大家。<br><a href="https://www.google.com/edu/tools-and-solutions/guide-for-technical-development/index.html" target="_blank" rel="external">英文原版</a><br><a href="http://mooc.guokr.com/post/610231/" target="_blank" rel="external">中文翻译版</a><br>另外在推荐一下孙志刚老师在知乎的回答<a href="http://www.zhihu.com/question/26594660" target="_blank" rel="external">Google发布了程序员养成指南，国内互联网巨头是否也有类似的指南和课程推荐？</a><br>]]>
-    
-    </summary>
-    
-      <category term="google" scheme="http://perthcharles.github.com/tags/google/"/>
-    
-      <category term="自学材料" scheme="http://perthcharles.github.com/tags/%E8%87%AA%E5%AD%A6%E6%9D%90%E6%96%99/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(4): TCP Connection Setup]]></title>
-    <link href="http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/"/>
-    <id>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</id>
-    <published>2014-11-05T01:52:27.000Z</published>
-    <updated>2014-12-03T01:59:00.000Z</updated>
-    <content type="html"><![CDATA[<p>这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。  </p>
-<a id="more"></a>  
-
-<h3 id="服务器端调用关键系统调用的顺序及简单说明">服务器端调用关键系统调用的顺序及简单说明</h3>
-<p>英文水平有限，没法准确的翻译出这些句子。所以直接摘录原文了，:-)  </p>
-<p>socket(): Identify correct set of socket * protocol operation and link them together with the help of sock &amp; socket structure. Hook this socket to vfs and associate this socket to the inode.  </p>
-<p>bind(): Register this socket and request kernel to associate port number and(/or) IP address with the socket. At this stage kernel will lock the port number.  </p>
-<p>listen(): request to the kernel to configure the connection baklog queue for the socket.  </p>
-<p>accept(): this is the final step to get the server application up. Server application requests the kernel to now start accepting the connection for itself. Kernel creates a new socket on behalf of the server application, associates this socket with the VFS and returns new socket fd to the server applications.  </p>
-<h3 id="Bind过程及其相关数据结构">Bind过程及其相关数据结构</h3>
-<hr>
-<p>bind完成的主要工作就是将socket与sockaddr结构体进行绑定。这点从bind的函数原型就能看出来。  </p>
-<pre><code><span class="keyword">int</span> bind(<span class="keyword">int</span> sockfd, <span class="keyword">struct</span> sockaddr *my_addr, <span class="keyword">int</span> addrlen);
-</code></pre><p>而struct sockaddr其实只是一个通用的数据结构，写实际代码的时候往往声明更加具体的结构体，比如AF_INET family的话就使用sockaddr_in结构体。然后调用bind的时候完成类型转换即可。<br>相关结构体声明如下：  </p>
-<pre><code><span class="comment">// 声明在include/linux/socket.h中</span>
-<span class="keyword">struct</span> sockaddr {
-    sa_family_t                sa_family;        <span class="comment">// 存储address family，AF_xxx</span>
-    <span class="keyword">char</span>                    sa_data[<span class="number">14</span>];    <span class="comment">// 通用内存区域</span>
-};
-
-<span class="comment">// 声明在include/uapi/linux/in.h中</span>
-<span class="keyword">struct</span> sockaddr_in {
-    __kernel_sa_family_t     sin_family;        <span class="comment">// address family， unsigined short</span>
-
-    __be16                    sin_port;        <span class="comment">// port number, __u16, 应是2Bytes</span>
-    <span class="keyword">struct</span>    in_addr            sin_addr;        <span class="comment">// internet address</span>
-
-    <span class="comment">// pad to size of `struct sockaddr`</span>
-    <span class="keyword">unsigned</span> <span class="keyword">char</span>             _padXXX;        <span class="comment">// 补齐未用完的内存，已具体声明省略</span>
-};
-
-<span class="comment">// 声明在include/uapi/linux/in.h中</span>
-<span class="keyword">struct</span> in_addr {
-    __be32                    s_addr;            <span class="comment">// __u32,应是4Bytes</span>
-};
-</code></pre><p>可以看出sockaddr_in其实只用了其中6个字节作为有效区域。需要说明的是，作为服务器端sin_addr一般设置为INADDR_ANY（0x00000000）, 意思就是说可以接受来自不同网卡（服务器一般有多个网卡，也就对应对个IP地址）的链接请求。  </p>
-<h4 id="bind系统调用的过程">bind系统调用的过程</h4>
-<pre><code>sys_bind()
-    =&gt; sock = sockfd_lookup_light() <span class="comment">// 根据fd 获取套接口指针  </span>
-    =&gt; err = move_addr_to_kernel()
-    =&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;bind</span>()  == inet_bind()
-        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;bind</span>() == raw_bind()  <span class="comment">// 如果是RAW sock</span>
-        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>() == inet_csk_get_port()  <span class="comment">// 如果是 TCP</span>
-        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>() == udp_v4_get_port()  <span class="comment">// 如果是 UDP    </span>
-</code></pre><p>sys_bind的实现在net/socket.c中，具体的声明如下：  </p>
-<pre><code>SYSCALL_DEFINE3(bind, <span class="keyword">int</span>, fd, <span class="keyword">struct</span> sockaddr __user *, umyaddr, <span class="keyword">int</span>, addrlen)  
-</code></pre><p>主要完成的动作就是首先根据fd找到sock结构体，然后将sockaddr从用户空间move到内核空间。之后就根据sock结构体中的ops-&gt;bind函数执行具体的调用。如果fput_needed被标记，则将sock的引用计数减一。  </p>
-<p>sock_fd_lookup_light的具体过程如下：  </p>
-<pre><code>sock_fd_lookup_light()
-<span class="output"><span class="status">    =&gt;</span> file = fget_light(fd, fput_needed);    <span class="regexp">//</span> 获取文件指针</span>
-<span class="output"><span class="status">    =&gt;</span> sock = sock_from_file(file, err);      <span class="regexp">//</span> 获取socket指针</span>
-        <span class="keyword">return</span> file-&gt;private_data;  <span class="regexp">//</span> private_data即是file结构体中的指向socket结构体的指针
-</code></pre><p>inet_bind的实现在net/ipv4/af_inet.c中，具体过程如下：  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">如果是RAW sock的话，直接调用bind</div><div class="line">检查addr_len和sin_family</div><div class="line">chk_addr_ret = inet_addr_type();  <span class="comment">// 得到地址的类型，用于后续检查</span></div><div class="line">对port进行判断，用户仅能使用Port &gt;= <span class="number">1024</span>的端口。</div><div class="line">根据sk-&gt;sk_state及inet-&gt;inet_num判断socket状态，检查重复绑定的错误</div><div class="line"></div><div class="line"><span class="comment">/* rcv_saddr用于hash lookups, inet_saddr用于transmit。正常情况下它们值相同 */</span></div><div class="line">inet-&gt;inet_rcv_saddr = inet-&gt;inet_saddr = addr-&gt;sin_addr.s_addr;  </div><div class="line"></div><div class="line">调用sk-&gt;sk_prot-&gt;get_port(sk, snum);  <span class="comment">// snum就是sin_port</span></div></pre></td></tr></table></figure>
-
-
-
-<h4 id="端口管理">端口管理</h4>
-<p>在介绍具体的get_port函数之前，需要先来了解一下内核对于端口是怎么管理的。<br>Linux内核是通过一张hash表管理socket使用时的端口的，hash表存放在tcp_hashinfo中，通过sk-&gt;sk_prot-&gt;h.hashinfo引用。  </p>
-<pre><code><span class="keyword">struct</span> inet_hashinfo {
-    <span class="keyword">struct</span> inet_ehash_bucket    *ehash;        
-    spinlock_t                    *ehash_locks;
-    <span class="keyword">unsigned</span> <span class="keyword">int</span>                ehash_mask;
-    <span class="keyword">unsigned</span> <span class="keyword">int</span>                ehash_locks_mask;
-
-    <span class="keyword">struct</span> inet_bind_hashbucket        *bhash;    
-    <span class="keyword">unsigned</span> <span class="keyword">int</span>                    bhash_size;
-    <span class="keyword">struct</span> kmem_cache                *bind_bucket_cachep;
-
-    <span class="comment">/* 上面的变量在bootup时确定，之后是只读的
-     * 下面的变量往往是dirty的，所以用了cacheline对齐
-     */</span>
-
-    <span class="keyword">struct</span> inet_listen_hashbucket    listening_hash[INET_LHTABLE_SIZE]
-                                    ____cacheline_aligned_in_smp;
-    atomic_t                        bsockets;
-};
-
-<span class="keyword">struct</span> inet_bind_hashbucket {
-    spinlock_t            lock;
-    <span class="keyword">struct</span> hlist_head    chain;
-};
-
-<span class="keyword">struct</span> hlist_head {
-    <span class="keyword">struct</span> hlist_node     *first;
-};
-
-<span class="keyword">struct</span> hlist_node {
-    strcut hlist_node    *next, **pprev;
-};
-</code></pre><h4 id="TCP端口绑定实现：inet_csk_get_port()">TCP端口绑定实现：inet_csk_get_port()</h4>
-<p>新版的内核中TCP的get_port函数改名为了inet_csk_get_port，这点是与书中不一样的地方。当然完成的功能是一样的，参数是sock结构体和Port，如果Port=0，则需要找到一个空闲的Port给sock。函数的实现位于net/ipv4/inet_connection_sock.c中，具体执行过程可参考<a href="http://hellojavaer.iteye.com/blog/1114726" target="_blank" rel="external">这里</a>. 主要就是找到一个可用的Port过程，然后就是判断找到的Port是否可重用，不能重用的Port在使用是还要检查绑定冲突，即调用bind_conflict().<br>bind_confict()对于TCP来说，就是inet_csk_bind_conflict，具体的实现位于net/ipv4/tcp_ipv4.c中。  </p>
-<pre><code>小技巧：对于TCP而言，sk-&gt;sk_prot结构体的初始化位于net/ipv4/tcp_ipv4.c文件中，<span class="keyword">struct</span> proto tcp_prot.  
-</code></pre><h3 id="Listen过程及其相关结构体">Listen过程及其相关结构体</h3>
-<hr>
-<p>sys_listen()是listen在内核的表示，而具体的实现是在net/socket.c中，声明为：  </p>
-<pre><code>SYSCALL_DEFINE2(<span class="keyword">listen</span>, <span class="keyword">int</span>, fd, <span class="keyword">int</span>, backlog)  
-</code></pre><p>sys_listen在获得sock结构体之后，会进一步检查backlog是否超过系统允许的上限，最后就是调用sock-&gt;ops-&gt;list。先手来看一下sys_listen关键的调用过程：  </p>
-<pre><code>sys_listen()
-=&gt; sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;listen</span>()  == inet_listen()
-    =&gt; fastopen_init_queue(sk, backlog)    <span class="comment">// 条件允许的话，建立fastopen队列</span>
-    =&gt; inet_csk_listen_start(sk, backlog)
-        =&gt; sk<span class="variable">-&gt;sk_state</span> = TCP_LISTEN
-        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;get_port</span>(sk, inet<span class="variable">-&gt;inet_num</span>)  <span class="comment">// re-check port是否可用，原因见下面一段原文引用。</span>
-        =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;hash</span>(sk) == inet_hash(sk)     <span class="comment">// 如果一切正常，则为该socket建立hash表项</span>
-            =&gt; __inet_hash()  <span class="comment">// 为socket生成表项，并加入listen hash table</span>
-</code></pre><p>inet_listen()首先判断sock的状态，如果不是合法的状态的话就直接返回错误。随后如果不是listen状态，则需要做更多的事情将sock置于listen状态，否则直接设置sk-&gt;sk_max_ack_backlog即可。如果需要将sock置于listen状态，首先会判断一些条件看是否满足TCP_FASTOPEN（TFO）的要求，若满足则执行fastopen_init_queue()，然后执行inet_csk_listen_start(). sk-&gt;sk_prot-&gt;hash(sk)对于TCP来讲的话，具体的实现就是inet_hash(), 位于net/ipv4/inet_hashtables.c文件中。    </p>
-<p>至于为什么sys_listen还需要调用get_port确认一次，我还不是太懂。根据代码的注释和书本的讲解，大概可以理解为多线程可能存在竞争（race）。关键就是reuse标示可能被重置，详细解释摘录一段书中的解释如下：  </p>
-<blockquote>
-<p> We need to check if we are still eligible to use the same port to which we earlier bound this socket. There is a window between the bind() and listen() calls form an application when two threads can race to bind two sockets to the same port. After both the threads are bound to the same port (both the sockets are in the bind hash list, tcp_bhash), one of the sockets makes the socket port not reusable (resets sk-&gt;reuse for itself) and gets into the TCP_LISTEN state. The other thread now enters the listen() systemcall and gets into this part of the code. So, once again it needs to make sure whether it can use the same port that it requested eariler.  </p>
-</blockquote>
-<h4 id="分析调用bind和listen对socket状态的影响">分析调用bind和listen对socket状态的影响</h4>
-<pre><code><span class="number">1</span>. 一个调用了<span class="keyword">bind</span>，而没有调用<span class="keyword">listen</span>的<span class="keyword">socket</span>，是仅仅绑定了端口（或IP）的，并不能接收连接请求。  
-    此时<span class="keyword">socket</span>的状态还不是listening，如果客户端发出连接请求，服务器端会回复<span class="keyword">reset</span>包  
-<span class="number">2</span>. 为<span class="keyword">socket</span>调用了<span class="keyword">listen</span>，而没有调用<span class="keyword">accept</span>时，<span class="keyword">socket</span>的状态是listening，  
-    此时如果客户端发出连接请求，能能够看到三次握手成功的【注意！】；
-    同时客户端也能发送数据并收到ACK，但是在发完rwnd数量的数据后会收到rwnd等于<span class="number">0</span>的确认包。  
-    此后客户端就会停止发送数据。最终由于服务器端不会consume接收的数据，会导致客户端的<span class="number">0</span>窗口探测包超时后结束连接。  
-</code></pre><p>tcp_ehash结构中存储这所有状态为TCP_ESTABLISHED和TIME_WAIT状态下的TCP流。当一个新的数据包到来时，我们需要找到这个包对应的socket，具体就是使用四元组（remote IP, PORT 和 local IP, PORT）作为key在tcp_ehash查找。  </p>
-<h4 id="区分SYN_queue和Accept_queue">区分SYN queue和Accept queue</h4>
-<p>SYN queue: 当一个调用过listen函数的socket收到连接请求（第一个SYN包）后，会首先发送SYN/ACK包然后添加对应的connection request到SYN queue中去等待最后一个ACK包。  </p>
-<p>Accept queue: 一旦收到了三次握手的最后一个ACK包，一个新的socket将会为对应的connection request建立，然后将connection request从SYN queue中移除。最后connection request 将放入listening socket对应的accept queue中。  </p>
-<h4 id="Flow_control_for_handling_a_new_connection_request">Flow control for handling a new connection request</h4>
-<p>当TCP层收到一个IP包时，被调用的函数是tcp_v4_rcv()，该函数的实现是在net/ipv4/tcp_ipv4.c中。  </p>
-<pre><code>tcp_v4_rcv(struct sk_buff *skb)  
-    =&gt; sk = __inet_lookup_skb(&amp;tcp_hashinfo, skb, th<span class="variable">-&gt;source</span>, th<span class="variable">-&gt;dest</span>) <span class="comment">//根据四元组查找该IP包对应的sock结构体  </span>
-        =&gt; __inet_lookup()
-            =&gt; __inet_lookup_established()  <span class="comment">// 在tcp_ehash table中查找  </span>
-            =&gt; __inet_lookup_listener()     <span class="comment">// 上一步没找到再到hashinfo-&gt;listening-hash[]中查找  </span>
-
-    =&gt; ret = tcp_v4_do_rcv(sk, skb)  
-        =&gt; <span class="keyword">if</span> (sk<span class="variable">-&gt;sk_state</span> == TCP__ESTABLISHED)
-            =&gt; tcp_rcv_established()  <span class="comment">// 后续再分析该函数  </span>
-        =&gt; <span class="keyword">if</span> (sk<span class="variable">-&gt;sk_state</span> == TCP_LISTEN)
-            =&gt; struct sock *nsk = tcp_v4_hnd_req(sk, skb)    <span class="comment">// 找到skb对应的sock，找不到则丢弃  </span>
-            =&gt; <span class="keyword">if</span> (nsk != sk)  <span class="comment">// 如果nsk与sk不同，即说明已经为该connection request新建了sock</span>
-                =&gt; tcp_child_process(sk, nsk, skb)  <span class="comment">// 对新建立的sock结构体做更多地处理</span>
-        =&gt; tcp_rcv_state_process(sk, skb, tcp_hdr(skb), skb<span class="variable">-&gt;len</span>)    <span class="comment">// 根据不同的状态处理响应的包，此处关心listen和syn_sent状态      </span>
-            =&gt; <span class="keyword">case</span> TCP_LISTEN:  
-                =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;conn_request</span>() == tcp_v4_conn_request()
-                    =&gt; inet_csk_reqsk_queue_is_full(sk)    <span class="comment">// 判断request queue是否用满  </span>
-                    =&gt; sk_acceptq_is_full(sk)              <span class="comment">// 判断accept queue是否用满</span>
-                    =&gt; req = inet_reqsk_alloc()            <span class="comment">// 为connection request分配一个request sock</span>
-                    =&gt; tcp_parse_options()                 <span class="comment">// 解析TCP options  </span>
-                    =&gt; tcp_openreq_init()
-                    =&gt; ip_build_and_send_pkt()             <span class="comment">// add an ip header to a skbuff and send it out  </span>
-                    =&gt; inet_csk_reqsk_queue_hash_add()     <span class="comment">// add the request sock to the SYN table</span>
-            =&gt; <span class="keyword">case</span> TCP_SYN_SENT:  
-                =&gt; queue = tcp_rcv_syssent_state_process(sk, skb, th, len)    <span class="comment">// 代码里面注释较详细  </span>
-                    =&gt; tcp_finish_connect()     <span class="comment">// 完成连接，进行最后的设置  </span>
-                        =&gt; tcp_set_state(sk, TCP_ESTABLISHED)   <span class="comment">// 设置sk_state</span>
-                        =&gt; tcp_init_congestion_control(sk)      <span class="comment">// 设置congestion control algorithm，我实现的快速重传算法的初始化也是在这附近  </span>
-                        =&gt; tcp_init_buffer_space(sk)  
-</code></pre><h3 id="Accept过程及相关结构体">Accept过程及相关结构体</h3>
-<hr>
-<p>accept系统调用对应内核中的sys_accept()函数，具体的实现则在net/socket.c文件中。主要调用流程如下：  </p>
-<pre><code>SYSCALL_DEFINE4(accept4, int, fd, struct sockaddr __user *, upeer_sockaddr,  
-                int __user *, upeer_addrlen, int, flags)  == sys_accept4   
-    =&gt; sock = sockfd_lookup_light(fd, &amp;err, &amp;fput_needed)  <span class="comment">// 根据监听的socket fd找到其sock结构体  </span>
-    =&gt; newsock = sock_alloc()   <span class="comment">// 分配一个新的BSD socket </span>
-    =&gt; newfd = get_unused_fd_flags(flags)
-    =&gt; newfile = sock_alloc_file(newsock, flags, sock<span class="variable">-&gt;sk</span><span class="variable">-&gt;sl_prot_creator</span><span class="variable">-&gt;name</span>)
-    =&gt; err = sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;accept</span>(sock, newsock, sock<span class="variable">-&gt;file</span><span class="variable">-&gt;f_flags</span>)  == inet_accept()
-        =&gt; *sk2 = sk1<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;accept</span>()  == inet_csk_accept()
-            =&gt; <span class="keyword">if</span> accept queue is <span class="keyword">empty</span>, wait <span class="keyword">for</span> connect <span class="keyword">if</span> is blocking
-            =&gt; otherwise, get the very first request
-
-            =&gt; newsk = req<span class="variable">-&gt;sk</span>    <span class="comment">// 获取request结构体中的sock结构体指针并返回</span>
-        =&gt; sock_graft(sk2, newsock)  <span class="comment">// 将获取的sock结构体与之前新建的BSD socket关联  </span>
-        =&gt; newsock<span class="variable">-&gt;state</span> = SS_CONNECTED;
-    =&gt; fd_install(newfd, newfile);   <span class="comment">// index newfile for the socket inode in the process file table  </span>
-        =&gt; fd_install主要完成的动作就是：current<span class="variable">-&gt;files</span><span class="variable">-&gt;fd</span>[fd] = file;
-</code></pre><p>inet_accept()在net/ipv4/af_inet.c文件中，完成连接建立的最后一步：accept a pending connection. 当然这里的pending connection 其实已经完成了三次握手的过程。<br>注意这里sock_graft函数，函数实现在include/net/sock.h文件中。第一个参数是struct sock <em>sk, 这是通过获取accept queue中第一项找到的，是在三次握手阶段创建的；第二个参数是struct socket </em>parent，这是一个网络编程时看到的一个概念，与kernel中的sock有着本质的区别。<br>同时也要注意到kernel中命名的一个小规律：<br>    struct socket 结构体的实例化名字，常缩写成sock<br>    struct sock结构体的实例化名字，常缩写成sk  </p>
-<h4 id="BSD_socket与sock结构体的关系">BSD socket与sock结构体的关系</h4>
-<p>同时sock_graft函数也很直接的现实了BSD socket结构体与sock结构体的关系，源代码不长就直接贴出来了。需要注意的是，这里为了完整的展现sock_graft的功能，手动的展开了inline函数。  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">static <span class="keyword">inline</span> <span class="literal">void</span> sock_graft(struct sock <span class="subst">*</span>sk, struct socket <span class="subst">*</span><span class="keyword">parent</span>)</div><div class="line">{</div><div class="line">    write_lock_bh(<span class="subst">&</span>sk<span class="subst">-&gt;</span>sk_callback_lock);</div><div class="line">    sk<span class="subst">-&gt;</span>sk_wq <span class="subst">=</span> <span class="keyword">parent</span><span class="subst">-&gt;</span>wq;</div><div class="line">    <span class="keyword">parent</span><span class="subst">-&gt;</span>sk <span class="subst">=</span> sk;</div><div class="line"></div><div class="line">    sk<span class="subst">-&gt;</span>sk_tx_queue_mapping <span class="subst">=</span> <span class="subst">-</span><span class="number">1</span>;</div><div class="line">    sk<span class="subst">-&gt;</span>sk_socket <span class="subst">=</span> <span class="keyword">parent</span>;</div><div class="line"></div><div class="line">    write_unlock_bh(<span class="subst">&</span>sk<span class="subst">-&gt;</span>sk_callback_lock);</div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-
-<p>至于file, inode 和 socket结构体的关系用文字表达比较费劲，推荐看下书中的Figure 4.21, Figure 4.22再结合代码理解。  </p>
-<h3 id="Connect过程及相关结构体">Connect过程及相关结构体</h3>
-<hr>
-<p>客户端建立一个TCP connection需要做的事情相对简单。先调用socket()新建一个BSD socket，然后调用connect函数与远端相连即可。引用一段书中的一段更详细准确的解释如下：  </p>
-<pre><code>Socket():
-    <span class="number">1.</span> Identify correct <span class="built_in">set</span> <span class="operator">of</span> <span class="built_in">socket</span> &amp; protocol operations <span class="operator">and</span>  
-    link them together <span class="operator">with</span> <span class="operator">the</span> help <span class="operator">of</span> sock &amp; <span class="built_in">socket</span> structure.  
-    <span class="number">2.</span> Initialize some <span class="operator">of</span> <span class="operator">the</span> fields <span class="operator">of</span> protocol specific data structures.  
-    <span class="number">3.</span> Hook this <span class="built_in">socket</span> <span class="built_in">to</span> <span class="operator">the</span> vfs <span class="operator">and</span> associate this <span class="built_in">socket</span> <span class="built_in">to</span> <span class="operator">the</span> inode.
-</code></pre><p>   Connect():</p>
-<pre><code>    <span class="number">1.</span> Let <span class="operator">the</span> kernel know what services (server port <span class="built_in">number</span>) you want <span class="built_in">to</span> avail <span class="operator">and</span>  
-    <span class="built_in">from</span> where (IP address).  
-    <span class="number">2.</span> Initializes protocol specific data structures, allocates resources <span class="keyword">for</span> client  
-    application, <span class="operator">and</span> sets up complete procotol stack <span class="keyword">for</span> <span class="operator">the</span> client side.  
-    <span class="number">3.</span> By default, connect blocks <span class="operator">and</span> returns <span class="built_in">to</span> <span class="operator">the</span> application once <span class="operator">the</span> connection  
-    is established <span class="operator">with</span> <span class="operator">the</span> server <span class="keyword">else</span> returns <span class="operator">an</span> error <span class="built_in">number</span>.  
-</code></pre><p>connect系统调用对应内核中的sys_connect()函数，具体的实现则在net/socket.c文件中。<br>connect主要调用流程如下：  </p>
-<pre><code>SYSCALL_DEFINE3(connect, int, fd, struct sockaddr __user *, uservaddr,  
-                int, addrlen)  == sys_connect()  
-    =&gt; sock = sockfd_lookup_light()  
-    =&gt; err = move_addr_to_kernel()  
-    =&gt; err = sock<span class="variable">-&gt;ops</span><span class="variable">-&gt;connect</span>()  == inet_stream_connect()  
-        =&gt; Any states other then SS_UNCONNECTED are unacceptable <span class="keyword">for</span> processing  
-        =&gt; err = sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;connect</span>(sk, uaddr, addr_len)  == tcp_v4_connect()  
-            =&gt; rt = ip_route_connect()  <span class="comment">// get the route for the dst addr. All routing entries for the system are hashed in the global table rt_hash_table[].    </span>
-            =&gt; tcp_set_state(sk, TCP_SYN_SEND)
-            =&gt; err = inet_hash_connect(&amp;tcp_death_row, sk);  <span class="comment">// 获得一个free的Port,流程与tcp_v4_get_port较类似  </span>
-                =&gt; inet_get_local_port_range(&amp;low, &amp;high)
-                =&gt; 遍历所有端口，对某个备选端口，遍历inet_bind_bucket确认是否有冲突。  
-                =&gt; 如果没有冲突，则tb = inet_bind_bucket_create()创建bind_bucket中的hash表项
-
-            =&gt; Until now we got the route to destination, <span class="keyword">and</span> obtained the local port number,  
-               <span class="keyword">and</span> we have initialized remote address, remote port, local address, <span class="keyword">and</span> local address fields of the socket.  
-
-            =&gt; err = tcp_connect(sk)  <span class="comment">// generate a SYN packet and give it to the IP layer  </span>
-                =&gt; tcp_connect_init(sk)  <span class="comment">// do all connect socket setups that can be done AF independent  </span>
-                    =&gt; tcp_select_initial_window() <span class="comment">// determine  a window scaling and initial window to offer  </span>
-                =&gt; buff = alloc_skb_fclone()  <span class="comment">// allocate a sk_buff structure, 细节在下一章再写  </span>
-                =&gt; tcp_transmit_skb(sk, buff, <span class="number">1</span>, sk<span class="variable">-&gt;sk_allocation</span>)  <span class="comment">// 复制一份Buff，然后发送出去</span>
-                    =&gt; skb = skb_clone(skb, gfp_mask)  <span class="comment">// 复制一份buff  </span>
-                    =&gt; 初始化skb及TCP header  
-                    =&gt; tcp_options_write()  <span class="comment">// write previously computed tcp options to the packet  </span>
-                    =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;send_check</span>(sk, skb)  == tcp_v4_send_check()  <span class="comment">// compute checksum</span>
-                    =&gt; err = icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;queue_xmit</span>()  == ip_queue_xmit()  <span class="comment">// transmit packet to IP layer  </span>
-        =&gt; 至此已发送SYN包，然后等待SYN/ACK包从而完成三次握手  
-        =&gt; timeo = sock_sndtimeo(sk, flag * O_NONBLOCK)
-        =&gt; inet_wait_for_connect(sk, timeo, writebias)  <span class="comment">// 完成三次握手的最后的工作  </span>
-</code></pre><h3 id="SUMMARY">SUMMARY</h3>
-<p>摘录书中的原文如下  </p>
-<pre><code>Protocol-specific operation one the socket <span class="keyword">is</span> accessed from prot field <span class="keyword">of</span> the sock object.  
-<span class="keyword">For</span> the INET stream protocol, this field <span class="keyword">is</span> initialized <span class="keyword">to</span> tcp_prot.  
-
-The tcp_hashinfo object has pointers <span class="keyword">to</span> different hash tables <span class="keyword">for</span> bind, established, <span class="keyword">and</span> listening sockets.  
-    <span class="number">1.</span> tcp_bhash <span class="keyword">is</span> an object <span class="keyword">of</span> <span class="keyword">type</span> tcp_bind_hashbucket pointing <span class="keyword">to</span> bind hash table.  
-       This table <span class="keyword">is</span> hased based ont the <span class="keyword">port</span> number sockets are bound <span class="keyword">to</span> them.  
-    <span class="number">2.</span> ehash <span class="keyword">is</span> object <span class="keyword">of</span> <span class="keyword">type</span> tcp_ehash_bucket points <span class="keyword">to</span> established hash table. 
-       Hashed <span class="keyword">on</span> the destination <span class="keyword">and</span> source <span class="keyword">port</span>/IP.
-    <span class="number">3.</span> tcp_listenging_hash <span class="keyword">is</span> a hash table <span class="keyword">of</span> sock objects hashing <span class="keyword">all</span> the listenging sockets.  
-       Hashed <span class="keyword">on</span> the listening <span class="keyword">port</span> number.  
-
-tcp_bind_conflict() checks <span class="keyword">for</span> any conflicts related <span class="keyword">to</span> allocation <span class="keyword">of</span> <span class="keyword">port</span>.  
-tcp_port_rover stores the last allocated <span class="keyword">port</span> number.  
-tcp_listen_opt <span class="keyword">is</span> an object that keeps information about <span class="keyword">all</span> connection requests <span class="keyword">for</span> a listening socket.  
-    sys_table field <span class="keyword">of</span> tcp_lisen_opt object <span class="keyword">of</span> <span class="keyword">type</span> open_request.  
-    This hashes <span class="keyword">in</span> <span class="keyword">all</span> the connection requests <span class="keyword">for</span> the lisening socket.  
-
-Once a three-way handshake <span class="keyword">is</span> over, the connection request <span class="keyword">is</span> moved from listeners SYN queue <span class="keyword">to</span> accept queue, tp-&gt;accept_queue  
-[Important] sock <span class="keyword">and</span> tcp_opt objects are initialized <span class="keyword">for</span> the <span class="keyword">new</span> connection int the accept queue.  
-[Important] Once an application accepts a connection request int the accept queue,  
-            a BSD socket <span class="keyword">is</span> created <span class="keyword">for</span> the <span class="keyword">new</span> connection <span class="keyword">and</span> <span class="keyword">is</span> associated <span class="keyword">with</span> VFS.  
-
-__tcp_v4_lookup_established() searches <span class="keyword">for</span> established connections <span class="keyword">in</span> the ehash table.  
-tcp_v4_lookup_listener() searches <span class="keyword">for</span> listening sockets <span class="keyword">in</span> the tcp_listening_hash hash table.  
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<p>这一章主要学习TCP网络编程的几个关键函数：bind(),listen(),accept()和connect()。当然这里说的是这几个函数对应的systemcall的内核实现，并不是用户层怎么使用这些函数。同时还会介绍一些内核中与这些函数相关的数据结构。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[使用hexo搭建博客]]></title>
-    <link href="http://perthcharles.github.com/2014/11/04/change-to-hexo/"/>
-    <id>http://perthcharles.github.com/2014/11/04/change-to-hexo/</id>
-    <published>2014-11-04T06:55:07.000Z</published>
-    <updated>2014-11-04T10:22:07.000Z</updated>
-    <content type="html"><![CDATA[<p>本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。  </p>
-<a id="more"></a>
-
-<h3 id="必备软件">必备软件</h3>
-<p>Node.js:直接打开<a href="http://nodejs.org/" target="_blank" rel="external">官网</a>，点击INSTALL即可下载安装包。官网能够识别你的电脑是不是MAC，这点还是蛮给力的。  </p>
-<p>Git: 这个不会装的可以去面壁了。  </p>
-<p>至于编辑markdown的软件的话，在MAC下当然是推荐Mou了，不过我还是喜欢直接在vim下编辑，vim重度患者没办法。  </p>
-<h3 id="hexo主要安装过程及常用命令">hexo主要安装过程及常用命令</h3>
-<pre><code><span class="preprocessor"># sudo -i                 // 先切换到root权限下</span>
-<span class="preprocessor"># npm install -g hexo</span>
-<span class="preprocessor"># cd my-blog-dir</span>
-<span class="preprocessor"># hexo init               // 在该目录下初始化</span>
-<span class="preprocessor"># hexo install            // 安装依赖包</span>
-<span class="preprocessor"># hexo new post "test"    // 新建一个空白post</span>
-<span class="preprocessor"># hexo generate           // 生成静态页面</span>
-<span class="preprocessor"># hexo server             // 启动本地预览服务</span>
-
-<span class="preprocessor"># hexo g == hexo generate</span>
-<span class="preprocessor"># hexo d == hexo deploy   // 将仓库部署到在config文件中指定的repo中  </span>
-<span class="preprocessor"># hexo s == hexo server</span>
-<span class="preprocessor"># hexo n == hexo new</span>
-<span class="preprocessor"># hexo deploy -g          // deploy + generate</span>
-<span class="preprocessor"># hexo server -g          // server + generate</span>
-<span class="preprocessor"># hexo deploy -m "msg"    // custom message</span>
-</code></pre><p>如果任何一步遇到问题，可自行Google。当然看看<a href="http://hexo.io/docs/index.html" target="_blank" rel="external">官网的文档</a>也是必要的。<br>参考资料中一些博主的博文也是很好的guide。  </p>
-<h3 id="常用的技巧">常用的技巧</h3>
-<p>markdown语法还是有必要学一学的，不过很简单请放心。  </p>
-<p>向Google提交sitemap：<a href="http://fionat.github.io/blog/2013/10/23/sitemap/" target="_blank" rel="external">如何向google提交sitemap</a>  </p>
-<p>hexo的作者提示过，使用四个空格的方式标志的代码块是没有行号的，需要行号的请使用三个反引号的形式。  </p>
-<p>hexo does not watch for configuration file changes. You have to restart hexo to make the new configurations take effects.  </p>
-<p>添加RSS和sitemap  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"># npm <span class="operator"><span class="keyword">install</span> hexo-generator-feed <span class="comment">--save</span></span></div><div class="line"># vim _config.yml</div><div class="line">    Plugins:</div><div class="line">    - hexo-generator-feed</div><div class="line">    - hexo-generator-sitemap</div><div class="line">    sitemap:</div><div class="line">      path: sitemap.<span class="keyword">xml</span></div><div class="line">    feed:</div><div class="line">      type: atom</div><div class="line">      path: atom.<span class="keyword">xml</span></div><div class="line">      <span class="keyword">limit</span>: <span class="number">20</span></div></pre></td></tr></table></figure>
-
-
-
-<p>可以用下面这句话在markdown文件中分隔摘要  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--more--&gt;</span></div></pre></td></tr></table></figure>
-
-
-<p>更多plugins，可以查看<a href="https://github.com/hexojs/hexo/wiki/Plugins" target="_blank" rel="external">官方文档</a>。  </p>
-<p>由于我之前就用disqus管理博客的留言，所以直接在_config.yml文件中配置好disqus_shortname即可。  </p>
-<p>觉得默认主题的recent部分显示的数量较少的话，可以修改themes/landscape/layout/_widget/recent_posts.ejs文件  </p>
-<p>tag的话，直接使用tag cloud就比较好了，所以我去掉了tags的详细显示，方法就是直接注释掉landscape主题的配置文件中对应的tag行。  </p>
-<p>配置访问统计，直接将之前的统计代码写进_widget/count.ejs后，在config文件中配置好即可。  </p>
-<p>添加about页面  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># hexo new page "about"</span></div><div class="line"><span class="preprocessor"># vim source/about/index.md  // 编辑index.md页面</span></div><div class="line"><span class="preprocessor"># vim themse/landscape/_config.yml  </span></div><div class="line">    menu:</div><div class="line">      About: /about  <span class="comment">//添加该行</span></div></pre></td></tr></table></figure>
-
-
-
-<hr>
-<h3 id="未完成">未完成</h3>
-<p>使用图床加速带图片的网页，比如七牛，又拍云。  </p>
-<p>添加友情链接widget  </p>
-<p>购买自己的域名  </p>
-<p>设置404页面  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://ibruce.info/2013/11/22/hexo-your-blog/" target="_blank" rel="external">hexo你的博客</a><br><a href="http://www.jianshu.com/p/05289a4bc8b2" target="_blank" rel="external">如何搭建一个独立博客</a><br><a href="http://zipperary.com/categories/hexo/" target="_blank" rel="external">Zipperary的hexo系列教程</a><br><a href="http://hexo.io/docs/index.html" target="_blank" rel="external">Hexo官方文档</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>本来只是觉着之前的主题代码快有点丑，开始寻找更好地显示代码块的方法。没想到找到了hexo这么给力的一个东西。看了几个博主的网站发现确实很好看，所以就下定决心开始折腾了。这篇博文就是记录我从jekyll换到hexo的一个过程。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="hexo" scheme="http://perthcharles.github.com/tags/hexo/"/>
-    
-      <category term="博客搭建" scheme="http://perthcharles.github.com/categories/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(3): Implementation of Sockets]]></title>
-    <link href="http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/"/>
-    <id>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/</id>
-    <published>2014-10-23T14:29:08.000Z</published>
-    <updated>2014-12-01T13:06:32.000Z</updated>
-    <content type="html"><![CDATA[<p>这章主要从socket()系统调用入手，介绍socket建立时初始化的一些重要数据结构。熟练掌握这些数据结构和他们之间的关系能够有效的帮助理解代码，所以这部分随着理解的加深，随时需要补充和完善。  </p>
-<a id="more"></a>
-
-<p>首先是，sock结构体，是network layer对于socket的表示。结构体定义在include/net/sock.h中，主要需要理解的结构元素如下：  </p>
-<pre><code>// sock_common是第一个内嵌的结构体，是于inet_timewait_sock共享的layout  
-struct    sock_common        __sk_common;  
-<span class="keyword">...</span>  
-struct    sk_buff_head    sk_receive_queue;    // 接收队列，注意是skb head的队列  
-<span class="keyword">...</span>  
-int                        sk_forward_alloc;    // 预分配的空间  
-<span class="keyword">...</span>  
-int                        sk_rcvbuf;            // 接收buf的大小（Bytes）  
-<span class="keyword">...</span>  
-atomic_t                sk_wmem_alloc;        // 传输队列中已committed的字节数
-atomic_t                sk_omem_alloc;        // <span class="string">'o'</span> 表示 other
-int                        sk_sndbuf;            // 发送buf的大小（Bytes）  
-struct    sk_buff_head    sk_write_queue;        // 数据包的发送队列  
-<span class="keyword">...</span>  
-int                        sk_wmem_queue;        // persistent 队列大小
-gfp_t                    sk_allocation;        // allocation mode
-u32                        sk_pacing_rate;        // pacing rate(Bps，<span class="keyword">if</span> supported by transport/packet scheduler)  
-<span class="keyword">...</span>  
-struct    sk_buff_head    sk_error_queue;        // queue of defactive packets  
-<span class="keyword">...</span>  
-long                    sk_rcvtimeo;        // 判断接收超时的上限  
-long                    sk_sndtimeo;        // 判断发送超时的上限  
-<span class="keyword">...</span>  
-struct                    *sk_send_head;        // 指向下一个应该发送的skb
-int                     sk_write_pending;    // a write to stream socket waits to start  
-<span class="keyword">...</span>  
-</code></pre><p>然后是inet_sock。sock结构体是inet_sock的第一个元素，然后inet_sock中包含了一些TTL，IP和Port等信息。结构体的定义在include/net/inet_sock.h中。  </p>
-<p>再接着就是inet_connection_sock。inet_sock是inet_connection_sock的第一个元素，然后从字面理解也可以看出inet_connection_sock相比于inet_sock添加了一些面向connection的信息。主要元素如下：  </p>
-<pre><code>struct    inet_sock        icsk_inet;
-<span class="keyword">...</span>  
-struct    timer_list        icsk_retransmit_timer;    // resend (no ack)  
-__u32                    icsk_rto;                  // retransmit timeout  
-<span class="keyword">...</span>  
-const    struct tcp_congestion_ops    *icsk_ca_ops; // 拥塞控制算法hook  
-__u8                    icsk_ca_state;              // 拥塞控制的状态  
-</code></pre><p>最后就是TCP最相关的，tcp_sock结构体。类似的，inet_connection_sock是tcp_sock的第一个元素。主要元素如下：  </p>
-<pre><code><span class="keyword">struct</span>    inet_connection_sock    inet_conn;  
-...  
-<span class="comment">/* RFC793 and RFC1122 are the best references for this */</span>
-<span class="keyword">u32</span>        rcv_nxt;                <span class="comment">// what we want to receive next  </span>
-<span class="keyword">u32</span>        copied_seq;                <span class="comment">// Head of yet unread data  </span>
-<span class="keyword">u32</span>        snd_nxt;                <span class="comment">// next sequence we send  </span>
-<span class="keyword">u32</span>        snd_una;                <span class="comment">// first byte we want an ack for  </span>
-...  
-<span class="keyword">u32</span>        rcv_tstamp;                <span class="comment">// timestamp of last rcv ack (for keepalives)  </span>
-<span class="keyword">u32</span>        lsndtime;                <span class="comment">// timestamp of last snd pkt (for restart window)  </span>
-...  
-<span class="keyword">u32</span>        snd_wnd;                <span class="comment">// the window we expect to receive  </span>
-<span class="keyword">u32</span>        max_window;                <span class="comment">// maximal window ever seen from peer  </span>
-<span class="keyword">u32</span>        window_clamp;            <span class="comment">// maximal window to advertise  </span>
-<span class="keyword">u32</span>        rcv_ssthresh;            <span class="comment">// current window clamp  </span>
-u16        advmss;                    <span class="comment">// advertised MSS  </span>
-
-<span class="comment">/* RTT measurement */</span>
-<span class="keyword">u32</span>        srtt;                    <span class="comment">// smoothed RTT &lt;&lt; 3  </span>
-<span class="keyword">u32</span>        mdev;                    <span class="comment">// medium deviation  </span>
-<span class="keyword">u32</span>        mdev_max;                <span class="comment">// maximal mdev for the last rtt period  </span>
-<span class="keyword">u32</span>        rttvar;                    <span class="comment">// smoothed mdev_max  </span>
-<span class="keyword">u32</span>        rtt_seq;                <span class="comment">// sequence number to update rttvar  </span>
-
-<span class="keyword">u32</span>        packets_out;            <span class="comment">// packets which are "in_flight"  </span>
-<span class="keyword">u32</span>        retrans_out;            <span class="comment">// retransmitted packets out  </span>
-...  
-
-<span class="comment">/* Slow start and congestion control */</span>
-<span class="keyword">u32</span>        snd_ssthresh;            <span class="comment">// slow start size threshold  </span>
-<span class="keyword">u32</span>        snd_cwnd;                <span class="comment">// sending congestion window, 注意与snd_wnd区分开  </span>
-<span class="keyword">u32</span>        snd_cwnd_cnt;            <span class="comment">// linear increase counter  </span>
-<span class="keyword">u32</span>        snd_cwnd_clamp;            <span class="comment">// snd_cwnd的上限  </span>
-<span class="keyword">u32</span>        snd_cwnd_used;
-<span class="keyword">u32</span>        snd_cwnd_stamp;
-<span class="keyword">u32</span>        prior_cwnd;                <span class="comment">// Recovery 开始时的cwnd值  </span>
-<span class="keyword">u32</span>        prr_delivered;            <span class="comment">// # of newly delivered pkts in Recovery  </span>
-<span class="keyword">u32</span>        prr_out;                <span class="comment">// # of total sent pkts during Recovery  </span>
-
-<span class="keyword">u32</span>        rcv_wnd;                <span class="comment">// current receiver window, 表示的是自己作为receiver时的window大小，用于通知对方  </span>
-
-<span class="keyword">struct</span> sk_buff *highest_sack;    <span class="comment">// skb just after the highest skb with SACKed bit set  </span>
-...  
-<span class="keyword">u32</span>        retransmit_high;
-<span class="keyword">u32</span>        lost_retrans_low;
-<span class="keyword">u32</span>        prior_ssthresh;            <span class="comment">// ssthresh saved at Recovery start  </span>
-<span class="keyword">u32</span>        high_seq;  
-<span class="keyword">u32</span>        retrans_stamp;            <span class="comment">// timestamp of the last retransmit  </span>
-<span class="keyword">u32</span>        uodo_marker;            <span class="comment">// tracking retrans started here  </span>
-<span class="keyword">int</span>     undo_retrans;            <span class="comment">// number of undoable retransmissions  </span>
-<span class="keyword">u32</span>        total_retrans;            <span class="comment">// total retransmits for entire connection  </span>
-</code></pre><h3 id="总结">总结</h3>
-<p>可以看出来，这些结构体是一个嵌套一个的形式被定义，个人感觉很像C++中类继承时的内存分布状况。下面是书中总结的一段，觉得很好，就直接摘录了。  </p>
-<pre><code>There are <span class="constant">two</span> levels <span class="operator">of</span> <span class="built_in">socket</span> abstraction. At <span class="operator">the</span> top is <span class="operator">the</span> BSD  
-<span class="built_in">socket</span> layer defined <span class="keyword">as</span> struct <span class="built_in">socket</span> <span class="operator">and</span> <span class="keyword">then</span> protocol-specific  
-<span class="built_in">socket</span> defined <span class="keyword">as</span> sturct sock.  
-    <span class="number">1.</span> sock_register() is <span class="operator">an</span> interface <span class="built_in">to</span> register BSD sockets <span class="keyword">for</span>
-    different net families. For INET family, inet_family_ops <span class="operator">of</span>  
-    type net_proto_family is registered.  
-    <span class="number">2.</span> net_families is <span class="operator">a</span> <span class="built_in">global</span> array <span class="built_in">to</span> indexed <span class="command"><span class="keyword">on</span> <span class="title">net</span> <span class="title">family</span></span>
-    <span class="built_in">number</span>. Net family sockets are registered <span class="operator">with</span> this table.  
-    <span class="number">3.</span> inet_register_protose() is <span class="operator">an</span> interface <span class="built_in">to</span> register  
-    protocol supported <span class="keyword">by</span> <span class="operator">the</span> INET family. These protocols  
-    are TCP, UDP <span class="operator">and</span> RAW.  
-    <span class="number">4.</span> inetsw_array is <span class="operator">a</span> <span class="built_in">global</span> table that registers <span class="operator">the</span>  
-    INET family protocols, object <span class="operator">of</span> type inet_protosw.  
-    <span class="number">5.</span> inet_stream_ops is <span class="built_in">set</span> <span class="operator">of</span> operation <span class="keyword">for</span> INET stream BSD  
-    <span class="built_in">socket</span>, <span class="operator">and</span> tcp_prot is <span class="operator">a</span> protocol-specific <span class="built_in">set</span> <span class="operator">of</span> operations  
-    TCP sockets.  
-</code></pre><p>最后结合Linux v3.10的代码梳理一下，sys-socket()中暂时感兴趣的major rountines.  </p>
-<pre><code>socket() [User Space] 等价于 sys_socket() [Kernel Space]
-__________________________________________________________________
-SYSCALL_DEFINE3(socket, int, family, int, type, int, protocol)  <span class="comment">// net/socket.c</span>
-    =&gt; sock_create() <span class="comment">// 在net/socket.c文件中  </span>
-        =&gt; sock = sock_alloc()  <span class="comment">// allocate the BSD socket</span>
-        =&gt; pf = rcu_dereference(net_families[family]);  <span class="comment">// 根据family值，得到struct net_proto_family结构体  </span>
-        =&gt; pf<span class="variable">-&gt;create</span>() = inet_create()  <span class="comment">// PF_INET对应的定义在net/ipv4/af_inet.c中  </span>
-            =&gt; 遍历inetsw <span class="keyword">list</span>，如果protocol没设置，则默认会匹配成IPPROTO_TCP
-            =&gt; sock<span class="variable">-&gt;ops</span> = answer<span class="variable">-&gt;ops</span>  <span class="comment">// 设置sock-&gt;ops = &amp;inet_stream_ops</span>
-            =&gt; sk = sk_alloc()  <span class="comment">// 分配struct sock结构体，传递了tcp_prot结构体地址作为参数，所以一次性分配了整个tcp_sock结构体大小的内存空间  </span>
-            =&gt; sock_init_data()  <span class="comment">// 完成sock结构体的初始化，把sock与socket关联</span>
-
-            =&gt; sk<span class="variable">-&gt;sk_prot</span><span class="variable">-&gt;init</span>() = tcp_v4_init_sock()    
-                =&gt; tcp_init_sock()  <span class="comment">// 完成tcp_sock结构体的初始化</span>
-    =&gt; sock_map_fd()  <span class="comment">// bind sock with fd</span>
-        =&gt; fd = get_unused_fd_flags()
-        =&gt; newfile = sock_alloc_file()  <span class="comment">// create file 结构体，并于socket关联</span>
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<p>这章主要从socket()系统调用入手，介绍socket建立时初始化的一些重要数据结构。熟练掌握这些数据结构和他们之间的关系能够有效的帮助理解代码，所以这部分随着理解的加深，随时需要补充和完善。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(2): Protocol Fundamentals]]></title>
-    <link href="http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-2/"/>
-    <id>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-2/</id>
-    <published>2014-10-23T09:29:08.000Z</published>
-    <updated>2014-11-03T14:33:30.000Z</updated>
-    <content type="html"><![CDATA[<p>这章主要还是基础知识的介绍，更加详细的介绍TCP/IP相关协议。  </p>
-<a id="more"></a>
-
-<p>经典的TCP header构成剖析。需要注意的就是header len只有4bits，因此最长支持60B（15*4B）  </p>
-<pre><code>Src port: 16<span class="built_in">bits</span>      Dst port: 16<span class="built_in">bits</span>  
-Seq num: 32<span class="built_in">bits</span>  
-Ack num: 32<span class="built_in">bits</span>  
-Header len: 4<span class="built_in">bits</span>     Unused: 6<span class="built_in">bits</span>    Flags: 6<span class="built_in">bits</span>  
-<span class="label">Rwnd:</span> 16<span class="built_in">bits</span>  
-Check sum: 16<span class="built_in">bits</span>    Urgent pointers: 16<span class="built_in">bits</span>  
-</code></pre><p>TCP Options (RFC 1323)  </p>
-<pre><code>标准的option格式：  Kind(<span class="number">1</span>B) | Len(<span class="number">1</span>B) | Value(Variable length)  
-常见option:  
-<span class="number">1</span>. End of Option List:   | <span class="variable">kind =</span> <span class="number">0</span> |  
-<span class="number">2</span>. No operation:         | <span class="variable">kind =</span> <span class="number">1</span> |  &lt;== 用于内存对齐  
-<span class="number">3</span>. MSS:                  | <span class="variable">kind =</span> <span class="number">2</span> | <span class="variable">length =</span> <span class="number">4</span> | <span class="variable">mss =</span> <span class="number">2</span>B |  
-<span class="number">4</span>. Window-Scaling:       | <span class="variable">kind =</span> <span class="number">3</span> | <span class="variable">length =</span> <span class="number">3</span> | left shift <span class="variable">count =</span> <span class="number">1</span>B |  
-<span class="number">5</span>. SACK-permit:          | <span class="variable">kind =</span> <span class="number">4</span> | <span class="variable">lenght =</span> <span class="number">2</span> |
-<span class="number">6</span>. SACK:                 | <span class="variable">kind =</span> <span class="number">5</span> | <span class="variable">length =</span> variable | <span class="variable">Start =</span> <span class="number">4</span>B | <span class="variable">End =</span> <span class="number">4</span>B | ...  
-<span class="number">7</span>. Timestamp:            | <span class="variable">kind =</span> <span class="number">8</span> | <span class="variable">length =</span> <span class="number">10</span>| <span class="variable">TS =</span> <span class="number">4</span>B | TS <span class="variable">echo =</span> <span class="number">4</span>B |  
-</code></pre><p>书中较大的篇幅介绍了TCP的ACK机制，这里正常的ACK就不展开了，而是更关注书中提到的Delayed ACK和Nagle算法.前者通过在ACK包中携带数据避免small ack packet，后者是为了进一步避免发送数据太少导致small packet。  </p>
-<pre><code>Nagle<span class="attribute">'s</span> algorithm: <span class="keyword">all</span> the data that need <span class="keyword">to</span> be sent <span class="keyword">out</span> are  
-collected <span class="keyword">until</span> the <span class="typename">time</span> we receive an ACK <span class="keyword">for</span> the last sent data.  
-</code></pre><p>Sliding Window 机制就是rwnd的限制导致的，rwnd的存在是为了做flow control。另外cwnd的存在则是为了做congestion control。  </p>
-<p>TCP Timers是一个很重要的部分，常见的计时器有一下几种：  </p>
-<pre><code><span class="number">1.</span> Retransmission <span class="built_in">Timer</span>: 如果一个包在该计时器超时之前都没有收到ACK，则触发超时重传  
-<span class="number">2.</span> Persistent <span class="built_in">Timer</span>: 为了应对rwnd=<span class="number">0</span>后，接收方发送通知rwnd&gt;<span class="number">0</span>的包丢失的情况。  
-    具体就是发送发使用指数规避的方式增加persistent <span class="built_in">timer</span>，  
-    每次<span class="built_in">timer</span>结束的时候发送一个不带数据的包试探对方的rwnd.  
-<span class="number">3.</span> Keepalive <span class="built_in">Timer</span>: 看名字就理解了，不解释  
-<span class="number">4.</span> TIME_WAIT <span class="built_in">Timer</span>: TCP状态转换机制中的一个重要结束状态  
-</code></pre><p>FACK如果启用，则认为SACK数据块之间空隙的包都丢失了，默认开启；DSACK是SACK的一个扩展。  </p>
-<pre><code>DSACK is generated when both <span class="operator">the</span> original <span class="operator">and</span> retransmission   
-reach <span class="operator">the</span> receiver. This gives us <span class="operator">an</span> indication that we have   
-falsely entered <span class="keyword">into</span> <span class="operator">the</span> fast retransmission <span class="operator">and</span> fast recovery   
-phase because <span class="operator">the</span> packet got delayed <span class="operator">in</span> <span class="operator">the</span> network <span class="operator">or</span> because   
-<span class="operator">of</span> excessive reordering.  
-</code></pre><p>IP及以下层相关的内容暂忽略。  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>这章主要还是基础知识的介绍，更加详细的介绍TCP/IP相关协议。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(1): Introduction]]></title>
-    <link href="http://perthcharles.github.com/2014/10/22/tcp-design-and-implementation/"/>
-    <id>http://perthcharles.github.com/2014/10/22/tcp-design-and-implementation/</id>
-    <published>2014-10-22T09:29:08.000Z</published>
-    <updated>2014-11-03T14:36:37.000Z</updated>
-    <content type="html"><![CDATA[<p>今天开始好好研究TCP/IP的Linux实现，结合书和代码希望自己能对TCP这块更加的熟悉。读Kernel代码还是功利性强一点比较好，比如这次我是由于毕设相关才来仔细研究TCP这块的具体实现的。没有目的性的看这种大块头项目，效率比较难保障。Anyway，这个系列也是看到那块记录哪块，用以加强自己的理解。题目中的ADI分别是Architecture, Design, Implementation。书就是下面这一本了，英文的比较带劲，:)  </p>
-<pre><code>《TCP/IP ARCHITECTURE, DESIGN, <span class="keyword">AND</span> <span class="keyword">IMPLEMENTATION</span> <span class="keyword">IN</span> LINUX》 <span class="keyword">by</span> Sameer Seth   
-</code></pre><a id="more"></a>
-
-<h2 id="Introduction">Introduction</h2>
-<hr>
-<p>读这种大块头的项目时，首先应该首先熟悉代码的框架，而不是立马dive into source code。这方面有许多优秀的工具能帮助我们了解代码的框架，这里推荐<a href="https://scitools.com/" target="_blank" rel="external">understand</a>. 顺带吐槽一下，个人觉得这款软件远没有<a href="http://www.sourceinsight.com/" target="_blank" rel="external">source insight</a>闻名的主要原因就是这软件的名字。  </p>
-<pre><code>Once we know how <span class="operator">the</span> code is distributed, <span class="keyword">it</span> becomes  
-easier <span class="built_in">to</span> find out <span class="operator">the</span> relevant code <span class="operator">in</span> which we are interested.  
-</code></pre><p>几乎所有的网络应用都是基于基础的client-server框架的，后续的优化主要是为了做到更好地安全性，负载均衡等。  </p>
-<p>在Linux中，sk_buff结构体包含一个packet的所有相关信息，把sk_buff理解为TCP packet在Linux中的表示也不为过。  </p>
-<p>1.1.1 Moving Down the Stack是一个很好了解TCP/IP栈发包过程的简要描述  </p>
-<p>1.1.2 Moving Up the Stack则是收包过程的简要描述  </p>
-<p>Linux的设计上，user-space is preemptible, kernel is non-preemptible.  </p>
-<p>关于Linux基础知识的介绍，这里就不再解释了。比如system_call, process &amp; thread, user space &amp; kernel space，以及各种锁。  </p>
-<p>1.7给出了一个典型的client-server程序例子，主要就是需要了解那几个重要函数的用法：socket(), bind(), listen(), accept(), connect() 以及setsockopt()和getsockopt()。这里有一个不错的资料：<a href="http://man.chinaunix.net/develop/c&amp;c++/linux_c/default.htm" target="_blank" rel="external">Linux C function参考手册</a>。  </p>
-<p>socket I/O有blocking和non-blocking之分，I/O复用有select(), poll(), epoll()之分，不熟悉的请移步Google.  </p>
-<p>TCP状态转换机制可以看TCP/IP详解的卷一中的插图，正常流程没什么好说的。关键在于一些特殊情况的分析，比如TIME_WAIT。  </p>
-<pre><code>设置TIME_WAIT状态的原因：  
-<span class="bullet">1. </span>如果最后一个ACK丢失了，需要接受对方重新发送的FIN包并确认；  
-<span class="bullet">2. </span>防止两个完全一样的流overlap。  
-</code></pre><h4 id="总结">总结</h4>
-<p>这章主要介绍一些理解与TCP相关的一些Linux机制和基础知识，读下来还是比较顺利的。OK，what’s next ?  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>今天开始好好研究TCP/IP的Linux实现，结合书和代码希望自己能对TCP这块更加的熟悉。读Kernel代码还是功利性强一点比较好，比如这次我是由于毕设相关才来仔细研究TCP这块的具体实现的。没有目的性的看这种大块头项目，效率比较难保障。Anyway，这个系列也是看到那块记录哪块，用以加强自己的理解。题目中的ADI分别是Architecture, Design, Implementation。书就是下面这一本了，英文的比较带劲，:)  </p>
-<pre><code>《TCP/IP ARCHITECTURE, DESIGN, <span class="keyword">AND</span> <span class="keyword">IMPLEMENTATION</span> <span class="keyword">IN</span> LINUX》 <span class="keyword">by</span> Sameer Seth   
-</code></pre>]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Install windows 7 into a ubuntu server]]></title>
-    <link href="http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/"/>
-    <id>http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/</id>
-    <published>2014-06-18T04:00:00.000Z</published>
-    <updated>2014-11-04T06:47:15.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="Backgrounds">Backgrounds</h2>
-<p>As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.<br>This post is mainly a remainder for the encountered problems while I was installing win7.  </p>
-<a id="more"></a>
-
-<h2 id="Problems">Problems</h2>
-<ul>
-<li><a href="#nic">[win7]Unrecognized NIC</a>  </li>
-<li><a href="#net">[win7]Network connection</a>  </li>
-<li><a href="#cygwin">[win7]Cygwin and ssh</a>  </li>
-<li><a href="#lvm">[ubuntu]LVM</a>  </li>
-<li><a href="#grub">restore grub2</a>  </li>
-<li><a href="#setup">grub setup</a>  </li>
-</ul>
-<hr>
-<p><h3 id="nic">[win7]Unrecognized NIC</h3><br>The unrecognized NICs are mainly caused by missed drivers.<br>So this problem can easily fixed via installations of missed drivers.<br>If you needs to find out the info for the NICs, the following commands are what you are looking for.  </p>
-<pre><code><span class="variable">$ethtool</span> eth<span class="number">0</span>
-<span class="variable">$lspci</span> |<span class="keyword">grep</span> -i ether
-<span class="variable">$dmesg</span> |<span class="keyword">grep</span> -i eth
-</code></pre><p><h3 id="net">Network  connection</h3><br>As four NICs are used in my server, some for internets and some for inter-connections, DNS and IPs need to be configured manually.<br>The related info can be found in the following files:  </p>
-<pre><code>$vim <span class="regexp">/etc/</span>resolv.conf   <span class="comment">//DNS server</span>
-$vim <span class="regexp">/etc/</span>sysconfig<span class="regexp">/network-scripts/i</span>fcfg-eth0  <span class="comment">//CentOS</span>
-$vim <span class="regexp">/etc/</span>network<span class="regexp">/interfaces /</span><span class="regexp">/Ubuntu</span>
-</code></pre><p><h3 id="cygwin">Cygwin and ssh</h3><br>In my testbed, all the tasks supposed to be executed automaticly. Therefore a command-line workspace is required in win7 and I choose Cygwin in here.<br>Here are some excellent tutorials which helps me a lot.  </p>
-<ul>
-<li><a href="https://cygwin.com/install.html" target="_blank" rel="external">Cygwin Homepage</a>  </li>
-<li><a href="https://code.google.com/p/apt-cyg/" target="_blank" rel="external">apt-cyg: A command-line software installer for Cygwin</a>  </li>
-<li><a href="http://www.howtogeek.com/howto/41382/" target="_blank" rel="external">How to use linux commands in windows with Cygwin</a>  </li>
-<li><p><a href="http://www.howtogeek.com/howto/41560/" target="_blank" rel="external">How to get ssh command-line access to windows 7 using Cygwin</a><br>Because the ssh key in Cygwin is different with the original key in ubuntu, I choose to disable the host key checking for my server.  </p>
-<p>  $vim ~/.ssh/config  // if this file doesn’t exist, create it<br>  $cat ~/.ssh/config<br>  Host ip-of-my-server</p>
-<pre><code>  <span class="title">StrictHostKeyChecking</span> <span class="built_in">no</span>
-</code></pre></li>
-</ul>
-<p><h3 id="lvm">LVM</h3><br>When trying to restore grub after the win7 installed,<br>There are several methods mentioned in this <a href="https://help.ubuntu.com/community/Grub2/Installing#Reinstalling_GRUB_2" target="_blank" rel="external">document</a> from ubuntu community. But I still cann’t restore the grub until I find this <a href="http://typethinker.blogspot.com/2009/12/reinstalling-grub-with-lvm-from-ubuntu.html" target="_blank" rel="external">post</a>. The main reason is that my ubuntu is install inside a <a href="http://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux\" target="_blank" rel="external">LVM</a>) partition.<br>Here are some relative commands.  </p>
-<pre><code><span class="variable">$lvdisplay</span>  // <span class="literal">show</span> logical volumes
-<span class="variable">$vgdisplay</span>  // <span class="literal">show</span> volume groups
-<span class="variable">$pvdisplay</span>  // <span class="literal">show</span> physical volumes
-</code></pre><p><h3 id="grub">Restore grub2</h3><br>Here is my steps to restore grub2:  </p>
-<pre><code>1. Boot the ubuntu LiveCD, <span class="operator"><span class="keyword">select</span> <span class="string">"Try it"</span>, <span class="keyword">and</span> <span class="keyword">open</span> a terminal  
-<span class="number">2.</span> <span class="keyword">Use</span> fdisk <span class="keyword">to</span> <span class="keyword">help</span> determine the <span class="keyword">partition</span> <span class="keyword">on</span> which ubuntu <span class="keyword">is</span> installed  
-    #fdisk -l
-<span class="number">3.</span> <span class="keyword">Install</span> LVM
-    $apt-<span class="keyword">get</span> <span class="keyword">install</span> lvm2
-    $vgdisplay                // find name <span class="keyword">of</span> volume <span class="keyword">group</span>
-    $vgchange -ay name-<span class="keyword">of</span>-vg  // make volume <span class="keyword">group</span> available
-<span class="number">4.</span> Mount root <span class="keyword">and</span> boot file systems
-    $mount /dev/name-<span class="keyword">of</span>-vg/name-<span class="keyword">of</span>-root-lv /mnt
-    $mount /dev/name-<span class="keyword">of</span>-boot-<span class="keyword">partition</span> /mnt/boot
-<span class="number">5.</span> <span class="keyword">Install</span> grub2
-    $grub-<span class="keyword">install</span> <span class="comment">--boot-directory=/mnt/boot /dev/name-of-root-device</span>
-<span class="number">6.</span> Reboot <span class="keyword">and</span> <span class="keyword">update</span>-grub
-    $reboot
-    $<span class="keyword">update</span>-grub</span>
-</code></pre><p>Until now the grub for ubuntu is restore.  </p>
-<p><h3 id="setup">Grub setup</h3><br>Q: How to boot into into win7 from ubuntu for only once ?<br>A: grub-reboot is the tool you are looking for. <a href="http://askubuntu.com/questions/18170/how-to-reboot-into-windows-from-ubuntu" target="_blank" rel="external">This post</a> is a related question in askubuntu.com. Here are the configuration steps:  </p>
-<pre><code>$vim /etc/default/grub
-    modify GRUB_DEFAULT=0 to GRUB_DEFAULT=saved
-$<span class="operator"><span class="keyword">update</span>-grub
-$grub-reboot X
-    X <span class="keyword">is</span> the menuentry <span class="keyword">position</span> <span class="keyword">of</span> the OS you want <span class="keyword">to</span> boot <span class="keyword">into</span> <span class="keyword">for</span> the <span class="keyword">next</span> <span class="keyword">time</span> <span class="keyword">and</span> the <span class="keyword">next</span> <span class="keyword">time</span> <span class="keyword">only</span>.
-$reboot</span>
-</code></pre><p>There is a little bug in my grub that the timeout isn’t working properly.<br>My solution is modify the grub.cfg file according to <a href="http://askubuntu.com/questions/202309/cannot-get-grub-menu-to-timeout-or-go-away" target="_blank" rel="external">this-post</a> and <a href="http://dietrichschroff.blogspot.com/2014/03/ubuntu-upgrade-to-1204-grub-timeout.html" target="_blank" rel="external">this-post</a>.  </p>
-<p>Until now, the server has become a perfect double-boot server. Cheers! :)  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<h2 id="Backgrounds">Backgrounds</h2>
-<p>As a windows client is needed for my testbed, I have to install windows system into a server which is runing a ubuntu os already.<br>This post is mainly a remainder for the encountered problems while I was installing win7.  </p>
-]]>
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="ubuntu" scheme="http://perthcharles.github.com/tags/ubuntu/"/>
     
   </entry>
   

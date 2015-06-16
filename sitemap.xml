@@ -2,428 +2,463 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://perthcharles.github.com/2015/02/06/linux-using-11/</loc>
-    <lastmod>2015-02-10T03:16:19.000Z</lastmod>
+    <loc>http://perthcharles.github.com/2015/06/16/wiki-network-tcp-frto/</loc>
+    <lastmod>2015-06-16T10:23:07.000Z</lastmod>
   </url>
   
   <url>
-    <loc>http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/</loc>
-    <lastmod>2015-02-05T09:31:26.000Z</lastmod>
+    <loc>http://perthcharles.github.com/2015/06/15/server-load-test/</loc>
+    <lastmod>2015-06-15T03:32:22.000Z</lastmod>
   </url>
   
   <url>
-    <loc>http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/</loc>
-    <lastmod>2015-02-05T09:31:17.000Z</lastmod>
+    <loc>http://perthcharles.github.com/2015/06/12/tc-tutorial/</loc>
+    <lastmod>2015-06-15T02:30:38.000Z</lastmod>
   </url>
   
   <url>
-    <loc>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</loc>
-    <lastmod>2015-01-20T13:11:22.000Z</lastmod>
+    <loc>http://perthcharles.github.com/2015/05/07/skill-list/</loc>
+    <lastmod>2015-05-10T15:46:01.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/</loc>
-    <lastmod>2015-01-17T10:25:40.000Z</lastmod>
+    <lastmod>2015-05-10T08:13:33.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/07/15/a-macro-for-excel/</loc>
+    <lastmod>2015-05-10T05:11:09.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/18/yum-using/</loc>
+    <lastmod>2015-05-10T05:08:19.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/10/05/yui-learning/</loc>
+    <lastmod>2015-05-10T05:08:14.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/28/yahoo-yql/</loc>
+    <lastmod>2015-05-10T05:08:09.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/28/x-window/</loc>
+    <lastmod>2015-05-10T05:08:02.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/26/x-window-2/</loc>
+    <lastmod>2015-05-10T05:07:55.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/02/05/wiki-network-paper-stack-specialization/</loc>
+    <lastmod>2015-05-10T05:07:48.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/</loc>
+    <lastmod>2015-05-10T05:07:41.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/06/08/wget-quick-learning/</loc>
+    <lastmod>2015-05-10T05:07:29.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/23/vim-decode/</loc>
+    <lastmod>2015-05-10T05:07:24.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/23/utorrent-mplayer/</loc>
+    <lastmod>2015-05-10T05:06:39.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/12/using-git-to-write-blog-in-win7/</loc>
+    <lastmod>2015-05-10T05:06:34.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/12/16/tshark-intro/</loc>
+    <lastmod>2015-05-10T05:06:26.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/13/trace-driven-survey/</loc>
+    <lastmod>2015-05-10T05:06:21.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/04/20/the-art-of-readable-code/</loc>
+    <lastmod>2015-05-10T05:06:15.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://perthcharles.github.com/2015/01/14/test-wiki/</loc>
-    <lastmod>2015-01-14T15:16:04.000Z</lastmod>
+    <lastmod>2015-05-10T05:06:05.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/08/test-search/</loc>
+    <lastmod>2015-05-10T05:05:59.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/06/16/tcpdump-tcptrace-tshark/</loc>
+    <lastmod>2015-05-10T05:05:53.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/12/19/tcp-probe-intro/</loc>
+    <lastmod>2015-05-10T05:05:48.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/10/22/tcp-design-and-implementation/</loc>
+    <lastmod>2015-05-10T05:05:42.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/</loc>
+    <lastmod>2015-05-10T05:05:37.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</loc>
+    <lastmod>2015-05-10T05:05:13.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/</loc>
+    <lastmod>2015-05-10T05:05:08.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/</loc>
+    <lastmod>2015-05-10T05:05:02.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</loc>
+    <lastmod>2015-05-10T05:04:48.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</loc>
+    <lastmod>2015-05-10T05:04:43.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/</loc>
+    <lastmod>2015-05-10T05:04:37.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-2/</loc>
+    <lastmod>2015-05-10T05:04:32.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/24/ssh-free-pwd/</loc>
+    <lastmod>2015-05-10T05:04:27.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/06/05/setup-nginx-sever/</loc>
+    <lastmod>2015-05-10T05:04:12.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/03/python-plot-bar/</loc>
+    <lastmod>2015-05-10T05:04:06.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/14/python-learning-3/</loc>
+    <lastmod>2015-05-10T05:04:01.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/14/python-learning-2/</loc>
+    <lastmod>2015-05-10T05:03:56.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/04/python-learning-1/</loc>
+    <lastmod>2015-05-10T05:03:48.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/20/problem-one/</loc>
+    <lastmod>2015-05-10T05:03:40.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/25/os-profile-line/</loc>
+    <lastmod>2015-05-10T05:03:35.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</loc>
+    <lastmod>2015-05-10T05:03:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/24/negation-in-c/</loc>
+    <lastmod>2015-05-10T05:03:26.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/21/mst-parallel/</loc>
+    <lastmod>2015-05-10T05:03:21.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/06/19/matlabl-read-data-from-excel/</loc>
+    <lastmod>2015-05-10T05:03:15.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/19/mapreduce-learning/</loc>
+    <lastmod>2015-05-10T05:03:10.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/04/26/make-progress-everyday/</loc>
+    <lastmod>2015-05-10T05:03:05.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/01/linux-using/</loc>
+    <lastmod>2015-05-10T05:03:00.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/31/linux-using-9/</loc>
+    <lastmod>2015-05-10T05:02:55.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/24/linux-using-8/</loc>
+    <lastmod>2015-05-10T05:02:50.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/09/linux-using-7/</loc>
+    <lastmod>2015-05-10T05:02:45.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/08/linux-using-6/</loc>
+    <lastmod>2015-05-10T05:02:40.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/12/linux-using-5/</loc>
+    <lastmod>2015-05-10T05:02:35.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/08/linux-using-4/</loc>
+    <lastmod>2015-05-10T05:02:29.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/08/linux-using-3/</loc>
+    <lastmod>2015-05-10T05:02:24.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/05/linux-using-2/</loc>
+    <lastmod>2015-05-10T05:02:19.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/02/06/linux-using-11/</loc>
+    <lastmod>2015-05-10T05:02:14.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/01/linux-using-10/</loc>
+    <lastmod>2015-05-10T05:02:08.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/01/linux-tools/</loc>
+    <lastmod>2015-05-10T05:02:03.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/14/linux-tex/</loc>
+    <lastmod>2015-05-10T05:01:58.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/01/linux-system-info/</loc>
+    <lastmod>2015-05-10T05:01:52.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/25/linux-disassemble/</loc>
+    <lastmod>2015-05-10T05:01:47.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/25/kvm-virt-install/</loc>
+    <lastmod>2015-05-10T05:01:41.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/26/kvm-storage/</loc>
+    <lastmod>2015-05-10T05:01:36.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/27/kvm-qemu/</loc>
+    <lastmod>2015-05-10T05:01:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/17/javascript-quick-learning/</loc>
+    <lastmod>2015-05-10T05:01:26.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/22/inverse-number/</loc>
+    <lastmod>2015-05-10T05:01:03.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/24/install-linux-from-disk/</loc>
+    <lastmod>2015-05-10T05:00:58.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/12/22/insert-latex-to-markdown/</loc>
+    <lastmod>2015-05-10T05:00:52.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/23/hp-bench/</loc>
+    <lastmod>2015-05-10T05:00:46.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/13/guide-for-technical-development/</loc>
+    <lastmod>2015-05-10T05:00:36.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/25/gnu-as-pratice/</loc>
+    <lastmod>2015-05-10T05:00:30.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/02/25/git-start/</loc>
+    <lastmod>2015-05-10T05:00:24.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/31/git-multi-user-error/</loc>
+    <lastmod>2015-05-10T05:00:15.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/25/get-ip-of-vm-via-libvist/</loc>
+    <lastmod>2015-05-10T04:59:48.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/02/25/first-view-of-jelyll/</loc>
+    <lastmod>2015-05-10T04:59:42.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/</loc>
+    <lastmod>2015-05-10T04:59:36.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/05/06/coding-style/</loc>
+    <lastmod>2015-05-10T04:59:31.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/04/25/chrome-bugs/</loc>
+    <lastmod>2015-05-10T04:58:13.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/06/19/choose-multi-line-from-text/</loc>
+    <lastmod>2015-05-10T04:58:07.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/14/chinese-remainder-theorem/</loc>
+    <lastmod>2015-05-10T04:58:02.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2014/11/04/change-to-hexo/</loc>
+    <lastmod>2015-05-10T04:57:56.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/31/change-library-path/</loc>
+    <lastmod>2015-05-10T04:57:51.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/03/24/centos-mount-ntfs/</loc>
+    <lastmod>2015-05-10T04:57:46.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/28/c-setbuf/</loc>
+    <lastmod>2015-05-10T04:57:40.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/09/05/c-and-pointer/</loc>
+    <lastmod>2015-05-10T04:57:34.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/05/31/biggest-continuous-subsum/</loc>
+    <lastmod>2015-05-10T04:57:28.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/08/16/bfs-and-dfs-pseudo-code/</loc>
+    <lastmod>2015-05-10T04:57:19.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2013/12/14/beauty-of-mathematics/</loc>
+    <lastmod>2015-05-10T04:57:10.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/03/27/alfred/</loc>
+    <lastmod>2015-05-10T04:57:03.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/03/06/what-is-a-full-stack-developer/</loc>
+    <lastmod>2015-05-09T17:06:32.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://perthcharles.github.com/about/index.html</loc>
     <lastmod>2015-01-14T13:02:19.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/04/26/make-progress-everyday/</loc>
-    <lastmod>2015-01-12T06:53:33.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/24/ssh-free-pwd/</loc>
-    <lastmod>2015-01-05T07:22:34.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</loc>
-    <lastmod>2014-12-30T04:37:06.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/12/19/tcp-probe-intro/</loc>
-    <lastmod>2014-12-20T15:45:26.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/12/16/tshark-intro/</loc>
-    <lastmod>2014-12-16T10:08:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/</loc>
-    <lastmod>2014-12-16T08:26:54.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/06/05/setup-nginx-sever/</loc>
-    <lastmod>2014-12-05T08:45:12.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/05/tcp-design-and-implementation-4/</loc>
-    <lastmod>2014-12-03T01:59:00.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-3/</loc>
-    <lastmod>2014-12-01T13:06:32.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</loc>
-    <lastmod>2014-11-21T12:15:32.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/</loc>
-    <lastmod>2014-11-20T08:10:24.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/</loc>
-    <lastmod>2014-11-19T11:30:56.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/13/guide-for-technical-development/</loc>
-    <lastmod>2014-11-13T10:16:41.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/11/04/change-to-hexo/</loc>
-    <lastmod>2014-11-04T10:22:07.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/31/linux-using-9/</loc>
-    <lastmod>2014-11-04T07:01:48.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/24/linux-using-8/</loc>
-    <lastmod>2014-11-04T07:01:32.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/09/linux-using-7/</loc>
-    <lastmod>2014-11-04T07:01:15.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/08/linux-using-6/</loc>
-    <lastmod>2014-11-04T07:00:56.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/01/linux-using/</loc>
-    <lastmod>2014-11-04T07:00:37.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/12/linux-using-5/</loc>
-    <lastmod>2014-11-04T07:00:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/08/linux-using-4/</loc>
-    <lastmod>2014-11-04T06:59:57.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/08/linux-using-3/</loc>
-    <lastmod>2014-11-04T06:59:48.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/05/linux-using-2/</loc>
-    <lastmod>2014-11-04T06:59:37.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/01/linux-using-10/</loc>
-    <lastmod>2014-11-04T06:57:55.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/06/19/choose-multi-line-from-text/</loc>
-    <lastmod>2014-11-04T06:57:42.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/06/16/tcpdump-tcptrace-tshark/</loc>
-    <lastmod>2014-11-04T06:48:02.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/06/18/double-boot-win7-and-ubuntu/</loc>
-    <lastmod>2014-11-04T06:47:15.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/04/20/the-art-of-readable-code/</loc>
-    <lastmod>2014-11-04T06:31:20.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/12/22/insert-latex-to-markdown/</loc>
-    <lastmod>2014-11-04T06:29:45.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/12/14/beauty-of-mathematics/</loc>
-    <lastmod>2014-11-04T06:27:28.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/10/05/yui-learning/</loc>
-    <lastmod>2014-11-04T06:26:39.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/28/yahoo-yql/</loc>
-    <lastmod>2014-11-04T06:25:46.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/14/python-learning-3/</loc>
-    <lastmod>2014-11-04T06:24:42.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/14/python-learning-2/</loc>
-    <lastmod>2014-11-04T06:23:32.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/14/linux-tex/</loc>
-    <lastmod>2014-11-04T05:37:42.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/05/c-and-pointer/</loc>
-    <lastmod>2014-11-04T03:53:43.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/04/python-learning-1/</loc>
-    <lastmod>2014-11-04T03:52:39.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/09/03/python-plot-bar/</loc>
-    <lastmod>2014-11-04T03:47:16.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/31/change-library-path/</loc>
-    <lastmod>2014-11-04T03:41:17.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/28/c-setbuf/</loc>
-    <lastmod>2014-11-04T03:40:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/26/kvm-storage/</loc>
-    <lastmod>2014-11-04T03:38:59.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/25/kvm-virt-install/</loc>
-    <lastmod>2014-11-04T03:38:06.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/25/get-ip-of-vm-via-libvist/</loc>
-    <lastmod>2014-11-04T03:33:46.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/16/bfs-and-dfs-pseudo-code/</loc>
-    <lastmod>2014-11-04T03:29:02.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/08/12/using-git-to-write-blog-in-win7/</loc>
-    <lastmod>2014-11-04T03:23:24.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/07/15/a-macro-for-excel/</loc>
-    <lastmod>2014-11-04T03:22:06.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/06/19/matlabl-read-data-from-excel/</loc>
-    <lastmod>2014-11-04T03:21:08.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/06/08/wget-quick-learning/</loc>
-    <lastmod>2014-11-04T03:19:15.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/31/git-multi-user-error/</loc>
-    <lastmod>2014-11-04T03:10:28.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/31/biggest-continuous-subsum/</loc>
-    <lastmod>2014-11-04T03:07:36.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/22/inverse-number/</loc>
-    <lastmod>2014-11-04T03:06:23.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/17/javascript-quick-learning/</loc>
-    <lastmod>2014-11-04T03:04:21.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/05/14/chinese-remainder-theorem/</loc>
-    <lastmod>2014-11-04T03:00:32.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/27/kvm-qemu/</loc>
-    <lastmod>2014-11-04T02:55:14.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/26/x-window-2/</loc>
-    <lastmod>2014-11-04T02:52:19.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/25/os-profile-line/</loc>
-    <lastmod>2014-11-04T02:49:07.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/25/chrome-bugs/</loc>
-    <lastmod>2014-11-04T02:47:46.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/21/mst-parallel/</loc>
-    <lastmod>2014-11-04T02:45:53.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/20/problem-one/</loc>
-    <lastmod>2014-11-04T02:44:03.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/19/mapreduce-learning/</loc>
-    <lastmod>2014-11-04T02:41:50.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/04/13/trace-driven-survey/</loc>
-    <lastmod>2014-11-04T02:34:17.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/28/x-window/</loc>
-    <lastmod>2014-11-04T02:29:40.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/25/linux-disassemble/</loc>
-    <lastmod>2014-11-04T02:27:04.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/25/gnu-as-pratice/</loc>
-    <lastmod>2014-11-04T02:19:28.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/18/yum-using/</loc>
-    <lastmod>2014-11-04T02:10:40.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/23/vim-decode/</loc>
-    <lastmod>2014-11-04T02:10:31.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/23/utorrent-mplayer/</loc>
-    <lastmod>2014-11-04T02:10:25.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/08/test-search/</loc>
-    <lastmod>2014-11-04T02:10:17.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/01/linux-tools/</loc>
-    <lastmod>2014-11-04T02:09:12.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/01/linux-system-info/</loc>
-    <lastmod>2014-11-04T02:09:00.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/24/install-linux-from-disk/</loc>
-    <lastmod>2014-11-04T02:08:44.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/23/hp-bench/</loc>
-    <lastmod>2014-11-04T02:08:38.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/02/25/git-start/</loc>
-    <lastmod>2014-11-04T02:08:26.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/02/25/first-view-of-jelyll/</loc>
-    <lastmod>2014-11-04T02:08:20.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/24/centos-mount-ntfs/</loc>
-    <lastmod>2014-11-04T02:08:11.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2013/03/24/negation-in-c/</loc>
-    <lastmod>2014-11-04T02:05:26.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/10/22/tcp-design-and-implementation/</loc>
-    <lastmod>2014-11-03T14:36:37.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2014/10/23/tcp-design-and-implementation-2/</loc>
-    <lastmod>2014-11-03T14:33:30.000Z</lastmod>
   </url>
   
 </urlset>

@@ -71,14 +71,14 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-negation-in-c" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-linux-using-5" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/03/24/negation-in-c/" class="article-date">
-  <time datetime="2013-03-24T04:00:00.000Z" itemprop="datePublished">3月 24 2013</time>
+    <a href="/2013/04/12/linux-using-5/" class="article-date">
+  <time datetime="2013-04-12T05:03:10.000Z" itemprop="datePublished">4月 12 2013</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/面试题/">面试题</a>
+    <a class="article-category-link" href="/categories/Shell/">Shell</a>
   </div>
 
   </div>
@@ -89,7 +89,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/03/24/negation-in-c/">一道C语言二进制反码题</a>
+      <a class="article-title" href="/2013/04/12/linux-using-5/">linux 命令学习（五）：服务器登录消息 找含某字符串的所有文件</a>
     </h1>
   
 
@@ -97,36 +97,26 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="题目">题目</h3>
-<p>请写出下面程序在32/64位机器上的输出结果<br>编译器：GCC  </p>
-<pre><code><span class="preprocessor">#<span class="keyword">include</span>&lt;sdtio.h&gt;  </span>
-
-<span class="keyword">int</span> main(<span class="keyword">void</span>)
-{
-    <span class="keyword">unsigned</span> <span class="keyword">char</span> a = <span class="number">0xa5</span>;
-    <span class="built_in">printf</span>(<span class="string">"%d\n"</span>,~a);
-    <span class="keyword">char</span> b = ~a;
-    <span class="built_in">printf</span>(<span class="string">"%d\n"</span>,b);
-    <span class="keyword">unsigned</span> <span class="keyword">char</span> c = ~a;
-    <span class="built_in">printf</span>(<span class="string">"%d\n"</span>,c);
-
-    <span class="keyword">return</span> <span class="number">0</span>;
-}  
+        <!-- add for TOC @ by charles -->
+        
+        <h2 id="/etc/motd使用">/etc/motd使用</h2>
+<p>如果你正在使用一台服务器，并且想通知每一个新登录这台服务器的用户一个消息。<br>比如你需要在服务器上进行一些测试工作，肯定希望其他登录进来的用户不要跑别的程序。这时你可以在/etc/motd文件中编辑你的通知消息，每一个新登录的用户都会看到这个消息。  </p>
+<pre><code><span class="comment">#cat /etc/motd</span>
+Hello everyone,
+This server will be used <span class="keyword">to</span> <span class="command">run</span> <span class="keyword">some</span> test-programs <span class="keyword">at</span> <span class="number">2013</span>/<span class="number">04</span>/<span class="number">12</span> <span class="number">0</span>:<span class="number">00</span> ~ <span class="number">24</span>:<span class="number">00</span>
+Please do <span class="keyword">not</span> login server <span class="keyword">at</span> this <span class="property">time</span>. ^_^
+</code></pre><h2 id="找出含特定字符串的所有文件">找出含特定字符串的所有文件</h2>
+<pre><code>#grep -ir (<span class="built_in">string</span>-<span class="keyword">to</span>-<span class="keyword">find</span>) (<span class="built_in">search</span>-<span class="keyword">files</span>)
 </code></pre>
-        
-          <p class="article-more-link">
-            <a href="/2013/03/24/negation-in-c/#more">Read More</a>
-          </p>
-        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/03/24/negation-in-c/" data-id="qqpb9srjj52l82hh" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/04/12/linux-using-5/" data-id="ypfhcq8ykj8jt62q" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/03/24/negation-in-c/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/04/12/linux-using-5/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C-C/">C/C++</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
 
     </footer>
   </div>
@@ -134,11 +124,12 @@
 </article>
 
 
+
   
-    <article id="post-hp-bench" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-x-window" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/03/23/hp-bench/" class="article-date">
-  <time datetime="2013-03-23T05:01:02.000Z" itemprop="datePublished">3月 23 2013</time>
+    <a href="/2013/03/28/x-window/" class="article-date">
+  <time datetime="2013-03-28T04:00:10.000Z" itemprop="datePublished">3月 28 2013</time>
 </a>
     
   </div>
@@ -149,7 +140,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/03/23/hp-bench/">HP Bench 安装记录</a>
+      <a class="article-title" href="/2013/03/28/x-window/">X window</a>
     </h1>
   
 
@@ -157,32 +148,40 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>HP Benchmark安装记录  </p>
+        <h2 id="Type_of_XEvent">Type of XEvent</h2>
+<pre><code>Keyboard events                <span class="string">| KeyPress, KeyRelease</span>
+Pointer events                 <span class="string">| ButtonPress, ButtonRelease, MotionNotify</span>
+Window crossing events         <span class="string">| EnterNotify, LeaveNotify</span>
+Input focus events             <span class="string">| FocusIn, FocusOut</span>
+</code></pre><p>参考资料：(X Window学习xlib—-X Event)[<a href="http://blog.csdn.net/unailbobo/article/details/3036618" target="_blank" rel="external">http://blog.csdn.net/unailbobo/article/details/3036618</a>]</p>
 
         
           <p class="article-more-link">
-            <a href="/2013/03/23/hp-bench/#more">Read More</a>
+            <a href="/2013/03/28/x-window/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/03/23/hp-bench/" data-id="7m9brukj89870bhf" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/03/28/x-window/" data-id="r1551x37opsswyhz" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/03/23/hp-bench/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/03/28/x-window/#disqus_thread" class="article-comment-link">Comments</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/X11/">X11</a></li></ul>
+
     </footer>
   </div>
   
 </article>
 
 
+
   
-    <article id="post-vim-decode" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-linux-disassemble" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/03/23/vim-decode/" class="article-date">
-  <time datetime="2013-03-23T03:10:34.000Z" itemprop="datePublished">3月 23 2013</time>
+    <a href="/2013/03/25/linux-disassemble/" class="article-date">
+  <time datetime="2013-03-25T05:00:14.000Z" itemprop="datePublished">3月 25 2013</time>
 </a>
     
   </div>
@@ -193,7 +192,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/03/23/vim-decode/">vim 编码相关问题</a>
+      <a class="article-title" href="/2013/03/25/linux-disassemble/">linux 反汇编初步</a>
     </h1>
   
 
@@ -201,28 +200,23 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="vim中文乱码问题—本机设置">vim中文乱码问题—本机设置</h3>
-<p>首先应该选用utf8格式的编码比较靠谱，同时为了防止乱码现象，应该保障系统设置和vim的设置相一致  </p>
-<pre><code><span class="preprocessor">#echo $LANG //查看系统当前选用编码方式  </span>
-<span class="preprocessor">#LANG=zh_CN.utf8  </span>
-<span class="preprocessor">#vim /etc/vimrc  //将set fileencodings 设置如下  </span>
-<span class="keyword">set</span> fileencodings=utf8,gbk,big5,ucs-bom,latin1  
-</code></pre><h3 id="其他推荐的设置">其他推荐的设置</h3>
-<p>中文环境GBK码  </p>
-<pre><code><span class="preprocessor">#LANG=zn_CN.gbk  </span>
-<span class="preprocessor">#vim /etc/vimrc  </span>
-<span class="keyword">set</span> fileencodings=gbk,big5,ucs-bom,latin1  
-</code></pre><p>中文环境UTF8参照之前的本机设置<br>英文环境就直接用就好了，所以推荐装机的时候就选择英文系统，毕竟码代码还是英文用的多点    </p>
+        <h2 id="工具">工具</h2>
+<p>十六进制编辑器：hexedit<br>还有objdump，xxd等查看工具  </p>
 
+        
+          <p class="article-more-link">
+            <a href="/2013/03/25/linux-disassemble/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/03/23/vim-decode/" data-id="fedjmjggnmxnz1fm" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/03/25/linux-disassemble/" data-id="ujzymg4m6eqrcpco" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/03/23/vim-decode/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/03/25/linux-disassemble/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/vim/">vim</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/assembly/">assembly</a></li></ul>
 
     </footer>
   </div>
@@ -230,11 +224,12 @@
 </article>
 
 
+
   
-    <article id="post-utorrent-mplayer" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-gnu-as-pratice" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/03/23/utorrent-mplayer/" class="article-date">
-  <time datetime="2013-03-23T03:00:10.000Z" itemprop="datePublished">3月 23 2013</time>
+    <a href="/2013/03/25/gnu-as-pratice/" class="article-date">
+  <time datetime="2013-03-25T04:00:00.000Z" itemprop="datePublished">3月 25 2013</time>
 </a>
     
   </div>
@@ -245,7 +240,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/03/23/utorrent-mplayer/">utorrent+mplayer使用</a>
+      <a class="article-title" href="/2013/03/25/gnu-as-pratice/">Gnu AS 汇编实践</a>
     </h1>
   
 
@@ -253,35 +248,43 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="utorrent">utorrent</h3>
-<p>为了在centos上面下载六维空间的资源，就必须选择一个给力的下载器，但是目前utorrent客户端只有WINDOWS版本，所以就必须曲线救国了。我的方法如下：<br>首先确保你添加了第三方的源，如果不会添加请移步<a href="http://perthcharles.github.com/centos6.4/2013/03/18/yum-using/" target="_blank" rel="external">yum 源的使用</a><br>然后安装在linux环境下安装windows软件的平台，想了解更多的请<a href="www.google.com">google wine</a>  </p>
-<pre><code><span class="preprocessor">#yum installl wine  </span>
-</code></pre><p>安装好wine环境后，只要下载一个windows环境下的utorrent.exe文件，就可以直接打开这个软件下载六维的软件了。开始享受吧！  </p>
+        <h3 id="首先尝试一个最近简单的Hello_world程序">首先尝试一个最近简单的Hello world程序</h3>
+<pre><code><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span>
+
+<span class="keyword">int</span> main(<span class="keyword">void</span>) 
+{
+        <span class="built_in">printf</span>(<span class="string">"Hello, world!\n"</span>);
+        <span class="keyword">return</span> <span class="number">0</span>;
+}
+</code></pre><p>保存文件：hello.c  </p>
 
         
           <p class="article-more-link">
-            <a href="/2013/03/23/utorrent-mplayer/#more">Read More</a>
+            <a href="/2013/03/25/gnu-as-pratice/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/03/23/utorrent-mplayer/" data-id="sdvxgnjjzctnkm0p" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/03/25/gnu-as-pratice/" data-id="3mmukb80q0u6f6h0" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/03/23/utorrent-mplayer/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/03/25/gnu-as-pratice/#disqus_thread" class="article-comment-link">Comments</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/assembly/">assembly</a></li></ul>
+
     </footer>
   </div>
   
 </article>
 
 
+
   
-    <article id="post-yum-using" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-install-linux-from-disk" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/03/18/yum-using/" class="article-date">
-  <time datetime="2013-03-18T04:00:00.000Z" itemprop="datePublished">3月 18 2013</time>
+    <a href="/2013/03/24/install-linux-from-disk/" class="article-date">
+  <time datetime="2013-03-24T04:01:00.000Z" itemprop="datePublished">3月 24 2013</time>
 </a>
     
   </div>
@@ -292,7 +295,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/03/18/yum-using/">yum使用指南</a>
+      <a class="article-title" href="/2013/03/24/install-linux-from-disk/">硬盘安装linux</a>
     </h1>
   
 
@@ -300,40 +303,34 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="yum安装软件">yum安装软件</h3>
-<p>当你想安装软件的时候，可能你只知道一个大概的名字或者你想确认你系统的yum源中是否存在该软件包，那么你就可以用下面的命令来查找确认  </p>
-<pre><code>    #yum <span class="keyword">list</span> |<span class="keyword">grep</span> softname  
-</code></pre><p>如果想知道你现在已经安装来哪些包，可以使用  </p>
-<pre><code>#rpm -<span class="keyword">qa</span> | <span class="keyword">grep</span> softname  
-</code></pre><p>得到软件对应的正确软件包名称之后，就可以使用  </p>
-<pre><code><span class="preprocessor">#yum install softname  </span>
-</code></pre><p>来正确安装你需要的软件了  </p>
+        <p>目前正在用的系统是WIN7系统，由于现在系统性能表现越来越差，而自己又不想重新安装这个系统，所以就选择在电脑上面安装双系统。<br>再者最近在学习linux，所以就干脆选择安一个linux来玩玩，目前选择的是CentOS6.4。至于为什么选择这个版本，大家都知道的：稳定！当然这样一来桌面软件支持就略显不足，不过暂时够用就好。  </p>
 
         
           <p class="article-more-link">
-            <a href="/2013/03/18/yum-using/#more">Read More</a>
+            <a href="/2013/03/24/install-linux-from-disk/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/03/18/yum-using/" data-id="uvf0gjzc13i0yk6b" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/03/24/install-linux-from-disk/" data-id="xz16x0q9bjlqkmp3" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/03/18/yum-using/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/03/24/install-linux-from-disk/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yum/">yum</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/EasyBCD/">EasyBCD</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
 
     </footer>
   </div>
   
 </article>
+
 
 
   
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/14/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><a class="page-number" href="/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/page/16/">16</a><a class="page-number" href="/page/17/">17</a><a class="extend next" rel="next" href="/page/16/">Next &raquo;</a>
+      <a class="extend prev" rel="prev" href="/page/14/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><a class="page-number" href="/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/page/16/">16</a><a class="page-number" href="/page/17/">17</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/16/">Next &raquo;</a>
     </nav>
   
 </section>
@@ -344,7 +341,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -354,6 +351,34 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/06/16/wiki-network-tcp-frto/">TCP FRTO机制</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/15/server-load-test/">服务器负载压力测试相关工具</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/12/tc-tutorial/">TC 实践</a>
+          </li>
+        
+          <li>
+            <a href="/2015/05/07/skill-list/">技艺培养(基于知道创宇技能表v2.2)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/05/06/coding-style/">Linux内核编码风格</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/27/alfred/">Alfred 使用记录</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/06/what-is-a-full-stack-developer/">Full Stack developer是怎样的一种存在？</a>
+          </li>
         
           <li>
             <a href="/2015/02/06/linux-using-11/">linux命令学习（十一）：lsof, vnstat, fuser, host, at, cron</a>
@@ -387,45 +412,38 @@
             <a href="/2014/12/16/tshark-intro/">tshark, network protocol analyzer</a>
           </li>
         
-          <li>
-            <a href="/2014/12/16/tcp-design-and-implementation-phase1/">TCP ADI in Linux Phase 1</a>
-          </li>
-        
-          <li>
-            <a href="/2014/11/20/tcp-design-and-implementation-8/">TCP ADI in Linux(8): TCP receive</a>
-          </li>
-        
-          <li>
-            <a href="/2014/11/19/tcp-design-and-implementation-7/">TCP ADI in Linux(7): TCP send</a>
-          </li>
-        
-          <li>
-            <a href="/2014/11/18/tcp-design-and-implementation-6/">TCP ADI in Linux(6): Movement of sk_buff across protocol layers</a>
-          </li>
-        
-          <li>
-            <a href="/2014/11/18/tcp-design-and-implementation-5/">TCP ADI in Linux(5): sk_buff and protocol headers</a>
-          </li>
-        
-          <li>
-            <a href="/2014/11/13/guide-for-technical-development/">Guide for Technical Development by Google</a>
-          </li>
-        
-          <li>
-            <a href="/2014/11/05/tcp-design-and-implementation-4/">TCP ADI in Linux(4): TCP Connection Setup</a>
-          </li>
-        
       </ul>
     </div>
   </div>
 
 
   
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
     
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/NTP/" style="font-size: 11.67px;">NTP</a><a href="/tags/PTP/" style="font-size: 11.67px;">PTP</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 13.33px;">hexo</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 13.33px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a><a href="/tags/vim/" style="font-size: 11.67px;">vim</a><a href="/tags/wget/" style="font-size: 11.67px;">wget</a>
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/NTP/" style="font-size: 11.67px;">NTP</a><a href="/tags/PTP/" style="font-size: 11.67px;">PTP</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 13.33px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 13.33px;">hexo</a><a href="/tags/http-load-test/" style="font-size: 11.67px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tc/" style="font-size: 11.67px;">tc</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 13.33px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a>
     </div>
   </div>
 
@@ -434,7 +452,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

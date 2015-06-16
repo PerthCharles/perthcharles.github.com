@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>Linux内核编码风格 | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Coding style is all about readability and maintainability using commonly available tools.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核编码风格">
+<meta property="og:url" content="http://perthcharles.github.com/2015/05/06/coding-style/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="Coding style is all about readability and maintainability using commonly available tools.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux内核编码风格">
+<meta name="twitter:description" content="Coding style is all about readability and maintainability using commonly available tools.">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-coding-style" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/05/06/coding-style/" class="article-date">
+  <time datetime="2015-05-06T09:49:38.000Z" itemprop="datePublished">5月 6 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Linux内核编码风格
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#缩进"><span class="toc-text">缩进</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#换行"><span class="toc-text">换行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#括号和空格"><span class="toc-text">括号和空格</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#命名"><span class="toc-text">命名</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#自定义类型"><span class="toc-text">自定义类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#函数"><span class="toc-text">函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#集中管理函数的退出条件"><span class="toc-text">集中管理函数的退出条件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#注释"><span class="toc-text">注释</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#宏，枚举"><span class="toc-text">宏，枚举</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#打印内核消息"><span class="toc-text">打印内核消息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#inline的使用"><span class="toc-text">inline的使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#函数返回值"><span class="toc-text">函数返回值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#不要重复发明内核宏定义"><span class="toc-text">不要重复发明内核宏定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#条件编译"><span class="toc-text">条件编译</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<pre><code>Coding style <span class="keyword">is</span> <span class="keyword">all</span> about readability <span class="built_in">and</span> maintainability using commonly available tools.  
+</code></pre><p><a id="more"></a>  </p>
+<h3 id="缩进">缩进</h3>
+<hr>
+<p>所有的缩进均应是8字符格式。</p>
+<pre><code><span class="keyword">If</span> you need more than <span class="number">3</span> levels indentation, you<span class="attribute">'re</span> screwed anyway, <span class="keyword">and</span> should 
+fix your program.
+</code></pre><p>注：关于这点保留意见，目前我(也)比较习惯用4字符格式的TAB。  </p>
+<pre><code>Don't <span class="keyword">put</span> multiple assignments <span class="function_start"><span class="keyword">on</span></span> a single line.
+
+Get a decent editor <span class="keyword">and</span> don't leave whitespace <span class="keyword">at</span> <span class="keyword">the</span> <span class="keyword">end</span> <span class="keyword">of</span> lines.
+</code></pre><h3 id="换行">换行</h3>
+<hr>
+<p>每行的长度限制在80各字符</p>
+<pre><code>However， never <span class="keyword">break</span> user-visible strings such <span class="keyword">as</span> printk <span class="keyword">messages</span>, because 
+that breaks the ability <span class="keyword">to</span> <span class="keyword">grep</span> <span class="keyword">for</span> them.  
+</code></pre><h3 id="括号和空格">括号和空格</h3>
+<hr>
+<pre><code>As shown <span class="built_in">to</span> us <span class="keyword">by</span> <span class="operator">the</span> prophets Kernighan <span class="operator">and</span> Ritchie, <span class="operator">the</span> preferred way is <span class="built_in">to</span> 
+<span class="built_in">put</span> <span class="operator">the</span> opening brace <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">line</span>, <span class="title">and</span> <span class="title">push</span> <span class="title">the</span> <span class="title">closing</span> <span class="title">brace</span> <span class="title">first</span>, <span class="title">thusly</span>:</span>
+<span class="keyword">if</span> (x is <span class="constant">true</span>) {
+        we <span class="built_in">do</span> y
+}
+</code></pre><p>上面的规则适用于所有的代码块，除了函数。  </p>
+<pre><code><span class="keyword">Do</span> <span class="keyword">not</span> unnecessarily use braces <span class="keyword">where</span> a <span class="built_in">single</span> statement will <span class="keyword">do</span>.
+
+        <span class="keyword">if</span> (condition)
+                action();
+
+<span class="keyword">and</span>
+        <span class="keyword">if</span> (condition)
+                do_this();
+        <span class="keyword">else</span>
+                do_that();
+
+This does <span class="keyword">not</span> apply <span class="keyword">if</span> only one branch <span class="keyword">of</span> a conditional statement <span class="keyword">is</span> a <span class="built_in">single</span> 
+statement; <span class="keyword">in</span> the latter <span class="keyword">case</span> use braces <span class="keyword">in</span> both braches.
+</code></pre><p>注：这个规则我保留意见。由于任何under-developing的代码片段都没办法保证在“现在和将来”都仅包含一条语句。因此我的选择是：在任何代码片段/分支处，均使用括号。  </p>
+<p>在Linux kernel的编程风格中，空格的使用主要依赖于function-versus-keyword的使用。</p>
+<pre><code><span class="operator"><span class="keyword">Use</span> a <span class="keyword">space</span> <span class="keyword">after</span> (most) keywords.
+The notable exceptions <span class="keyword">are</span> sizeof, typeof, alignof, <span class="keyword">and</span> __attribute__,
+which look somewhat <span class="keyword">like</span> functions.
+
+<span class="keyword">Do</span> <span class="keyword">not</span> <span class="keyword">add</span> spaces around (inside) parenthesized expressions.
+
+<span class="keyword">When</span> declaring pointer <span class="keyword">data</span> <span class="keyword">or</span> a <span class="keyword">function</span> that <span class="keyword">returns</span> a pointer type, the 
+preferred usd <span class="keyword">of</span> <span class="string">'*'</span> <span class="keyword">is</span> adjacent <span class="keyword">to</span> the <span class="keyword">data</span> name <span class="keyword">or</span> <span class="keyword">function</span> name <span class="keyword">and</span> <span class="keyword">not</span> 
+adjacent <span class="keyword">to</span> the type name. Examples:
+    <span class="built_in">char</span> *line_banner;</span>
+    char *match__strdup(substring_t *s);
+
+<span class="operator"><span class="keyword">Use</span> one <span class="keyword">space</span> around (<span class="keyword">on</span> <span class="keyword">each</span> side <span class="keyword">of</span>) most <span class="built_in">binary</span> <span class="keyword">and</span> ternary operators, 
+but <span class="keyword">no</span> <span class="keyword">space</span> <span class="keyword">after</span> unary operators.</span>
+</code></pre><h3 id="命名">命名</h3>
+<hr>
+<pre><code>GLOBAL variables need to have descriptive names, as <span class="operator"><span class="keyword">do</span> <span class="keyword">global</span> functions.
+
+Encoding the types <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">into</span> the name (so-called Hungarian notaion) 
+<span class="keyword">is</span> brain damaged - the compiler knows the types anyway <span class="keyword">and</span> can <span class="keyword">check</span> those, <span class="keyword">and</span> 
+it <span class="keyword">only</span> confuses the programmer. <span class="keyword">No</span> wonder MicroSoft makes buggy programs.
+=.= 黑的漂亮  
+
+<span class="keyword">LOCAL</span> variable <span class="keyword">names</span> should be short, <span class="keyword">and</span> <span class="keyword">to</span> the point.</span>
+</code></pre><h3 id="自定义类型">自定义类型</h3>
+<hr>
+<p>typedefs应尽量少用。仅在满足一下条件之一时，typedefs才算是能适当提高可读性的选择。</p>
+<ul>
+<li>totally opaque objects (where the typedef is actively used to _hide_ what the<br>object is).  </li>
+<li>clear integer types, where the abstaction _helps_ avoid confusion whether it<br>is ‘int’ or ‘long’. 例如 u8/u16/u32就是很好的抽象  </li>
+<li>when you use sparse to literally create a _new_ type for type-checking.<br>— 暂时不太理解:-(  </li>
+<li>New types which are identical to standard C99 types, in certain exceptional<br>circumstances.  </li>
+<li>Types safe for use in userspace. — 暂时不太理解:-(  </li>
+</ul>
+<h3 id="函数">函数</h3>
+<hr>
+<pre><code>Functions should be short and sweet, and <span class="operator"><span class="keyword">do</span> just one thing. 
+They should fit <span class="keyword">on</span> one <span class="keyword">or</span> two screenfuls <span class="keyword">of</span> <span class="built_in">text</span>.
+
+The maximum length <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">is</span> inversely proportional <span class="keyword">to</span> the complexity 
+<span class="keyword">and</span> indentation <span class="keyword">level</span> <span class="keyword">of</span> that <span class="keyword">function</span>.
+<span class="comment">-- 当函数逻辑简单时，稍微长一点没有关系；</span>
+<span class="comment">-- 当函数逻辑复杂时，可以通过helper函数缩短函数的长度。同时如果需要考虑性能，inline是个不错的选择。</span>
+
+Another measure <span class="keyword">of</span> the <span class="keyword">function</span> <span class="keyword">is</span> the <span class="built_in">number</span> <span class="keyword">of</span> <span class="keyword">local</span> <span class="keyword">variables</span>. 
+They shouldn<span class="string">'t exceed 5-10, or you'</span>re doing something wrong.
+依据：A human brain can generally easily keep track about <span class="number">7</span> different things.
+
+<span class="keyword">In</span> source file, seperate functions <span class="keyword">with</span> one blank line.
+
+<span class="keyword">If</span> the <span class="keyword">function</span> <span class="keyword">is</span> exported, the EXPORT macro <span class="keyword">for</span> it should follow immediately 
+<span class="keyword">after</span> the closing <span class="keyword">function</span> brace line.
+
+<span class="keyword">In</span> <span class="keyword">function</span> prototype, include parameter <span class="keyword">names</span> <span class="keyword">with</span> their <span class="keyword">data</span> types.</span>
+</code></pre><h3 id="集中管理函数的退出条件">集中管理函数的退出条件</h3>
+<hr>
+<p>这部分主要是讨论goto的实用技巧(goto反对党请绕道)。  </p>
+<pre><code>The <span class="keyword">goto</span> statement comes <span class="keyword">in</span> handy <span class="keyword">when</span> a <span class="keyword">function</span> exits <span class="keyword">from</span> multiple locations 
+<span class="keyword">and</span> some common works such <span class="keyword">as</span> cleanup has <span class="keyword">to</span> be done.
+
+Choose label names which say what the <span class="keyword">goto</span> does <span class="keyword">or</span> why the <span class="keyword">goto</span> exits.
+</code></pre><p>goto语句在以下情况下，可以合理的使用：  </p>
+<ul>
+<li>unconditional statements are easier to understand and follow  </li>
+<li>nesting is reduced  </li>
+<li>errors by not updating individual exit points when making modifications are prevented — 暂时不理解:-(  </li>
+<li>save the compiler work to optimize redundant code away  </li>
+</ul>
+<h3 id="注释">注释</h3>
+<hr>
+<p>这部分主要是一些避免over-commenting的原则。  </p>
+<pre><code>NEVER <span class="keyword">try</span> <span class="keyword">to</span> explain HOW your code works <span class="keyword">in</span> a commment:
+<span class="keyword">it</span>'s much better <span class="keyword">to</span> <span class="command">write</span> <span class="keyword">the</span> code so <span class="keyword">the</span> \_working\_ <span class="keyword">is</span> obvious, <span class="keyword">and</span> <span class="keyword">it</span>'s a 
+waste <span class="keyword">of</span> <span class="property">time</span> <span class="keyword">to</span> explain badly written code.
+
+Generally, you want your comments <span class="keyword">to</span> <span class="keyword">tell</span> WHAT your code <span class="keyword">does</span>, <span class="keyword">not</span> HOW. <span class="comment">--发人深省啊！</span>
+
+Try <span class="keyword">to</span> avoid putting comments inside a function body.
+Instead, <span class="keyword">put</span> <span class="keyword">the</span> comments <span class="keyword">at</span> <span class="keyword">the</span> head <span class="keyword">of</span> <span class="keyword">the</span> function, telling people what <span class="keyword">it</span> <span class="keyword">does</span>,
+<span class="keyword">and</span> possibly WHY <span class="keyword">it</span> <span class="keyword">does</span> <span class="keyword">it</span>.  
+
+Linux style <span class="keyword">for</span> comments <span class="keyword">is</span> <span class="keyword">the</span> C89 <span class="string">"/* ... */"</span> style.
+Don't use C99-style <span class="string">"// ..."</span> comments.
+
+The preferred style <span class="keyword">for</span> long (multi-line) comments <span class="keyword">is</span>:
+/*
+ * This <span class="keyword">is</span> <span class="keyword">the</span> preferred style <span class="keyword">for</span> multi-line
+ * comments <span class="keyword">in</span> <span class="keyword">the</span> Linux kernel source code.
+ * Please use <span class="keyword">it</span> consistently.
+ */
+</code></pre><h3 id="宏，枚举">宏，枚举</h3>
+<hr>
+<pre><code>Names <span class="operator">of</span> macros defining constants <span class="operator">and</span> labels <span class="operator">in</span> enums are capitalized.
+
+Enums are preferred when defining serveral related constants.
+
+CAPITALIZED macro names are appreciated but macros resembling functions may be  
+named <span class="operator">in</span> <span class="built_in">lower</span> <span class="keyword">case</span>.
+
+Generally, inline functions are preferable <span class="built_in">to</span> macros resembling functions. <span class="comment">-- 个人更认同这一原则。</span>
+
+Macros <span class="operator">with</span> multiple statements should be eclosed <span class="operator">in</span> <span class="operator">a</span> <span class="built_in">do</span>-which block.
+</code></pre><h3 id="打印内核消息">打印内核消息</h3>
+<pre><code>Make the messages concise, clear, <span class="keyword">and</span> unambiguous.
+
+<span class="keyword">For</span> messages that aren<span class="comment">'t associated with a particular device, <span class="xmlDocTag">&lt;linux/printk.h&gt;</span> </span>
+defines pr_notice(), pr_info(), pr_warn(), pr_err(), etc.
+</code></pre><h3 id="inline的使用">inline的使用</h3>
+<hr>
+<pre><code>Abundant use <span class="operator">of</span> <span class="operator">the</span> inline keyword leads <span class="built_in">to</span> <span class="operator">a</span> much bigger kernel, which <span class="operator">in</span> turn 
+slows <span class="operator">the</span> <span class="keyword">system</span> <span class="keyword">as</span> <span class="operator">a</span> <span class="keyword">whole</span> down, due <span class="built_in">to</span> <span class="operator">a</span> bigger icache footprint <span class="keyword">for</span> <span class="operator">the</span> CPU 
+<span class="operator">and</span> simply because there is less memory available <span class="keyword">for</span> <span class="operator">the</span> pagecache.
+
+A reasonable rule <span class="operator">of</span> thumb is <span class="built_in">to</span> <span class="operator">not</span> <span class="built_in">put</span> inline <span class="keyword">at</span> functions that have more 
+than <span class="number">3</span> <span class="keyword">lines</span> <span class="operator">of</span> code <span class="operator">in</span> them.  <span class="comment">--即，inline应限制用于小函数 </span>
+</code></pre><h3 id="函数返回值">函数返回值</h3>
+<hr>
+<pre><code><span class="keyword">If</span> the name <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">is</span> an action <span class="keyword">or</span> an imperative command, the <span class="keyword">function</span> 
+should <span class="keyword">return</span> an <span class="keyword">error</span>-code <span class="built_in">integer</span>.
+<span class="keyword">If</span> the name <span class="keyword">is</span> a predicate, the <span class="keyword">function</span> should <span class="keyword">return</span> a <span class="string">"succeeded"</span> <span class="built_in">boolean</span>.
+</code></pre><h3 id="不要重复发明内核宏定义">不要重复发明内核宏定义</h3>
+<pre><code>The header <span class="built_in">file</span> <span class="built_in">include</span>/linux/kernel.h <span class="operator">contains</span> <span class="operator">a</span> <span class="built_in">number</span> <span class="operator">of</span> macros that you 
+should use, rather than explicitly coding some variant <span class="operator">of</span> them yourself.
+</code></pre><h3 id="条件编译">条件编译</h3>
+<hr>
+<pre><code>Wherever possible, don't <span class="operator"><span class="keyword">use</span> preprocessor conditional (#<span class="keyword">if</span>, #ifdef) <span class="keyword">in</span> .c files, 
+doing so makes code harder <span class="keyword">to</span> <span class="keyword">read</span> <span class="keyword">and</span> logic harder <span class="keyword">to</span> follow.
+
+Prefer <span class="keyword">to</span> compile out entire functions, rather than portions <span class="keyword">of</span> functions <span class="keyword">or</span> 
+portions <span class="keyword">of</span> expressions.
+
+Within code, <span class="keyword">where</span> possible, <span class="keyword">use</span> the IS_ENABLED macro <span class="keyword">to</span> <span class="keyword">convert</span> a Kconfig 
+symbol <span class="keyword">into</span> a C <span class="built_in">boolean</span> expression, <span class="keyword">and</span> <span class="keyword">use</span> it <span class="keyword">in</span> a normal C conditional.
+
+<span class="keyword">At</span> the <span class="keyword">end</span> <span class="keyword">of</span> <span class="keyword">any</span> non-trivial #<span class="keyword">if</span> <span class="keyword">or</span> #ifdef block (more than a few <span class="keyword">lines</span>), 
+place a comment <span class="keyword">after</span> the #endif <span class="keyword">on</span> the same line, noting the conditional 
+expression used. <span class="keyword">For</span> instance:
+    #ifdef CONFIG_SOMETHING
+    ...
+    #endif <span class="comment">/* CONFIG_SOMETHING */</span></span>
+</code></pre><h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="https://www.kernel.org/doc/Documentation/CodingStyle" target="_blank" rel="external">Linux kernel coding style</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/05/06/coding-style/" data-id="y97b7hvypx4pntcq" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/05/06/coding-style/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/05/07/skill-list/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          技艺培养(基于知道创宇技能表v2.2)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/03/27/alfred/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Alfred 使用记录</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/06/16/wiki-network-tcp-frto/">TCP FRTO机制</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/15/server-load-test/">服务器负载压力测试相关工具</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/12/tc-tutorial/">TC 实践</a>
+          </li>
+        
+          <li>
+            <a href="/2015/05/07/skill-list/">技艺培养(基于知道创宇技能表v2.2)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/05/06/coding-style/">Linux内核编码风格</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/27/alfred/">Alfred 使用记录</a>
+          </li>
+        
+          <li>
+            <a href="/2015/03/06/what-is-a-full-stack-developer/">Full Stack developer是怎样的一种存在？</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/06/linux-using-11/">linux命令学习（十一）：lsof, vnstat, fuser, host, at, cron</a>
+          </li>
+        
+          <li>
+            <a href="/2015/02/05/wiki-network-paper-stack-specialization/">Network stack specialization for performance</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/26/wiki-network-osi-model/">OSI模型</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/20/ntp-ptp-intro/">网络时钟同步协议-- NTP, PTP</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/17/how-to-hack-hexo/">如何为hexo主题添加新layout</a>
+          </li>
+        
+          <li>
+            <a href="/2015/01/14/test-wiki/">test-wiki</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/19/tcp-probe-intro/">tcpprobe, observe the TCP flow with kprobes</a>
+          </li>
+        
+          <li>
+            <a href="/2014/12/16/tshark-intro/">tshark, network protocol analyzer</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.67px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.67px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.67px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.67px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 15.00px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.67px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.67px;">Mapreduce</a><a href="/tags/NTP/" style="font-size: 11.67px;">NTP</a><a href="/tags/PTP/" style="font-size: 11.67px;">PTP</a><a href="/tags/Shell/" style="font-size: 10.00px;">Shell</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 13.33px;">Tools</a><a href="/tags/X11/" style="font-size: 13.33px;">X11</a><a href="/tags/YQL/" style="font-size: 11.67px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.67px;">YUI</a><a href="/tags/assembly/" style="font-size: 13.33px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.67px;">chrome</a><a href="/tags/excel/" style="font-size: 13.33px;">excel</a><a href="/tags/google/" style="font-size: 11.67px;">google</a><a href="/tags/hexo/" style="font-size: 13.33px;">hexo</a><a href="/tags/http-load-test/" style="font-size: 11.67px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.67px;">javascript</a><a href="/tags/latex/" style="font-size: 13.33px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.67px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.67px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.67px;">matlab</a><a href="/tags/mount/" style="font-size: 11.67px;">mount</a><a href="/tags/nginx/" style="font-size: 11.67px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.67px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.67px;">papers</a><a href="/tags/python/" style="font-size: 15.00px;">python</a><a href="/tags/ssh/" style="font-size: 11.67px;">ssh</a><a href="/tags/tc/" style="font-size: 11.67px;">tc</a><a href="/tags/tcpdump/" style="font-size: 11.67px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.67px;">tcptrace</a><a href="/tags/tshark/" style="font-size: 13.33px;">tshark</a><a href="/tags/ubuntu/" style="font-size: 11.67px;">ubuntu</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/05/06/coding-style/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-02-05T09:31:39.148Z</updated>
+  <updated>2015-02-10T03:23:28.646Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,83 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[linux命令学习（十一）：lsof, vnstat, fuser, host, at, cron]]></title>
+    <link href="http://perthcharles.github.com/2015/02/06/linux-using-11/"/>
+    <id>http://perthcharles.github.com/2015/02/06/linux-using-11/</id>
+    <published>2015-02-06T07:07:07.000Z</published>
+    <updated>2015-02-10T03:16:19.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>这次介绍一些系统使用和状态方面的一些命令，继续学习Linux命令  </p>
+<a id="more"></a>  
+
+<h3 id="1-_lsof:_list_open_file">1. lsof: list open file</h3>
+<hr>
+<p>使用实例如下：  </p>
+<pre><code><span class="array"># lsof </span>-c &lt;process-name&gt;  <span class="comment">// 查看某个进程打开的文件  </span>
+<span class="array"># lsof </span>/var/log/message   <span class="comment">// 查看massage文件当前在被谁使用  </span>
+<span class="array"># lsof </span>-u ^root           <span class="comment">// 查看当前非root用户打开的文件信息  </span>
+<span class="array"># lsof </span>-p <span class="number">1</span>               <span class="comment">// 查看1号进程打开的文件  </span>
+<span class="array"># lsof </span>-p `pidof vim`     <span class="comment">// 查看vim进程打开的文件，效果如同第一条  </span>
+<span class="array"># lsof </span>-i                 <span class="comment">// 显示所有网络连接信息  </span>
+<span class="array"># lsof </span>-i tcp             <span class="comment">// 列出所有TCP网络连接信息  </span>
+<span class="array"># lsof </span>-i :<span class="number">22</span>             <span class="comment">// 查看22端口现在运行的情况  </span>
+</code></pre><h3 id="2-_vnstat:_a_console-based_network_traffic_monitor">2. vnstat: a console-based network traffic monitor</h3>
+<hr>
+<p>安装时候后才发现，vnstat并不能算一个实时的命令，更多的像是个制作历史报告的工具。<br>所以暂时就不学了，有需求再来看。<br>PS：如果想实时使用的话，可是使用—l选项。  </p>
+<h3 id="3-_fuser:_identify_processing_using_files_or_sockets">3. fuser: identify processing using files or sockets</h3>
+<hr>
+<p>基本上能用lsof替代，暂时忽略。  </p>
+<h3 id="4-_host:_DNS_lookup_utility">4. host: DNS lookup utility</h3>
+<hr>
+<p>使用实例如下：  </p>
+<pre><code><span class="array"># host www.baidu.com      </span><span class="comment">// 查看百度的IP地址  </span>
+<span class="array"># host </span>-a www.baidu.com   <span class="comment">// 显示详细的DNS查询消息  </span>
+</code></pre><h3 id="5-_dig:_DNS_lookup_utility">5. dig: DNS lookup utility</h3>
+<hr>
+<p>dig同样也是一个DNS查询的工具，和host互为补充吧。  </p>
+<pre><code># <span class="keyword">dig</span> www.baidu.<span class="keyword">com</span>         // 对百度网址进行DNS查询  
+# <span class="keyword">dig</span> +trace www.baidu.<span class="keyword">com</span>  // 从根域开始跟踪查询结果  
+# <span class="keyword">dig</span> +vc www.baidu.<span class="keyword">com</span>     // 使用TCP协议查询  
+</code></pre><p>说道DNS，就想吐槽，大家都懂的.有兴趣的话大家可以对比下面两个命令的输出差异，对G.F.W.有一个大致的了解。  </p>
+<pre><code># <span class="keyword">dig</span> +vc +trace www.baidu.<span class="keyword">com</span>  
+# <span class="keyword">dig</span> +vc +trace www.facebook.<span class="keyword">com</span>  
+</code></pre><h3 id="6-_ss:_another_utility_to_invertigate_sockets">6. ss: another utility to invertigate sockets</h3>
+<hr>
+<p>ss是socket statistics的缩写，相比于netstat能够显示过多关于socket细节的信息。<br>同时netstat略慢，而ss更快。  </p>
+<pre><code><span class="array"># ss </span>-a -t       <span class="comment">// a == all, t == tcp  </span>
+<span class="array"># ss </span>-s          <span class="comment">// s == summary, 显示socket信息摘要  </span>
+<span class="array"># ss </span>-l          <span class="comment">// l == listenning  </span>
+<span class="array"># ss </span>-p          <span class="comment">// p == processes, 显示哪些进程在用哪些socket  </span>
+<span class="array"># ss </span>-pl         <span class="comment">// 查看哪些进程在使用listening状态的socket  </span>
+</code></pre><h3 id="7-_关于环境变量LD_PRELOAD">7. 关于环境变量LD_PRELOAD</h3>
+<hr>
+<p>环境变量LD_PRELOAD指定程序运行时优先加载的动态链接库，且其中的符号优先级是最高的。所以在使用LD_PRELOAD环境变量后，可以替换掉标准C中的函数（默认放在libc.so.6文件中）。<br>比如想替换掉系统默认的malloc函数，则将LD_PRELOAD设置为新的malloc函数链接库。  </p>
+<pre><code><span class="comment"># LD_PRELOAD="/home/user/mymalloc.so"  </span>
+</code></pre><p>关于LD_PRELOAD环境变量，<a href="http://blog.csdn.net/haoel/article/details/1602108" target="_blank" rel="external">这篇文章</a>或许能让你脑洞大开。  </p>
+<h3 id="8-_at:_executes_commands_at_a_specified_time">8. at: executes commands at a specified time</h3>
+<hr>
+<p>与cron配置一个周期性的服务不同，at命令主要是用于一次性的任务需求中。  </p>
+<pre><code><span class="array"># at </span>-f myscript.sh -v <span class="number">10</span>:<span class="number">30</span>       <span class="comment">// 在10:30时刻，开始执行脚本  </span>
+<span class="array"># timer</span>=`date +%k:%M -d <span class="string">'5 min'</span>`   <span class="comment">// 得到距离当前时刻5min的时间  </span>
+<span class="array"># at </span>-f myscript.sh -v ${timer}    <span class="comment">// 在timer对应的时刻开始执行脚本  </span>
+<span class="array"># atq                              </span><span class="comment">// 查看还未执行的任务  </span>
+<span class="array"># atrm </span><span class="number">7</span>                           <span class="comment">// 使用任务编号进行删除  </span>
+<span class="array"># at </span>-c <span class="number">8</span>                          <span class="comment">// 查看某任务编号对应的具体内容  </span>
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>这次介绍一些系统使用和状态方面的一些命令，继续学习Linux命令  </p>
+]]>
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="Shell" scheme="http://perthcharles.github.com/categories/Shell/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[Network stack specialization for performance]]></title>
@@ -1603,59 +1680,6 @@ $reboot</span>
       <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
     
       <category term="ubuntu" scheme="http://perthcharles.github.com/tags/ubuntu/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Analysis tools for network traces]]></title>
-    <link href="http://perthcharles.github.com/2014/06/16/tcpdump-tcptrace-tshark/"/>
-    <id>http://perthcharles.github.com/2014/06/16/tcpdump-tcptrace-tshark/</id>
-    <published>2014-06-16T04:00:00.000Z</published>
-    <updated>2014-11-04T06:48:02.000Z</updated>
-    <content type="html"><![CDATA[<h2 id="Overview">Overview</h2>
-<p><a href="http://www.tcpdump.org/" target="_blank" rel="external">tcpdump</a>: capture network packets by specific filters<br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>: a tool for analysis of tcp dump files, like <a href="http://www.tcpdump.org/manpages/pcap.3pcap.html" target="_blank" rel="external">pcap</a><br><a href="http://tcptrace.org/jPlot/" target="_blank" rel="external">jplot</a>: a java version of <a href="http://www.xplot.org/" target="_blank" rel="external">xplot</a><br>补充一下tshark也是一个不错的工具，是wireshark的terminal版本，功能同样强大。  </p>
-<a id="more"></a>
-
-<h2 id="Install_&amp;_Usage">Install &amp; Usage</h2>
-<h3 id="TCPDUMP">TCPDUMP</h3>
-<pre><code><span class="variable">$yum</span> install tcpdump  <span class="comment">// My OS is CentOS 6.5</span>
-<span class="variable">$tcpdump</span> -w example.pcap -i eth0 -n  
-</code></pre><p><a href="http://www.tcpdump.org/manpages/tcpdump.1.html" target="_blank" rel="external">Here</a> is the manpage of tcpdump with lots of examples.  </p>
-<h3 id="TCPTRACE">TCPTRACE</h3>
-<pre><code><span class="variable">$yum</span> install tcptrace
-<span class="variable">$tcptrace</span> -R example.pcap  // produce data <span class="keyword">for</span> RTT graph
-</code></pre><p><a href="http://www.tcptrace.org/manual/index.html" target="_blank" rel="external">Here</a> is the manpage of tcptrace.  </p>
-<h3 id="JPLOT">JPLOT</h3>
-<p>Install  </p>
-<pre><code><span class="variable">$wget</span> http:<span class="comment">//www.tcptrace.org/jPlot/download/jPlot-1.0.2.tar.gz</span>
-<span class="variable">$tar</span> zxvf jPlot-<span class="number">1.0</span><span class="number">.2</span>.tar.gz
-<span class="variable">$cd</span> jPlot-<span class="number">1.0</span><span class="number">.2</span>
-<span class="variable">$yum</span> install java-devel   <span class="comment">// install javac</span>
-<span class="variable">$.</span>/configure
-<span class="variable">$make</span>
-</code></pre><p>Usage  </p>
-<pre><code><span class="variable">$java</span> jPlot a2b_rtt.xpl
-</code></pre><p><a href="http://tcptrace.org/jPlot/" target="_blank" rel="external">Here</a> is the manpage of jPlot.  </p>
-<h2 id="Others">Others</h2>
-<p>If you are familiar with <a href="http://www.gnuplot.info/" target="_blank" rel="external">gnuplot</a>, I think <a href="http://tcptrace.org/xpl2gpl/" target="_blank" rel="external">xpl2gpt</a> is a good shell scripts for you.  </p>
-<h3 id="Examples">Examples</h3>
-<pre><code><span class="variable">$tcpdump</span> -w example.pcap -i eth0 -n
-<span class="variable">$tcptrace</span> -R example.pcap
-<span class="variable">$xpl2gpl</span> a2b_rtt.xpl
-<span class="variable">$gnuplot</span> a2b_rtt.gpl
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<h2 id="Overview">Overview</h2>
-<p><a href="http://www.tcpdump.org/" target="_blank" rel="external">tcpdump</a>: capture network packets by specific filters<br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>: a tool for analysis of tcp dump files, like <a href="http://www.tcpdump.org/manpages/pcap.3pcap.html" target="_blank" rel="external">pcap</a><br><a href="http://tcptrace.org/jPlot/" target="_blank" rel="external">jplot</a>: a java version of <a href="http://www.xplot.org/" target="_blank" rel="external">xplot</a><br>补充一下tshark也是一个不错的工具，是wireshark的terminal版本，功能同样强大。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="tshark" scheme="http://perthcharles.github.com/tags/tshark/"/>
-    
-      <category term="tcpdump" scheme="http://perthcharles.github.com/tags/tcpdump/"/>
-    
-      <category term="tcptrace" scheme="http://perthcharles.github.com/tags/tcptrace/"/>
     
   </entry>
   

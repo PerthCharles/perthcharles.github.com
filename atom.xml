@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-06-16T10:24:09.245Z</updated>
+  <updated>2015-06-18T09:10:12.095Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,84 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[Random early detection]]></title>
+    <link href="http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/"/>
+    <id>http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/</id>
+    <published>2015-06-18T09:05:52.000Z</published>
+    <updated>2015-06-18T09:08:46.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>下图是RED机制的工作原理流程图<br><img src="/resource/RED_algorithm.png" alt="">  </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="https://en.wikipedia.org/?title=Random_early_detection" target="_blank" rel="external">Random Early Detection: wiki</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>下图是RED机制的工作原理流程图<br><img src="/resource/RED_algorithm.png" alt="">  </p>
+<h3 id="参考资料">参考资料</h3>
+<hr>
+<p><a href="https://en.wikiped]]>
+    </summary>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Understand the Performance of Pacing]]></title>
+    <link href="http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/"/>
+    <id>http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/</id>
+    <published>2015-06-18T05:20:22.000Z</published>
+    <updated>2015-06-18T09:09:16.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>这篇文章给出了对于TCP Pacing技术的详细评测分析结果。<br>对于pacing想要解决的问题和实际效果给出了详细的实验数据分析，是理解pacing<br>技术的一篇很好的入门文章。<br><a id="more"></a>  </p>
+<h2 id="1-_What_is_Pacing_?">1. What is Pacing ?</h2>
+<hr>
+<p>TCP的数据发送目前有三种策略：<br>a. ACK-Clocking: 这是Linux TCP/IP协议栈现有的实现策略。每一个数据包的发送<br>都是由收到的确认包触发的。当数据确认包ACK由于网络拥塞无法及时达到发送端时，<br>发送方是不会发送数据的，除非timeout。总的来说就是，ack控制数据发送的时机，<br>min(cwnd, rwnd)控制发送数据的多少。  </p>
+<p>b. Rate-based: pure的rate-based的方法使用一个估计的瓶颈链路带宽rate来控制<br>数据发送的多少和时机。  </p>
+<p>c. Pacing: pacing算是以上两种方法的一个hybrid。pure的rate-based的方法最大的<br>缺点就是可能造成瓶颈链路的over-subscribed，而不能及时的发现。而在Pacing方法<br>中，发送数据量的多少还是由min(cwnd, rwnd)控制，而数据的发送时机则由timer控制。<br>timer控制的目的就是保证在一个RTT内，数据是比较平滑的发送出去的。  </p>
+<h2 id="why_needs_pacing_?">why needs pacing ?</h2>
+<hr>
+<p>Pacing的提出主要是为了解决传统协议栈中存在的bursty transmission的情况。<br>文章总结的TCP中可能产生burst的情况有：  </p>
+<pre><code><span class="tag">a</span>. <span class="tag">Slow</span> <span class="tag">Start</span>：慢启动阶段<span class="tag">cwnd</span>的增长是指数级的  
+<span class="tag">b</span>. <span class="tag">Losses</span>: 当<span class="tag">rwnd</span>用完后，在丢包发生时无法发送新数据，重传结束后会引发<span class="tag">burst</span>。  
+  <span class="tag">Note</span>: 这种<span class="tag">burst</span>可以用<span class="tag">opportunistic</span> <span class="tag">retransmission</span> 解决 <span class="pseudo">:)</span>  
+<span class="tag">c</span>. <span class="tag">ACK</span> <span class="tag">Compression</span>: 当存在双向的数据流时，<span class="tag">ACK</span>包可能会在瓶颈链路中排队，破坏<span class="tag">ack-clocking</span>机制。  
+<span class="tag">d</span>. <span class="tag">Multiplexing</span>: 当多条流共享一个高速瓶颈链路时，尽管同一条流数据包可能到达瓶颈链路的时间不同(细小的维持<span class="tag">ack-clocking</span>的<span class="tag">gap</span>)，但当数据包经历在瓶颈链路排队后，维持<span class="tag">ack-clocking</span>的<span class="tag">gap</span>被完全的破坏了。最终导致的结果就是数据包的发送都是突发性的。  
+</code></pre><h2 id="Results">Results</h2>
+<hr>
+<p>Pacing的实现：  </p>
+<pre><code>Timeouts are scheduled <span class="keyword">at</span> regular intervals <span class="operator">of</span> duration RTT/window.  
+A packet is transmitted <span class="built_in">from</span> <span class="operator">the</span> window whenever <span class="operator">the</span> timer fires.  
+</code></pre><p>单条流的情况：  </p>
+<pre><code>a. 当瓶颈链路<span class="keyword">buffer</span>小于BDP时，reno会更早的遭遇丢包，因此pacing在throughput方面表现更好  
+b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的throughput更差，这主要是由于pacing会delay congestion <span class="keyword">signal</span>  
+</code></pre><p>多条流的情况：  </p>
+<pre><code><span class="keyword">a</span>. 在initial period，reno反而性能更好。主要是pacing流几乎同时丢包造成的性能下降，即synchronization effect现象。  
+    synchronization effect：pacing流由于将数据包打散，当瓶颈链路<span class="keyword">buffer</span>溢出时，  
+    许多pacing流都会产生丢包，进而许多pacing流都会下降cwnd。  
+    而reno由于数据包相对是以burst的形式发送的，要么有一条流丢很多包，  
+    要么可能某些流一个包都不丢。 
+
+<span class="keyword">b</span>. 在steady state，pacing反而性能更好。主要是de-synchronization effect现象导致的。  
+    de-synchronization effect：在稳定状态，Reno每个RTT会将cwnd加<span class="number">1</span>。  
+    在<span class="keyword">buffer</span>用满后，每个Reno流多发的这个数据包(burst最后一个包)很大概率就会<span class="keyword">drop</span>。  
+    而pacing由于将数据包打散了，丢包的发生有一定的随机性。对于单条pacing流而言就可能没有包被<span class="keyword">drop</span>  
+</code></pre><h2 id="参考资料">参考资料</h2>
+<hr>
+<p>Understanding the Performance of TCP Pacing, INFOCOM’2000  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>这篇文章给出了对于TCP Pacing技术的详细评测分析结果。<br>对于pacing想要解决的问题和实际效果给出了详细的实验数据分析，是理解pacing<br>技术的一篇很好的入门文章。<br>]]>
+    
+    </summary>
+    
+      <category term="wiki-paper" scheme="http://perthcharles.github.com/categories/wiki-paper/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[TCP FRTO机制]]></title>
@@ -1716,124 +1794,6 @@ All SKB<span class="comment">'s seen here are completely headerless.  </span>
 ]]></content>
     <summary type="html">
     <![CDATA[<p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(6): Movement of sk_buff across protocol layers]]></title>
-    <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/"/>
-    <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-6/</id>
-    <published>2014-11-18T13:50:50.000Z</published>
-    <updated>2015-05-10T05:05:02.000Z</updated>
-    <content type="html"><![CDATA[<p>这章主要是从宏观上来理解整个TCP/IP协议栈道额工作机制。在整个讨论的过程中，涉及到以下的层次划分：  </p>
-<pre><code><span class="keyword">socket</span> layer  
-tcp    layer  
-ip     layer  
-<span class="keyword">link</span>   layer  
-packet scheduling layer, qdisc  
-softIRQ framework  
-transmission/reception  
-</code></pre><a id="more"></a>  
-
-<p>这一章太重要了，建议直接看书，尤其是理解书中的几个图。<br>哦对了，如果大家找不到该书的电子版，可以在博客下方留下邮箱。  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>这章主要是从宏观上来理解整个TCP/IP协议栈道额工作机制。在整个讨论的过程中，涉及到以下的层次划分：  </p>
-<pre><code><span class="keyword">socket</span> layer  
-tcp    layer  
-ip     layer  
-<span class="keyword">link</span>   layer  
-packet scheduling layer, qdisc  
-softIRQ framework  
-transmission/reception  
-</code></pre>]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(5): sk_buff and protocol headers]]></title>
-    <link href="http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/"/>
-    <id>http://perthcharles.github.com/2014/11/18/tcp-design-and-implementation-5/</id>
-    <published>2014-11-18T06:22:06.000Z</published>
-    <updated>2015-05-10T05:04:48.000Z</updated>
-    <content type="html"><![CDATA[<p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
-<a id="more"></a>  
-
-<h3 id="struct_sk_buff">struct sk_buff</h3>
-<p>sk_buff结构体的定义位于：include/linux/skbuff.h文件中。其中的主要元素及解释如下所示：  </p>
-<pre><code><span class="keyword">struct</span> sk_buff {
-    <span class="comment">/* These two members must be first */</span>
-    <span class="keyword">struct</span> sk_buff      *next;  
-    <span class="keyword">struct</span> sk_buff      *prev;
-
-    <span class="keyword">struct</span> sk_buff      tstamp;                 <span class="comment">// sk_buff发送时间/接收时间</span>
-
-    <span class="keyword">struct</span> sock         *sk;                    <span class="comment">// 标示这个sk_buff属于哪个sock  </span>
-    <span class="keyword">struct</span> net_device   *dev;                   <span class="comment">// 表示从哪个设备接收/发出  </span>
-
-    <span class="keyword">char</span>                cb[<span class="number">48</span>] __aligned(<span class="number">8</span>);    <span class="comment">// control buffer, TCP map this buffer to struct tcp_skb_cb  </span>
-    ...  
-
-    <span class="keyword">unsigned</span> <span class="keyword">int</span>        len;                    <span class="comment">// sk_buff的总长度  = linear-data + paged-data  </span>
-    <span class="keyword">unsigned</span> <span class="keyword">int</span>        data_len;               <span class="comment">// paged-data length</span>
-    __u16               mac_len;            
-    __u16               hdr_len;                <span class="comment">// writable header length of cloned skb</span>
-    ...  
-
-    __u32               priority;               <span class="comment">// packet queueing priority</span>
-    ...  
-    __u8                peeked:<span class="number">1</span>;               <span class="comment">// packet has been seen already, so stats have been done for it, don't do them again</span>
-    ...  
-    <span class="comment">/* 有意思的是alloc_skb时，skb-&gt;tail = skb-&gt;data - skb-&gt;head。tail其实是一个偏移量，而不是一个真正意义上的指针
-     * 同时skb-&gt;end = skb-&gt;tail + size 也是一样偏移量。
-     */</span>
-    sk_buff_data_t      tail;                   <span class="comment">// last byte of the data residing in linear area (与data指针对应)</span>
-    sk_buff_data_t      end;                    <span class="comment">// end of linear-data area (与head指针对应)</span>
-    <span class="keyword">unsigned</span> <span class="keyword">char</span>       *head;                  <span class="comment">// points to the start of the linear data area (first byte allocated)</span>
-    <span class="keyword">unsigned</span> <span class="keyword">char</span>       *data;                  <span class="comment">// start of data residing in the linear area   (first byte used)</span>
-
-    <span class="keyword">unsigned</span> <span class="keyword">int</span>        truesize;               <span class="comment">// total memory allocated for this buffer = sizeof(sk_buff) + the size of the data block allocated for this sk_buff  </span>
-};
-
-<span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *sk_buff_data_t;
-</code></pre><h4 id="struct_skb_shared_info">struct skb_shared_info</h4>
-<p>This data is invariant(不变的) across clones and lives at the end of the header data, ie. at skb-&gt;end.<br>这个数据结构主要半酣sk_buff中的nonlinear data。所谓的nonlinear data其实就是linear-data area放不下的数据就放到nonlinear area了。<br>书中把nonlinear data area也叫做 paged-data area. The paged-data area is possible only if DMA allows scatter-gather operations on the physically scattered pages.  </p>
-<hr>
-<h3 id="Routines_operating_on_sk_buff">Routines operating on sk_buff</h3>
-<ol>
-<li><p>stuct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask, int flags, int mode)<br>该函数分配一个新的sk_buff实例，需要给定的参数是linear-data area的大小和内存分配的模式。  </p>
-</li>
-<li><p>static inline void skb_reserve(struct sk_buff *skb, int len)<br>该函数将skb的data和tail指针往后移动，移动长度为len。常见的用途是为协议头部保留空间。  </p>
-</li>
-<li><p>unsigned char <em>skb_put(struct sk_buff </em>skb, unsigned int len)<br>该函数负责将sk_buff的linear-data area的tail指针增加len。可以看到3.10的kernel里面使用了skb_tail_pointer的方式获取真正意义上的指向数据使用部分的最后一个字节的指针。进一步验证了之前分析sk_buff结构体定义时认为tail是一个offset的判断。这点与书中描述的是不一致的。可见Linux kernel中关于TCP这块的更新还是很频繁的。连sk_buff这种重要的数据结构也一直在改动。  </p>
-</li>
-<li><p>unsigned char <em>skb_push(struct sk_buff </em>skb, unsigend int len)<br>该函数负责将sk_buff的linear-data area的data指针往前移动，距离为len。不难看出，skb_put是用来构建包的数据的，而skb_push则是当一个上层包传递到下一层后，下层在添加头部数据时调用skb_push。  </p>
-</li>
-<li><p>unsigned char <em>skb_pull(struct sk_buff </em>skb, unsigned int len)<br>该函数与skb_push相对应，它将data指针往后移动，距离为len。也就意味着skb-&gt;len要减少len。当有数据包到达后，一层层解析包头的过程中往往会用到该函数。  </p>
-</li>
-</ol>
-<p>书中的5.5节描述了发送数据包时header是如何添加的，5.6节描述了收到的数据包头是如何被解析的。不过基本上熟悉了上面几个函数后，基本的操作方法应该都能理解了。还有不清楚的可以看下书。<br>这章主要就是讲sk_buff及其相关的一些操作函数，还算比较好理解。  </p>
-<pre><code>tcp_skb_cb结构体是TCP层对于sk_buff-&gt;<span class="keyword">cb</span>的实例化。里面主要有seq，timestamp和sacked flag  
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<p>这章学习一下TCP用于表示数据包的最重要的一个数据结构：sk_buff。<br>sk_buff有三部分：sk_buff基本数据元素, linear-data buffer, paged-data(struct skb_shared_info)。<br>这章将详细的讲解如何有sk_buff构建一个被发送出去的包（主要就是包头的构建）和如何解析一个数据包得到一个sk_buff。  </p>
 ]]>
     
     </summary>

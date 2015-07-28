@@ -2,23 +2,33 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/</loc>
-    <lastmod>2015-06-18T09:09:16.000Z</lastmod>
+    <loc>http://perthcharles.github.com/about/index.html</loc>
+    <lastmod>2015-07-28T14:06:28.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/07/08/iso-yum/</loc>
+    <lastmod>2015-07-08T01:47:57.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/06/15/server-load-test/</loc>
+    <lastmod>2015-07-07T03:33:01.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/</loc>
-    <lastmod>2015-06-18T09:08:46.000Z</lastmod>
+    <lastmod>2015-06-18T10:03:06.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/</loc>
+    <lastmod>2015-06-18T09:56:26.000Z</lastmod>
   </url>
   
   <url>
     <loc>http://perthcharles.github.com/2015/06/16/wiki-network-tcp-frto/</loc>
     <lastmod>2015-06-16T10:23:07.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/2015/06/15/server-load-test/</loc>
-    <lastmod>2015-06-15T03:32:22.000Z</lastmod>
   </url>
   
   <url>
@@ -464,11 +474,6 @@
   <url>
     <loc>http://perthcharles.github.com/2015/03/06/what-is-a-full-stack-developer/</loc>
     <lastmod>2015-05-09T17:06:32.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://perthcharles.github.com/about/index.html</loc>
-    <lastmod>2015-01-14T13:02:19.000Z</lastmod>
   </url>
   
 </urlset>

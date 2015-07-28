@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-06-18T09:10:12.095Z</updated>
+  <updated>2015-07-28T14:09:21.116Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,23 +15,72 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[使用ISO镜像配置yum源]]></title>
+    <link href="http://perthcharles.github.com/2015/07/08/iso-yum/"/>
+    <id>http://perthcharles.github.com/2015/07/08/iso-yum/</id>
+    <published>2015-07-08T01:28:18.000Z</published>
+    <updated>2015-07-08T01:47:57.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h2 id="问题">问题</h2>
+<hr>
+<p>在无网络连接时，需要安装常见的工具软件。如果每次都先下好然后拷贝到这台机器，则太繁琐。何况很多常见的工具看似简单，但却有许多依赖，从源码安装太麻烦而且易出错。最典型的例子就是GCC（不要问我是怎么知道的T_T）  </p>
+<a id="more"></a>  
+
+<h2 id="解决方法">解决方法</h2>
+<hr>
+<p>目前常见的Linux发行版本的ISO镜像都可以在挂载后配置为yum源。这样就能直接从ISO镜像中带的rpm包中安装到大部分常用的软件。以下以CentOS 6.5为例进行说明：  </p>
+<p>第一步：下载CentOS6.5的ISO镜像<br>第二步：挂载ISO镜像  </p>
+<pre><code><span class="preprocessor"># mkdir -p /cdrom/iso  </span>
+<span class="preprocessor"># mount -o loop ISO-FILE-PATH /cdrom/iso</span>
+</code></pre><p>第三步：配置yum源  </p>
+<pre><code><span class="comment"># cd /etc/yum.repos.d</span>
+<span class="comment"># mkdir BAK; mv *.repo BAK  // 备份现有yum源配置  </span>
+<span class="comment"># vim ISO.repo  </span>
+  [base]
+  <span class="variable">name=</span>CentOS-ISO1
+  <span class="variable">baseurl=</span>file:///cdrom/iso
+  <span class="variable">enabled=</span><span class="number">1</span>
+  <span class="variable">gpgcheck=</span><span class="number">1</span>
+  <span class="variable">gpgkey=</span>file:///cdrom/iso/RPM-GPG-KEY-CentOS-<span class="number">6</span>
+</code></pre><p>第四步：检查yum源配置  </p>
+<pre><code><span class="preprocessor"># yum list  </span>
+</code></pre><p>至此应该能看到ISO镜像中RPM包已经配置好了yum源。对于CentOS6.5来说，可以看到它有repodata文件夹，这意味着它的ISO镜像能够直接配置为yum源而不用额外的动作。<br>而如果ISO没有repodata文件夹或手头仅有RPM包时，则需要借助辅助工具createrepo来创建正确的yum源。<br>在安装好createrepo后，仅需在RPM包所在的目录执行以下命令就可以创建一个可用的yum源。  </p>
+<pre><code><span class="preprocessor"># createrepo .</span>
+</code></pre><h2 id="参考资料">参考资料</h2>
+<hr>
+<p><a href="http://blog.csdn.net/gzh0222/article/details/6724142" target="_blank" rel="external">如何使用yum工具从iso镜像文件上安装</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h2 id="问题">问题</h2>
+<hr>
+<p>在无网络连接时，需要安装常见的工具软件。如果每次都先下好然后拷贝到这台机器，则太繁琐。何况很多常见的工具看似简单，但却有许多依赖，从源码安装太麻烦而且易出错。最典型的例子就是GCC（不要问我是怎么知道的T_T）  </p>
+]]>
+    
+    </summary>
+    
+      <category term="yum" scheme="http://perthcharles.github.com/tags/yum/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[Random early detection]]></title>
     <link href="http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/"/>
     <id>http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/</id>
     <published>2015-06-18T09:05:52.000Z</published>
-    <updated>2015-06-18T09:08:46.000Z</updated>
+    <updated>2015-06-18T10:03:06.000Z</updated>
     <content type="html"><![CDATA[<hr>
-<p>下图是RED机制的工作原理流程图<br><img src="/resource/RED_algorithm.png" alt="">  </p>
+<p>下图是RED机制的工作原理流程图<br><img src="/resources/RED_algorithm.png" alt="">  </p>
 <h3 id="参考资料">参考资料</h3>
 <hr>
 <p><a href="https://en.wikipedia.org/?title=Random_early_detection" target="_blank" rel="external">Random Early Detection: wiki</a>  </p>
 ]]></content>
     <summary type="html">
     <![CDATA[<hr>
-<p>下图是RED机制的工作原理流程图<br><img src="/resource/RED_algorithm.png" alt="">  </p>
+<p>下图是RED机制的工作原理流程图<br><img src="/resources/RED_algorithm.png" alt="">  </p>
 <h3 id="参考资料">参考资料</h3>
 <hr>
-<p><a href="https://en.wikiped]]>
+<p><a href="https://en.wikipe]]>
     </summary>
     
       <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
@@ -43,7 +92,7 @@
     <link href="http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/"/>
     <id>http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/</id>
     <published>2015-06-18T05:20:22.000Z</published>
-    <updated>2015-06-18T09:09:16.000Z</updated>
+    <updated>2015-06-18T09:56:26.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>这篇文章给出了对于TCP Pacing技术的详细评测分析结果。<br>对于pacing想要解决的问题和实际效果给出了详细的实验数据分析，是理解pacing<br>技术的一篇很好的入门文章。<br><a id="more"></a>  </p>
 <h2 id="1-_What_is_Pacing_?">1. What is Pacing ?</h2>
@@ -121,7 +170,7 @@ b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的thr
     <link href="http://perthcharles.github.com/2015/06/15/server-load-test/"/>
     <id>http://perthcharles.github.com/2015/06/15/server-load-test/</id>
     <published>2015-06-15T02:30:56.000Z</published>
-    <updated>2015-06-15T03:32:22.000Z</updated>
+    <updated>2015-07-07T03:33:01.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <h2 id="工具列表">工具列表</h2>
 <hr>
@@ -142,7 +191,9 @@ b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的thr
 <pre><code><span class="attribute">HTTP_LOAD</span>: <s]]>
     </summary>
     
-      <category term="http_load, test" scheme="http://perthcharles.github.com/tags/http-load-test/"/>
+      <category term="http_load" scheme="http://perthcharles.github.com/tags/http-load/"/>
+    
+      <category term="test" scheme="http://perthcharles.github.com/tags/test/"/>
     
   </entry>
   
@@ -1701,99 +1752,6 @@ Fast processing <span class="keyword">is</span> turned <span class="keyword">on<
 <li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
 <li>否则，in-sequence包会被放在receive queue中，out-of-order包会放置于out-of-order queue中。  </li>
 </ol>
-]]>
-    
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(7): TCP send]]></title>
-    <link href="http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/"/>
-    <id>http://perthcharles.github.com/2014/11/19/tcp-design-and-implementation-7/</id>
-    <published>2014-11-19T11:30:22.000Z</published>
-    <updated>2015-05-10T05:05:08.000Z</updated>
-    <content type="html"><![CDATA[<p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
-<a id="more"></a>  
-
-<p>7.1 TCP segmentation unit for sending data<br>当应用层调用send发送数据后，内核中对应的函数就是tcp_sendmsg()。因此我们从这个函数切入来理解TCP的发送流程。  </p>
-<pre><code>SYSCALL_DEFINE4(send, int, fd, void __user *, buff, size_t, len, unsigned int, flags) // net/socket.c  
-=<span class="ruby">&gt; sys_sendto(fd, buff, len, flags, <span class="constant">NULL</span>, <span class="number">0</span>)  /<span class="regexp">/ send a datagram to a given address, net/socket</span>.c line <span class="number">1754</span>  
-</span>    =<span class="ruby">&gt; sock = sockfd_lookup_light()  /<span class="regexp">/ 通过fd找到sock  
-</span></span>    =<span class="ruby">&gt; err = sock_sendmsg(sock, &amp;msg, len)  
-</span>        =<span class="ruby">&gt; sock-&gt;ops-&gt;sendmsg()  == tcp_sendmsg()
-</span>
-tcp_sendmsg()  
-    =<span class="ruby">&gt; mss_now = tcp_send_mss()  /<span class="regexp">/ 获得current mss
-</span></span>    =<span class="ruby">&gt; sg = !!(sk-&gt;sk_route_caps * <span class="constant">NETIF_F_SG</span>)  /<span class="regexp">/ 检查硬件是否支持scatter-gather
-</span></span>    =<span class="ruby">&gt; 两个循环，第一层遍历所有的buffer块，第二层遍历某一个buffer的所有数据  
-</span><span class="comment">        /* 获取sk-&gt;sk_write_queue的最后一个skb，用于检查是否用满。</span>
-         * 用满了就新建一个skb放新数据，否则将新数据拼接到这最后一个skb中   
-         */
-        =<span class="ruby">&gt; skb = tcp_write_queue_tail(sk)  
-</span>        =<span class="ruby">&gt; <span class="keyword">if</span> (copy &lt;= <span class="number">0</span>) /<span class="regexp">/ 需要new a segment
-</span></span>            =<span class="ruby">&gt; sk_stream_memory_free(sk)  /<span class="regexp">/ 检查send buffer的配额是否超过上限, 超过了要跳转到wait_for_sndbuf  
-</span></span>                =<span class="ruby">&gt; <span class="keyword">return</span> sk-&gt;sk_wmem_queued &lt; sk-&gt;sk_sndbuf  
-</span>            =<span class="ruby">&gt; skb = sk_stream_alloc_skb() /<span class="regexp">/ 为新数据新分配一个skb  
-</span></span>            =<span class="ruby">&gt; skb_entail(sk, skb)    /<span class="regexp">/ 将新生成的skb挂到sk-&gt;sk_write_queue的尾部  
-</span></span>        =<span class="ruby">&gt; skb_can_coalesce()  /<span class="regexp">/ 判断最后一页能否合并更多数据  
-</span></span>
-        =<span class="ruby">&gt; forced_push(tp) /<span class="regexp">/ 解释见接下来的note
-</span></span>        =<span class="ruby">&gt; tcp_mark_push(tp, skb)  /<span class="regexp">/ 解释见接下来的note
-</span></span><span class="comment">        /* push out any pending frames which were held back due to TCP_CORK </span>
-         * or attempt at coalescing tiny packets 
-         */
-        =<span class="ruby">&gt; __tcp_push_pending_frame()  /<span class="regexp">/ 如果是设置了PSH flag，会调用该函数尽快的将数据发送出去  
-</span></span>
-        =<span class="ruby">&gt; <span class="keyword">if</span> (copied) tcp_push()  /<span class="regexp">/发送数据
-</span></span>            =<span class="ruby">&gt; check sk-&gt;sk_send_head is <span class="constant">NULL</span> <span class="keyword">or</span> <span class="keyword">not</span> /<span class="regexp">/ 不为空表示有数据待发送  
-</span></span>            =<span class="ruby">&gt; __tcp_push_pending_frames()  /<span class="regexp">/ 大部分数据应该是走这条流程被发送出去的  
-</span></span>                =<span class="ruby">&gt; tcp_write_xmit()  /<span class="regexp">/ this rountine write packets to the network  
-</span></span><span class="comment">                    /* 只要有数据pending在write queue里面就继续发送，</span>
-                     * 当然循环内部有各种条件判断是否应该终止循环  
-                     */
-                    =<span class="ruby">&gt; <span class="keyword">while</span> (skb = tcp_send_head(sk))  
-</span>                        =<span class="ruby">&gt; cwnd_quota = tcp_cwnd_test(tp, skb)  /<span class="regexp">/ 根据cwnd与packet in flight的差得到配额  
-</span></span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(!tcp_snd_wnd_test(tp, skb, mss_now)) <span class="keyword">break</span>;  <span class="regexp">//</span> 判断是否受限于rwnd  
-</span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(!tcp_nagle_test()) <span class="keyword">break</span>;  <span class="regexp">//</span> <span class="keyword">return</span> <span class="keyword">true</span> <span class="keyword">if</span> allow by <span class="constant">Nagle</span>
-</span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (unlikely(tcp_transmit_skb(sk, skb, <span class="number">1</span>, gfp)) <span class="keyword">break</span>;  <span class="regexp">//</span> 发送一个skb，不成功则<span class="keyword">break</span>。参数<span class="number">1</span>表示传递一份clone  
-</span>                            =<span class="ruby">&gt; 细节见后续章节    
-</span>                        =<span class="ruby">&gt; tcp_event_new_data_sent(sk, skb)  /<span class="regexp">/ 更新sk-&gt;sk_send_head，tp-&gt;snd_nxt, tp-&gt;packet_out等  
-</span></span>                        =<span class="ruby">&gt; <span class="keyword">if</span> (push_one) <span class="keyword">break</span>;  <span class="regexp">//</span> 如果之前只允许发送一个，则<span class="keyword">break</span>  
-</span>
-
-
-tcp_mark_push()为sk_buff设置PSH flag。当满足下面某一个条件时，PSH会被设置：  
-    1. we have written more than half of the so far maximum window size from the last byte marked as pushed  
-    2. we have one full-sized TCP segment ready for transmission.  
-
-forced_push()就是用来判断上面条件一是否成立的  
-</code></pre><h4 id="tcp_transmit_skb">tcp_transmit_skb</h4>
-<p>源代码函数上方的几句注释摘录一下，应该基本知道该函数的功能了。  </p>
-<pre><code>This routine actually transmits TCP packets queued <span class="keyword">in</span> <span class="keyword">by</span> tcp_do_sendmsg().  
-This <span class="keyword">is</span> used <span class="keyword">by</span> both the initial transmission <span class="keyword">and</span> possible later retransmissions.  
-All SKB<span class="comment">'s seen here are completely headerless.  </span>
-</code></pre><p>话多不说，直接读代码  </p>
-<pre><code>tcp_transmit_skb()  
-    =&gt; skb = skb_clone(skb, gfp_mask)  <span class="comment">// 复制一份skb，新的skb不属于任何一个socket  </span>
-    =&gt; <span class="keyword">if</span> (tcp_packets_in_flight(tp) == <span class="number">0</span>) tcp_ca_event(sk, CA_EVENT_TX_START);  <span class="comment">// 根据packet inflight判断传输的开始  </span>
-    =&gt; skb_push(skb, tcp_head_size)  <span class="comment">// 根据计算得到的TCP header长度调整skb  </span>
-    =&gt; th = tcp_hdr(skb)  <span class="comment">// 获得TCP header对应位置，并开始构建TCP header</span>
-    =&gt; tcp_options_write()  <span class="comment">// write previously computed TCP options to the packet</span>
-    =&gt; icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;send_check</span>(sk, skb) == tcp_v4_send_check()  <span class="comment">// compute an IPv4 TCP checksum  </span>
-    =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;len</span> != tcp_header_size) tcp_event_data_send(tp, sk)  <span class="comment">// congestion state accounting after a packet has been sent  </span>
-    =&gt; err = icsk<span class="variable">-&gt;icsk_af_ops</span><span class="variable">-&gt;queue_xmit</span>()   ==  ip_queue_xmit() <span class="comment">// 目前不关心ip层及以下的实现  </span>
-</code></pre><h3 id="TODO">TODO</h3>
-<p>sock结构体中有一个sk_forward_alloc，需要理解一下这个变量  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>这种重点描述从应用层下发的数据，是在TCP中如何被管理以及被传输的。主要会涉及到MTU，各类TCP层的算法（如Nagle）以及核心的拥塞控制算法和flow control算法（滑动窗口机制）。<br>另外需要注意的是，这块我看的内核3.10与书中的内核版本实现存在较大不同，看代码的时候需要引起注意。  </p>
 ]]>
     
     </summary>

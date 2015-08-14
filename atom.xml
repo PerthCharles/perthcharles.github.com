@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-07-28T14:09:21.116Z</updated>
+  <updated>2015-08-14T09:45:30.144Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,121 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[像linux kernel一样管理你的项目]]></title>
+    <link href="http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/"/>
+    <id>http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/</id>
+    <published>2015-08-14T02:34:06.000Z</published>
+    <updated>2015-08-14T09:43:43.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>坚持良好的代码管理习惯，将极大的帮助我们做出更好的项目。<br>本文用于记录如何有效的使用git进行代码管理，像诸多优秀的项目一样。<br>本文尤其适合需要向其他项目提交patch的情形。不懂这句话的请参考标题，哈哈。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="1-_如何正确的对待commit_？">1. 如何正确的对待commit ？</h3>
+<p>commit是一个项目的变更史，如何维持一个高质量的commit log对于项目的质量<br>至关重要。<br>那么什么样的commit log是合格的呢？  </p>
+<h4 id="1-1_避免初级的错误">1.1 避免初级的错误</h4>
+<pre><code><span class="array"># git diff </span>--check   <span class="comment">// identifies possible whitespace errors  </span>
+</code></pre><h4 id="1-2_坚持一个commit对应一个功能">1.2 坚持一个commit对应一个功能</h4>
+<p>这点在实践的过程中可能很难满足，但是git提供了其他的方式让你可以在事后<br>进行弥补<a href="http://git-scm.com/book/en/v2/Git-Tools-Rewriting-History" target="_blank" rel="external">[1]</a>。<br>尽管如此，这些弥补措施只能在将代码与他人共享(git push)之前使用。<br>尽管如此，这些弥补措施只能在将代码与他人共享(git push)之前使用。<br>尽管如此，这些弥补措施只能在将代码与他人共享(git push)之前使用。  </p>
+<pre><code>// 方式1：修改最近的一次<span class="operator"><span class="keyword">commit</span>信息  
+// 同时也会将已进行的更改添加进入修改后的<span class="keyword">commit</span>  
+// 典型应用场景：<span class="keyword">commit</span>后才发现遗漏了某个文件  
+# git <span class="keyword">commit</span> <span class="comment">--amend  </span>
+
+// 方式<span class="number">2</span>：修改最近的多次<span class="keyword">commit</span>信息  
+// 正式使用该方法前，最好用一个测试分支先体验一下。  
+# git rebase -i HEAD~n    // 修改最近的n个<span class="keyword">commit</span>  
+&lt;&lt; 将需要被修改的<span class="keyword">commit</span>信息对应行的<span class="string">"pick"</span>改为<span class="string">"edit"</span>  
+# git <span class="keyword">commit</span> <span class="comment">--amend      // 真实的修改选择的commit信息  </span>
+# git rebase <span class="comment">--continue   // 让rebase自动完成后续(未修改)的commit  </span>
+
+// 方式<span class="number">3</span>：将最近的多个<span class="keyword">commit</span>替换为一个<span class="keyword">commit</span>
+# git rebase -i HEAD~n  
+&lt;&lt; 将需要被合并的前n-<span class="number">1</span>个<span class="keyword">commit</span>对应行的<span class="string">"pick"</span>改为<span class="string">"squash"</span>  
+&lt;&lt; 之后会自动进入修改<span class="keyword">commit</span>的文本编辑页面，让你编辑新的<span class="keyword">commit</span> message  
+
+// 方式<span class="number">4</span>：使用相对人工的方式合并多个<span class="keyword">commit</span>  
+# git <span class="keyword">reset</span> <span class="comment">--soft HEAD~n  // 使用soft选项，仅将commit log回退n个记录  </span>
+# git <span class="keyword">commit</span> -a // 提交正式的<span class="keyword">commit</span> message  </span>
+</code></pre><h4 id="1-3_使用更规范的commit_message格式">1.3 使用更规范的commit message格式</h4>
+<p>在确保了一个commit对应一个功能后，最后就是确保commit message的规范性了。<br>首先贴一下写一个合格commit message的规则，最后贴一下Tim Pope给出来的一个<br>模板<a href="http://git-scm.com/book/ch5-2.html" target="_blank" rel="external">[2]</a>。  </p>
+<pre><code>第一行用一句简短的话总结这个<span class="operator"><span class="keyword">commit</span>  
+
+第一行最好用一个描述性的前缀开始，比如  
+  <span class="string">"net:"</span>表示针对net子系统的修改  
+  <span class="string">"fix:"</span>表示这是一个bug fix  
+
+第二行为空行
+
+最后可以增加一些详细的描述，用以解释<span class="keyword">commit</span>具体干了什么，为什么这么干  </span>
+</code></pre><p>commit message格式的一个模板如下，为保持原文含义，直接贴上英文版。  </p>
+<pre><code>Short (<span class="number">50</span> <span class="keyword">chars</span> <span class="operator">or</span> less) summary <span class="operator">of</span> changes
+
+More <span class="keyword">detailed</span> explanatory <span class="keyword">text</span>, <span class="keyword">if</span> necessary.  Wrap <span class="keyword">it</span> <span class="built_in">to</span>
+about <span class="number">72</span> <span class="keyword">characters</span> <span class="operator">or</span> so.  In some contexts, <span class="operator">the</span> <span class="keyword">first</span>
+<span class="built_in">line</span> is treated <span class="keyword">as</span> <span class="operator">the</span> subject <span class="operator">of</span> <span class="operator">an</span> email <span class="operator">and</span> <span class="operator">the</span> rest <span class="operator">of</span>
+<span class="operator">the</span> <span class="keyword">text</span> <span class="keyword">as</span> <span class="operator">the</span> body.  The blank <span class="built_in">line</span> separating <span class="operator">the</span>
+summary <span class="built_in">from</span> <span class="operator">the</span> body is critical (unless you omit <span class="operator">the</span> body
+entirely); tools like rebase can <span class="built_in">get</span> confused <span class="keyword">if</span> you run
+<span class="operator">the</span> <span class="constant">two</span> together.
+
+Further paragraphs come <span class="keyword">after</span> blank <span class="keyword">lines</span>.
+
+  - Bullet points are okay, too
+
+  - Typically <span class="operator">a</span> hyphen <span class="operator">or</span> asterisk is used <span class="keyword">for</span> <span class="operator">the</span> bullet,
+    preceded <span class="keyword">by</span> <span class="operator">a</span> single <span class="constant">space</span>, <span class="operator">with</span> blank <span class="keyword">lines</span> <span class="operator">in</span>
+    between, but conventions vary here
+</code></pre><hr>
+<h3 id="2-_如何通过commit生成patch_？">2. 如何通过commit生成patch ？</h3>
+<p>在得到合格的commit log后，则可以通过commit log直接得到想要的patch。<br>这里推荐使用format-patch格式的，理由自行理解。  </p>
+<pre><code><span class="comment">// 生成前两个commit对应的patch，一个commit生成一个patch  </span>
+<span class="comment">//     -s 表示添加签名</span>
+<span class="comment">//     -n 表示patch里面会有[patch n/m]类似的标记 </span>
+<span class="preprocessor"># git format-patch -sn -2</span>
+<span class="comment">// 与上一条命令含义相同</span>
+<span class="preprocessor"># git format-patch -sn HEAD HEAD~2..HEAD  </span>
+<span class="comment">// 忽略掉diff里面的prefix  </span>
+<span class="preprocessor"># git format-patch -sn --no-prefix -1  </span>
+</code></pre><p>由于git format-patch会将每一个commit单独生成一个patch，这也就更加依赖<br>在上一步中是否严格控制好commit log的风格了。  </p>
+<hr>
+<h3 id="3-_如何检查patch的代码风格？">3. 如何检查patch的代码风格？</h3>
+<p>坚持良好的代码风格是长久做项目的基石，所以在提交patch前最好自行检查好<br>代码是否符合目标项目的代码风格。<br>以Linux kernel为例，它提供了scripts/checkpatch.pl脚本用于检查代码风格。  </p>
+<pre><code><span class="preprocessor"># scripts/checkpatch.pl PATCH-NAME</span>
+<span class="preprocessor"># scripts/checkpatch.pl --terse PATCH-NAME   // 生成简单的报告  </span>
+</code></pre><hr>
+<h3 id="4-_如何使用tag管理重要的发行版？">4. 如何使用tag管理重要的发行版？</h3>
+<p>项目在进行到一定阶段后，可能需要对外进行发布。长久下来，实际作业环境下<br>可能同时使用着不同的发布版本。但是项目本身的git管理肯定不会同时维护多<br>个分支。当然要求项目的所有开发人员都凭脑力记住特定发型版本对应的commit<br>也不太现实。这就是我理解的tag的用途：通过tag标识诸多发行版本与git仓库<br>某个时期状态的关系。<br>git中tag分为lightweight tag和annotated tag，建议仅使用annotated tag。<br>以下便是tag常见的用法：  </p>
+<pre><code><span class="array"># git tag                </span><span class="comment">// 显示当前所有的tag  </span>
+<span class="array"># git tag </span>-l <span class="string">'v1.0.*'</span>    <span class="comment">// 仅显示满足特定pattern的tag  </span>
+
+<span class="array"># git tag </span>-a v1<span class="number">.5</span> -m <span class="string">'my version 1.5'</span>   <span class="comment">// 创建一个带标签的tag  </span>
+<span class="array"># git tag </span>-a v1<span class="number">.6</span>        <span class="comment">// 如果不适用-m，则会进入文本编辑器进行编辑  </span>
+
+<span class="array"># git show v</span>1<span class="number">.5</span>          <span class="comment">// 查看v1.5的信息  </span>
+
+<span class="array"># git log </span>--pretty=oneline      <span class="comment">// 查看commit log  </span>
+<span class="array"># git tag </span>-a v1<span class="number">.7</span> abcdef        <span class="comment">// 为特定的commit添加tag</span>
+
+<span class="array"># git push origin v</span>1<span class="number">.7</span>   <span class="comment">// 提交tag v1.7  </span>
+<span class="array"># git push origin </span>--tags <span class="comment">// 提交所有的tag</span>
+
+<span class="array"># git checkout </span>-b version <span class="number">2.0</span> v2<span class="number">.0</span>   <span class="comment">// 新建一个branch查看v2.0源码  </span>
+</code></pre><h3 id="参考资料">参考资料</h3>
+<p><a href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html" target="_blank" rel="external">A Note About Git Commit Messages</a><br><a href="http://git-scm.com/book/ch5-2.html" target="_blank" rel="external">Distributed Git - Contributing to a Project</a><br><a href="http://git-scm.com/book/en/v2/Git-Tools-Rewriting-History" target="_blank" rel="external">Git Tools - Rewriting History</a><br><a href="http://linux.koolsolutions.com/2011/02/26/howto-create-and-submit-your-first-linux-kernel-patch/" target="_blank" rel="external">HOWTO: Create and submit your first Linux kernel patch using GIT</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>坚持良好的代码管理习惯，将极大的帮助我们做出更好的项目。<br>本文用于记录如何有效的使用git进行代码管理，像诸多优秀的项目一样。<br>本文尤其适合需要向其他项目提交patch的情形。不懂这句话的请参考标题，哈哈。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="Git" scheme="http://perthcharles.github.com/tags/Git/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[使用ISO镜像配置yum源]]></title>
@@ -1565,195 +1680,6 @@ srtt        <span class="comment">// smoothed RTT  </span>
 ]]></content>
     <summary type="html">
     <![CDATA[<p>对Linux TCP implementation的阅读暂时先告一段落。以后有需求的时候再来加深理解。<br>顺道分享一个总结性的<a href="http://vdisk.weibo.com/s/B_gfVkmzsvB60" target="_blank" rel="ex]]>
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux(8): TCP receive]]></title>
-    <link href="http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/"/>
-    <id>http://perthcharles.github.com/2014/11/20/tcp-design-and-implementation-8/</id>
-    <published>2014-11-20T08:17:45.000Z</published>
-    <updated>2015-05-10T05:05:13.000Z</updated>
-    <content type="html"><![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
-<ol>
-<li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
-<li>否则，in-sequence包会被放在receive queue中，out-of-order包会放置于out-of-order queue中。  </li>
-</ol>
-<a id="more"></a>  
-
-<p>8.1 Queuing mechanism<br>处理收到的TCP时，涉及到三个queue：backlog queue, prequeue, 和receive queue。<br>注：prequeue好像已经是一个过气的概念了。  </p>
-<pre><code><span class="number">1</span>. receive queue 包含的都是处理过的包，也就是说所有的协议头都被解析完了，  
-   里面的数据就等着被复制到<span class="literal">user</span> space了。  
-</code></pre><p>TCP层处理数据包的第一个函数是tcp_v4_rcv()，首先从这个函数开始理解整个流程。  </p>
-<pre><code>tcp_v4_rcv()  <span class="comment">// net/ipv4/tcp_ipv4.c  </span>
-    =&gt; sk = __inet_lookup_skb()  <span class="comment">// 找到skb属于的sock结构体  </span>
-    =&gt; <span class="keyword">if</span> (!sock_owned_by_user(sk))  <span class="comment">// sock未被加锁  </span>
-        =&gt; <span class="keyword">if</span> (!tcp_prequeue(sk, skb))  <span class="comment">// 如果符合加入prequeue的原则，则加入prequeue，返回true;反之返回false  </span>
-            =&gt; ret = tcp_v4_do_rcv(sk, skb)  
-                =&gt; tcp_rcv_established()  <span class="comment">// receive function for the ESTABLISHED state  </span>
-                    =&gt; <span class="keyword">if</span> (len == tcp_header_len)  <span class="comment">// 如果是纯ack包</span>
-                        =&gt; tcp_ack(sk, skb, <span class="number">0</span>)  <span class="comment">// dealing with incoming acks  </span>
-                            =&gt; flag |= tcp_clean_rtx_queue()  <span class="comment">// see if we can take anything off of the retransmit queue  </span>
-                            =&gt; <span class="keyword">if</span> (tcp_ack_is_dubious(sk, flag)  <span class="comment">// 判断时候出现可疑情况，具体看下代码吧。  </span>
-                                =&gt; tcp_fastretrans_alert()  <span class="comment">// 进入快速重传  </span>
-                                    =&gt; tcp_cwnd_down()  <span class="comment">// decrease cwnd each second ack, 该函数就是快速重传对cwnd操作的关键函数  </span>
-                                    =&gt; tcp_xmit_retransmit_queue(sk)  <span class="comment">// 在重传阶段，该函数负责找到合适的数据进行重传  </span>
-                        =&gt; __kfree_skb(skb)  <span class="comment">// free an sk_buff  </span>
-                        =&gt; tcp_data_snd_check(sk)  <span class="comment">// 如果有数据需要发送，则发送数据到对端  </span>
-                            =&gt; tcp_push_pending_frames(sk)   <span class="comment">// 发送pending的数据</span>
-                                =&gt; tcp_write_xmit()  <span class="comment">// writes packets to the network， 这部分在上一章已经分析过了   </span>
-                            =&gt; tcp_check_space(sk)  <span class="comment">//  如果有内存释放，则唤醒等待内存的队列  </span>
-                                <span class="comment">/* when incoming ACK allows to free some skb from write_queue,  
-                                 * we remember this event in flag SOCK_QUEUE_SHRUNK and wake up socket  
-                                 * on the exit from tcp input hander.
-                                 *  
-                                 * PROBLEM: sndbuf expansion does not work well with largesend. 
-                                 */</span>
-                                =&gt; tcp_new_space(sk)  
-                                    =&gt; sk<span class="variable">-&gt;sk_sndbuf</span> = min(sndmem, sysctl_tcp_wmem[<span class="number">2</span>])  <span class="comment">// expand the sndbuf if possible  </span>
-                    =&gt; <span class="keyword">else</span> <span class="comment">// 如果是带数据的包  </span>
-                        <span class="comment">/* 此数据包刚好是下一个读取的数据，并且用户空间可存放下该数据包 */</span>
-                        =&gt; <span class="keyword">if</span> (tp<span class="variable">-&gt;copied_seq</span> == tp<span class="variable">-&gt;rcv_nxt</span> &amp;&amp; len - tcp_header_len &lt;= tp<span class="variable">-&gt;ucopy</span>.len)  
-                            <span class="comment">/* 如果函数在进程上下文调用并且sock被用户占用的话 */</span>
-                            =&gt; <span class="keyword">if</span> (tp<span class="variable">-&gt;ucopy</span>.task == current &amp;&amp; sock_owned_by_user(sk) &amp;&amp; !copied_early)  
-                                =&gt; tcp_copy_to_iovec()  <span class="comment">// 直接copy 到用户空间  </span>
-                        =&gt; <span class="keyword">if</span> (!eaten)  <span class="comment">// 没有直接读到用户空间  </span>
-                            <span class="comment">/* 当truesize大于sk_forward_alloc时，表示已分配的限额已经用完，不能直接放到receive queue中, 此时往往要重新计算sk_forward_alloc */</span>
-                            =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;truesize</span> &gt; sk<span class="variable">-&gt;sk_forward_alloc</span>) <span class="keyword">goto</span> step5  
-                            =&gt; eaten = tcp_queue_rcv()  
-                                =&gt; tcp_try_coalesce()  <span class="comment">// try merge skb to prior one  </span>
-                                =&gt; <span class="keyword">if</span> (!eaten) __skb_queue_tail()  <span class="comment">// 如果上一步未成功，则将skb放入receive queue中  </span>
-                        =&gt; tcp_event_data_recv(sk, skb)  <span class="comment">// 数据包接收后续处理  </span>
-                            <span class="comment">/* 每次收到超过128字节的数据报后，需要调用tcp_grow_window增加rcv_ssthresh的值 */</span>
-                            =&gt; <span class="keyword">if</span> (skb<span class="variable">-&gt;len</span> &gt;= <span class="number">128</span>) tcp_grow_window(sk, skb) 
-                        =&gt; __tcp_ack_snd_check(sk, <span class="number">0</span>) <span class="comment">// check if sending an ack is needed  </span>
-
-                    =&gt; tcp_validate_incoming(sk, skb, th, <span class="number">1</span>)  <span class="comment">// standard slow path, [details ignored]  </span>
-                    =&gt; tcp_data_queue(sk, skb)  <span class="comment">// 对数据包进行处理  </span>
-                        =&gt; <span class="keyword">if</span> (TCP_SKB_CB(skb)<span class="variable">-&gt;seq</span> == tp<span class="variable">-&gt;rcv_nxt</span>)   <span class="comment">// 如果是待接收的报文  </span>
-                            =&gt; <span class="keyword">if</span> (tcp_receive_window(tp) == <span class="number">0</span>) <span class="keyword">goto</span> out_of_window;  <span class="comment">// 如果超出rwnd，则直接丢掉  </span>
-                            =&gt; 如果正在读，且正是要读的数据，那么直接拷贝到用户空间  
-                            =&gt; <span class="keyword">else</span> eaten = tcp_queue_rcv()  <span class="comment">// 将数据放入receive queue中  </span>
-                            =&gt; <span class="keyword">if</span> (!skb_queue_empty(&amp;tp<span class="variable">-&gt;out_of_order_queue</span>))  <span class="comment">// 如果out of ordre queue不为空  </span>
-                                =&gt; tcp_ofo_queue(sk)  <span class="comment">// This one checks to see if we can put data from the out-of-order queue into the receive-queue  </span>
-                            =&gt; tcp_fast_path_check(sk)  <span class="comment">// 检查是否可以从slowpath回到fastpath  </span>
-
-                        =&gt; <span class="keyword">else</span> tcp_data_queue_ofo(sk, skb)  <span class="comment">// 将数据包放到out-of-order queue中  </span>
-                    =&gt; tcp_data_snd_check(sk)  <span class="comment">// 如果有数据需要发送，则发送数据到对端  </span>
-                    =&gt; tcp_ack_snd_check(sk)  <span class="comment">// 判断是否有必要发送一个ack  </span>
-</code></pre><hr>
-<h4 id="prequeue的作用">prequeue的作用</h4>
-<p>首先来理解两个相关的参数。    </p>
-<ol>
-<li><p>sysctl_tcp_low_latency == /proc/sys/net/ipv4/tcp_low_latency<br>通过man 7 tcp可以看到官方的解释  </p>
-<p> tcp_low_latency (Boolean; default: disabled)  </p>
-<pre><code> <span class="keyword">If</span> enabled, the  TCP  stack makes decisions that prefer lower
- latency <span class="keyword">as</span> opposed <span class="keyword">to</span> higher throughput.   It  this  <span class="keyword">option</span>  <span class="keyword">is</span>
- disabled,  <span class="keyword">then</span>  higher throughput <span class="keyword">is</span> preferred.  An example <span class="keyword">of</span>
- an application <span class="keyword">where</span> this <span class="keyword">default</span> should be changed would be  a
- Beowulf compute cluster.
-</code></pre></li>
-</ol>
-<ol>
-<li>tcp_sock-&gt;ucopy.task<br>ucopy.task != NULL 表示进程空间有进程在等待sock的数据到来  </li>
-</ol>
-<p>下面这句话是tcp_prequeue()的一个关键判断：是否将该skb放到prequeue中。  </p>
-<pre><code><span class="keyword">if</span> (sysctl_tcp_low_latency || !tp-&gt;ucopy.task) <span class="keyword">return</span> <span class="keyword">false</span>;  
-</code></pre><p>首先字面理解这行代码就是说:<br>如果更关心low latency则不用prequeue;<br>如果当前用进程在等待读数据，则不用prequeue.  </p>
-<p>根据目前的理解，我认为prequeue有如下几方面的作用：  </p>
-<pre><code>1. 进prequeue处理会更侧重throughput。
-    由于软中断每次处理一个包，如果不进prequeue，而调用<span class="function">tcp_v4_do_rcv</span>()放进receive queue的话，  
-    工作量会不少(<span class="function">tcp_rcv_established</span>()函数很复杂的)。  
-    为了软中断更快的完成，放进prequeue后软中断就直接返回了，从而能更多地处理更多地收包。  
-    具体处理prequeue中数据的任务交给了进程上下文(即tcp_recvmsg调用中)去处理了。   
-    注：其实最终prequeue中的skb还是调用<span class="function">tcp_v4_do_rcv</span>()来处理的，所以放在prequeue中只是选择不同的处理skb的时机罢了。  
-2. 进prequeue能够更快速的唤醒blocking状态的数据读请求。  
-    这点很显然，进入prequeue的话，一般会立即wake up等待的进程。
-</code></pre><hr>
-<p>fastpath VS slowpath<br>这是一个看代码才了解到的概念，目前理解还不是太透彻，只是通过注释和代码初步知道了一些判断是否进入fast path的原则。区分这两类path的具体原因还没理解，等之后理解了再来补充吧。<br>目前的猜测可能是说满足fast path条件的话能省去许多判断的工作。暂时就简单列下tcp_rcv_established函数前面的一些注释吧：  </p>
-<pre><code>The fast path <span class="keyword">is</span> disabled <span class="keyword">when</span>:  
-- A zero window was announced from us - zero window probing  
-  <span class="keyword">is</span> only handled properly <span class="keyword">in</span> the slow path.  
-- <span class="keyword">Out</span> <span class="keyword">of</span> order segments arrived.  
-- Urgent data <span class="keyword">is</span> expected.  
-- There <span class="keyword">is</span> no <span class="keyword">buffer</span> space left.  
-- Unexpected TCP flags/window value/header lenghts are received  
-  (detected by checking the TCP header against pred_flags)  
-- Data <span class="keyword">is</span> sent <span class="keyword">in</span> both directions. Fast path only supports <span class="keyword">pure</span> senders  
-  <span class="keyword">or</span> <span class="keyword">pure</span> receivers (this means either the <span class="keyword">sequence</span> number <span class="keyword">or</span> the ack  
-  value must stay <span class="keyword">constant</span>)  
-- Unexpected TCP option.  
-
-Fast processing <span class="keyword">is</span> turned <span class="keyword">on</span> <span class="keyword">in</span> tcp_data_queue <span class="keyword">when</span> everything <span class="keyword">is</span> OK.  
-</code></pre><hr>
-<h3 id="Processing_of_Queues">Processing of Queues</h3>
-<p>TCP的接收队列的处理主要是在tcp_recvmsg()函数中，所以先从这个函数入手。<br>CSDN的<a href="http://blog.csdn.net/mrpre/article/details/33347221" target="_blank" rel="external">这篇博客</a>是一个不错的参考，不过一切还请以代码为准。  </p>
-<pre><code>tcp_recvmsg()  <span class="regexp">//</span> <span class="keyword">this</span> routine copies from a sock struct into the user buffer<span class="function">  
-    =&gt;</span> lock_sock(sk)  <span class="regexp">//</span> become a socket user<span class="function">  
-    =&gt;</span> skb_queue_walk()  <span class="regexp">//</span> get a skb<span class="function">  
-
-    =&gt;</span> 如果有skb可供拷贝<span class="function">  
-        =&gt;</span> err = skb_copy_datagram_iovec()  <span class="regexp">//</span> copy data into iovec <span class="keyword">if</span> found_ok_skb  
-        /* This <span class="reserved">function</span> should be called every time data <span class="keyword">is</span> copied to user space.  
-         * It calculates the appropriate TCP receive buffer space.  
-         */<span class="function">  
-        =&gt;</span> tcp_rcv_space_adjust<span class="function"><span class="params">(sk)</span>  
-            =&gt;</span> 调整至少每隔一个RTT才进行一次<span class="function">  
-            =&gt;</span> space = <span class="number">2</span> * (tp-&gt;copied_seq - tp-&gt;rcvq_space.seq)  <span class="regexp">//</span> 一个RTT内，接收并复制到用户空间的数量的<span class="number">2</span>倍  
-            ...<span class="function">  
-            =&gt;</span> sk-&gt;sk_rcvbuf = space  <span class="regexp">//</span> 调整接收缓冲区的大小<span class="function">  
-        =&gt;</span> sk_eat_skb(sk, skb, copied_early)  <span class="regexp">//</span> 如果一个skb内数据被拷贝完了，则释放掉该skb<span class="function">  
-
-    =&gt;</span> 如果没有skb可供拷贝  
-        <span class="regexp">/* 如果设置了MSG_WAITALL，target == len; 否则target == 1 */</span><span class="function">
-        =&gt;</span> <span class="keyword">if</span> (copied &gt;= target &amp;&amp; !sk-&gt;sk_backlog.tail) <span class="keyword">break</span>;  <span class="regexp">//</span> 如果读够了target，且backlog queue 为空则直接<span class="keyword">return</span><span class="function">  
-
-        =&gt;</span> tcp_cleanup_rbuf(sk, copied)  
-            <span class="regexp">/* 注意区分这个函数与sk_eat_skb()  后者是清掉某个skb及其内存, 前者的主要功能是发送一个接收窗口更新的ACK--因为用户进程消费了读缓存中的数据 */</span><span class="function">
-            =&gt;</span> <span class="keyword">if</span> <span class="function"><span class="params">(inet_csk_ack_scheduled(sk))</span>  // <span class="title">if</span> <span class="title">the</span> <span class="title">ack</span> <span class="title">is</span> <span class="title">scheduled</span> <span class="title">by</span> <span class="title">calling</span> <span class="title">tcp_ack_scheduled</span><span class="params">()</span>  
-                =&gt;</span> <span class="keyword">if</span> delayed ACK was blocked <span class="keyword">by</span> socket lock, send an ACK<span class="function">  
-                =&gt;</span> <span class="keyword">if</span> we have <span class="keyword">not</span> ACKed data <span class="keyword">of</span> length &gt; <span class="number">1</span>mss, send an ACK<span class="function">  
-                =&gt;</span> <span class="keyword">if</span> we have emptied the receive buffer, <span class="keyword">and</span> there <span class="keyword">is</span> data flow only <span class="keyword">in</span> one direction, send an ACK<span class="function">  
-            =&gt;</span> rcv_window_now = tcp_receive_window(tp)  <span class="regexp">//</span> 计算当前的应该通知对方的receive <span class="built_in">window</span><span class="function">
-                =&gt;</span> win = tp-&gt;rcv_wup + tp-&gt;rcv_wnd - tp-&gt;rcv_nxt  <span class="regexp">//</span> 左边界 + 当前receive_window - 已用<span class="function">  
-            =&gt;</span> new_window = __tcp_select_window(sk)  <span class="regexp">//</span> 计算新的接收窗口大小, 约为rcvbuf空闲部分的一半<span class="function">  
-            =&gt;</span> <span class="keyword">if</span> (new_window &amp;&amp; new_window &gt;= <span class="number">2</span> * rcv_window_now)  send an ACK<span class="function">  
-
-            =&gt;</span> <span class="keyword">if</span> (time_to_ack) tcp_send_ack(sk)   <span class="regexp">//</span> 如果上面有需要发送ack的需求，则发送一个ACK  
-        /* <span class="keyword">if</span> prequeue <span class="keyword">is</span> <span class="keyword">not</span> empty, we have to process it before releasing socket  
-         * queue的处理优先级如下：  
-         * receive queue 最高
-         * prequeue queue 次之
-         * backlog queue 最低
-         */<span class="function">  
-        =&gt;</span> <span class="keyword">if</span> prequeue <span class="keyword">is</span> <span class="keyword">not</span> empty, goto do_prequeue<span class="function">
-            =&gt;</span> tcp_prequeue_process<span class="function"><span class="params">(sk)</span>  
-                =&gt;</span> sk_backlog_rcv<span class="function"><span class="params">(sk, skb)</span>  == <span class="title">tcp_v4_do_rcv</span><span class="params">()</span>  
-
-        =&gt;</span> <span class="keyword">if</span> (copied &gt;= target)   <span class="regexp">//</span> 下面两个步骤主要就是为了处理backlog queue<span class="function">  
-            =&gt;</span> release_sock<span class="function"><span class="params">(sk)</span>  
-                =&gt;</span> <span class="keyword">if</span> <span class="function"><span class="params">(sk-&gt;sk_backlog.tail)</span>   
-                    =&gt;</span> __release_sock<span class="function"><span class="params">(sk)</span>  
-                        =&gt;</span> sk_backlog_rcv<span class="function"><span class="params">(sk, skb)</span>  == <span class="title">tcp_v4_do_rcv</span><span class="params">()</span>  
-            =&gt;</span> lock_sock<span class="function"><span class="params">(sk)</span> 
-        =&gt;</span> <span class="keyword">else</span><span class="function">  
-            =&gt;</span> sk_wait_data(sk, &amp;timeo)  <span class="regexp">//</span> 睡眠等待新数据的到来  
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<p>这章主要是TCP接收包得处理流程。<br>kernel对于TCP包得处理大致可以分为两类：  </p>
-<ol>
-<li>如果处理in-sequence的包时，application正阻塞在read操作中，则接收到的数据包的数据会被直接拷贝到user buffer。  </li>
-<li>否则，in-sequence包会被放在receive queue中，out-of-order包会放置于out-of-order queue中。  </li>
-</ol>
-]]>
-    
     </summary>
     
       <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>

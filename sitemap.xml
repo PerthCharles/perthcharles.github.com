@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/</loc>
+    <lastmod>2015-08-14T09:43:43.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://perthcharles.github.com/about/index.html</loc>
     <lastmod>2015-07-28T14:06:28.000Z</lastmod>
   </url>

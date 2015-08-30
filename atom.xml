@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-08-14T09:45:30.144Z</updated>
+  <updated>2015-08-30T13:32:45.135Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,11 +15,783 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[TCP timestamp]]></title>
+    <link href="http://perthcharles.github.com/2015/08/27/timestamp-intro/"/>
+    <id>http://perthcharles.github.com/2015/08/27/timestamp-intro/</id>
+    <published>2015-08-27T13:00:35.000Z</published>
+    <updated>2015-08-30T13:31:14.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>tcp_timestamps是在<a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323</a>中定义的一个TCP选项。<br>这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="关于RFC1323">关于RFC1323</h3>
+<p>这是一篇介绍针对High-bandwidth, Long delay链路设计的一些TCP扩展选项的资料。强烈推荐阅读！<br>但这篇RFC其实已经被<a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC7323</a>所取代，不过RFC1323对于了解timestamp相关的基本概念来说还是足够了的。关于RFC7323也会在后续的wiki中详细的介绍。  </p>
+<p>High-bandiwidth, Long delay链路面临的性能问题  </p>
+<pre><code>a. Window Size limit  
+TCP头部仅16字节用于存放receive window，这在高BDP的链路中往往是不够用的  
+解决办法就是引入window scale选项，然后real<span class="emphasis">_rcv_</span>wnd = rcv<span class="emphasis">_wnd_</span>in<span class="emphasis">_tcp_</span>header * (2^win_scale)  
+
+b. Recovery from Losses  
+当BDP很大时，意味着需要更大的cwnd来充分利用带宽。如果发生网络丢包，则对这类链路的影响是巨大的。  
+优化办法(真的不能说解决T_T)就是引入[<span class="link_label">SACK</span>](<span class="link_url">https://tools.ietf.org/html/rfc2018</span>)机制，来为发送方重传提供更加准确的信息。  
+
+c. Round-Trip Measurement  
+TCP作为可靠的传输协议，一个重要的机制就是超时重传。因此如何计算一个准确(合适)的
+RTO对于TCP性能有着重要的影响。而tcp_timestamp选项正是<span class="emphasis">*主要*</span>为此而设计的。  
+</code></pre><p>上一句话强调”主要”是因为tcp_timestamp还被用于PAWS机制，而这一重要用途却时常被忽略。<br>作为一个可靠的传输协议，TCP除了考虑如何应对性能问题，还需要考虑可靠性问题。<br>即使这些问题发生的概率较低，PAWS就是其中一个例子。<br>PAWS(Protect Against Wrapped Sequence numbers)一句话解释如下，后面会详细介绍  </p>
+<pre><code>在高带宽下，TCP序列号可能在较短的时间内就被重复使用(recycle/wrapped)
+就可能导致同一条TCP流在短时间内出现序号一样的两个合法的数据包及其确认包！
+</code></pre><p>补充一句：什么用wrapped形容序列号被重复使用？因为压圈了呀 :)  </p>
+<hr>
+<h3 id="tcp_timestamps_的设计">tcp_timestamps 的设计</h3>
+<p>tcp_timestamps的本质是记录数据包的发送时间。基本的步骤如下  </p>
+<pre><code><span class="bullet">1. </span>发送方在发送数据时，将一个timestamp(表示发送时间)放在包里面
+<span class="bullet">2. </span>接收方在收到数据包后，在对应的ACK包中将收到的timestamp返回给发送方(echo back)
+<span class="bullet">3. </span>发送发收到ACK包后，用当前时刻now - ACK包中的timestamp就能得到准确的RTT
+</code></pre><p>当然实际运用中要考虑到RTT的波动，因此有了后续的(Round-Trip Time Measurement)RTTM机制</p>
+<p>TCP Timestamps Option (TSopt)具体设计如下  </p>
+<pre><code>Kind: 8             // 标记唯一的选项类型，比如window scale是3
+<span class="header">Length: 10 bytes    // 标记Timestamps选项的字节数
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span>
+<span class="header">| Kind=8 | Length=10 | TS Value (TSval) | TS ECho Reply (TSecr) |
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span>
+<span class="code">    1          1             4                       4</span>
+</code></pre><p>timestamps一个双向的选项，当一方不开启时，两方都将停用timestamps。<br>比如client端发送的SYN包中带有timestamp选项，但server端并没有开启该选项。<br>则回复的SYN-ACK将不带timestamp选项，同时client后续回复的ACK也不会带有timestamp选项。<br>当然，如果client发送的SYN包中就不带timestamp，双向都将停用timestamp。  </p>
+<hr>
+<h3 id="为什么需要timestamp">为什么需要timestamp</h3>
+<p>如果没有timestamp，RTT的计算会怎样？  </p>
+<pre><code><span class="number">1</span>. <span class="constant">TCP层</span>在发送出一个<span class="constant">SKB时</span>，使用skb-&gt;<span class="keyword">when</span>记录发送出去的时间
+<span class="number">2</span>. <span class="constant">TCP层</span>在收到<span class="constant">SKB数</span>据包的确认时，使用now - skb-&gt;<span class="keyword">when</span>来计算<span class="constant">RTT</span>
+</code></pre><p>但上面的机制在丢包发生时会有问题，比如</p>
+<pre><code><span class="bullet">1. </span>TCP层第一次发送SKB的时间是send<span class="emphasis">_time1, TCP层重传一个数据包的时间是send_</span>time2
+<span class="bullet">2. </span>当TCP层收到SKB的确认包的时间是recv_time
+</code></pre><p>但是RTT应该是 (recv_time - send_time1)呢，还是(recv_time - send_time2)呢？  </p>
+<p>以上两种方式都不可取！因为无法判断出recv_time对应的ACK是确认第一次数据包的发送还是确认<br>重传数据包。因此TCP协议栈只能选择非重传数据包进行RTT采样。但是当出现严重丢包(比如整个窗口全部丢失)时，就完全没有数据包可以用于RTT采样。这样后续计算SRTT和RTO就会出现较大的偏差。  </p>
+<p>timestamp选项很好的解决了上述问题，因为ACK包里面带的TSecr值，一定是触发这个ACK的数据包在发送端发送的时间。不管数据包是否重传都能准确的计算RTT(前提是TSecr遵循RTTM中的计算原则)。  </p>
+<p>当然timestamp不仅解决了RTT计算的问题，还很好的为PAWS机制提供的信息依据。  </p>
+<hr>
+<h3 id="开启timestamp会有什么负面影响?">开启timestamp会有什么负面影响?</h3>
+<p>这部分内容以后会根据更多的实际经验来补充。目前列举一些找到的分析。  </p>
+<pre><code><span class="number">1.</span> <span class="number">10</span>字节的TCP header开销
+
+<span class="number">2.</span> The TCP Timestamp when enabled will allow you <span class="built_in">to</span> guess <span class="operator">the</span> uptime
+   <span class="operator">of</span> <span class="operator">a</span> target <span class="keyword">system</span> (nmap v -O . Knowing how <span class="keyword">long</span> <span class="operator">a</span> <span class="keyword">system</span> has been
+   up will enable you <span class="built_in">to</span> determine whether security patches that <span class="built_in">require</span>
+   reboot has been applied <span class="operator">or</span> <span class="operator">not</span>.
+        引自：<span class="keyword">http</span>://stackoverflow.com/questions/<span class="number">7880383</span>/what-benefit-is-conferred-<span class="keyword">by</span>-tcp-timestamp
+        注：如果通过热补丁修复bug，是否就能够避免这个问题？  
+</code></pre><hr>
+<h3 id="什么是RTTM">什么是RTTM</h3>
+<p>RTTM规定了一些使用TSecr计算RTT的原则，具体如下<br>(英文水平有限，为保持原意就使用RFC中的原话了)  </p>
+<pre><code><span class="operator">a</span>.  A TSecr <span class="built_in">value</span> received <span class="operator">in</span> <span class="operator">a</span> segment is used <span class="built_in">to</span> update <span class="operator">the</span>
+    averaged RTT measurement only <span class="keyword">if</span> <span class="operator">the</span> segment acknowledges
+    some <span class="built_in">new</span> data
+b.  The data-sender TCP must measure <span class="operator">the</span> <span class="keyword">effective</span> RTT, including <span class="operator">the</span> additional
+    <span class="built_in">time</span> due <span class="built_in">to</span> delayed ACKs. Thus, when delayed ACKs are <span class="operator">in</span> use, <span class="operator">the</span> receiver should
+    reply <span class="operator">with</span> <span class="operator">the</span> TSval field <span class="built_in">from</span> <span class="operator">the</span> earliest
+c.  An ACK <span class="keyword">for</span> <span class="operator">an</span> out-<span class="operator">of</span>-order segment should therefore contain <span class="operator">the</span> 
+    timestamp <span class="built_in">from</span> <span class="operator">the</span> most recent segment that advanced <span class="operator">the</span> window
+d.  The timestamp <span class="built_in">from</span> <span class="operator">the</span> latest segment (which filled <span class="operator">the</span> hole) must be echoed
+        在ACK被重传的数据时，应该使用重传数据包中的TSval进行回复
+</code></pre><p>如果对以上的特殊情况有疑问，还请直接去看RFC，里面有example解释。  </p>
+<p>最后，实际上计算RTO除了以上使用TSecr的原则外，还有一些更复杂的计算方法<a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC 7323</a>。<br>比如对于每一个RTT采样R，  </p>
+<pre><code><span class="constant">RTTVAR</span> = (<span class="number">1</span> - beta) * RTTVAR + beta * |SRTT - R|
+<span class="constant">SRTT</span> = (<span class="number">1</span> - alpha) * SRTT + alpha * R
+</code></pre><hr>
+<h3 id="什么是PAWS">什么是PAWS</h3>
+<p>PAWS — Protect Againest Wrapped Sequence numbers<br>目的是解决在高带宽下，TCP序号可能被重复使用而带来的问题。  </p>
+<p>PAWS同样依赖于timestamp，并且假设在一个TCP流中，<em>按序</em>收到的所有TCP包的timestamp值<br>都是线性递增的。而在正常情况下，每条TCP流<em>按序</em>发送的数据包所带的timestamp值<br>也确实是线性增加的。<br>至于为什么要强调<em>按序</em>，请先自行思考。:)  </p>
+<p>首先给出几个变量的定义，之后具体介绍PAWS的工作过程  </p>
+<pre><code>Per-Connection State Variables
+<span class="label">    TS.Recent:</span>       Latest received Timestamp
+<span class="label">    Last.ACK.sent:</span>   Last ACK field sent
+
+<span class="preprocessor">Option</span> Fields <span class="keyword">in</span> Current <span class="built_in">Segment</span>
+<span class="label">    SEG.TSval:</span>   TSval field from TSopt <span class="keyword">in</span> current <span class="built_in">segment</span>.
+<span class="label">    SEG.TSecr:</span>   TSecr field from TSopt <span class="keyword">in</span> current <span class="built_in">segment</span>.
+</code></pre><p>TS.Recent存放着<em>按序</em>达到的所有TCP数据包的最晚的一个时间戳，即只有在<br><code>SEG.SEQ &lt;= Last.ACK.sent &lt; SEG.SEG + SEG.LEN</code>(有新的数据被按序确认了)时，<br>才会去更新TS.Recent的值。  </p>
+<pre><code>假设三个数据包的*第一次*发送时间分别是<span class="literal">A</span>，B和C(<span class="literal">A</span> &lt; B &lt; C)，但<span class="literal">A</span>和C含有相同的序列号。
+而<span class="literal">A</span>数据包由于某种原因，在阻塞在了网络中，因此发送方进行了重传，重传时间为A2
+
+PAWS要解决的主要问题就是：
+    当接收端在接收到A2后，又接着确认到了数据包B，下一个想接收的数据是数据包C
+    此时如果收到了数据包<span class="literal">A</span>(<span class="literal">A</span>从阻塞中恢复过来了，但并未真的丢失)，
+    由于<span class="literal">A</span>与C的序列号是相同的。如果没有别的保护措施就会出现数据紊乱，没有做到可靠传输
+
+PAWS的做法就是，如果收到的一个TCP数据包的timestamp值小于TS.Recnt，则会丢弃该数据包。  
+因此数据包<span class="literal">A</span>到达接收方后，接收方的TS.Recent应该是数据包B中的timestamp
+而<span class="literal">A</span> &lt; B，故<span class="literal">A</span>包就会被丢弃。而真正有效的数据C到达接收后，由于B &lt; C，因此能被正常接收
+</code></pre><p>PAWS的更多细节  </p>
+<pre><code><span class="number">1.</span> It is recommended that RST segments NOT carry timestamps, <span class="operator">and</span> that
+RST segments be acceptable regardless <span class="operator">of</span> their timestamp.
+
+<span class="number">2.</span> PAWS is defined strictly <span class="operator">within</span> <span class="operator">a</span> single connection; <span class="operator">the</span> <span class="keyword">last</span> timestamp is
+TS.Recent is kept <span class="operator">in</span> <span class="operator">the</span> connection control block, <span class="operator">and</span>
+discarded when <span class="operator">a</span> connection is closed.
+
+<span class="number">3.</span> An additional mechanism could be added <span class="built_in">to</span> <span class="operator">the</span> TCP, <span class="operator">a</span> per-host
+cache <span class="operator">of</span> <span class="operator">the</span> <span class="keyword">last</span> timestamp received <span class="built_in">from</span> <span class="keyword">any</span> connection.
+This <span class="built_in">value</span> could <span class="keyword">then</span> be used <span class="operator">in</span> <span class="operator">the</span> PAWS mechanism <span class="built_in">to</span> reject
+old duplicate segments <span class="built_in">from</span> earlier incarnations <span class="operator">of</span> <span class="operator">the</span>
+connection, <span class="keyword">if</span> <span class="operator">the</span> timestamp clock can be guaranteed <span class="built_in">to</span> have
+ticked <span class="keyword">at</span> least once since <span class="operator">the</span> old connection was <span class="built_in">open</span>.
+</code></pre><p>从第三点可以看到，如果针对per-host的使用PAWS中的机制，则会解决TIME-WAIT中考虑的上一个流<br>的数据包在下一条流中被当做有效数据包的情况，这样就没有必要等待2*MSL来结束TIME-WAIT了。<br>只要等待足够的RTO，解决好需要重传最后一个ACK的情况就可以了。<br>因此Linux就实现了这样一种机制：</p>
+<pre><code>当timestamp和tw_recycle两个选项同时开启的情况下，开启per-host的PAWS机制。
+从而能快速回收处于<span class="typename">TIME</span>-<span class="keyword">WAIT</span>状态的TCP流。
+</code></pre><p>但这样真的就能完美的解决令无数人头疼的TIME-WAIT吗？答案是否定的！<br>因为公网中存在太多的NAT设置，当使用per-host的PAWS机制时，是无法保证timestamp是线性递增这一假设的。因为使用同一个NAT地址的两个真实的机器，他们的timestamp是不能保证同步的(其实一致也没有用，NAT就是per-host PAWS机制的死敌)。<br>关于这个问题也会在以后的一篇介绍TIME-WAIT的wiki中进一步详细介绍。  </p>
+<hr>
+<h3 id="总结">总结</h3>
+<pre><code>timestamp为TCP/IP协议栈提供了两个功能：  
+    <span class="operator">a</span>. 更加准确的RTT测量数据，尤其是有丢包时  <span class="comment">-- RTTM  </span>
+    b. 保证了在极端情况下，TCP的可靠性        <span class="comment">-- PAWS  </span>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt" target="_blank" rel="external">Documentation: ip-sysctl.txt</a><br><a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323: TCP Extensions for High Performance</a><br><a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC 7323: TCP Extensions for High Performance</a><br><a href="https://tools.ietf.org/html/rfc2018" target="_blank" rel="external">SACK</a><br><a href="http://stackoverflow.com/questions/7880383/what-benefit-is-conferred-by-tcp-timestamp" target="_blank" rel="external">What benefit is conferred by TCP timestamp?</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>tcp_timestamps是在<a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323</a>中定义的一个TCP选项。<br>这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。<br>]]>
+    
+    </summary>
+    
+      <category term="timestamp" scheme="http://perthcharles.github.com/tags/timestamp/"/>
+    
+      <category term="RTTM" scheme="http://perthcharles.github.com/tags/RTTM/"/>
+    
+      <category term="PAWS" scheme="http://perthcharles.github.com/tags/PAWS/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[GIT系列五：小知识点及FAQ]]></title>
+    <link href="http://perthcharles.github.com/2015/08/25/git-faq/"/>
+    <id>http://perthcharles.github.com/2015/08/25/git-faq/</id>
+    <published>2015-08-25T07:38:40.000Z</published>
+    <updated>2015-08-25T14:32:01.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>git作为一个强大的工具，也就意味着它也同样的复杂。<br>长期使用下来难免会遇到很多奇奇怪怪的问题和一些小的知识点，<br>这个帖子就用来记录一下那些年某人踩过的的坑T_T  </p>
+<p>这篇会慢慢更新，当某个点内容较多后，会独立出去成为一篇独立的wiki<br><a id="more"></a>  </p>
+<hr>
+<h3 id="小知识点">小知识点</h3>
+<hr>
+<h4 id="Fast_forward_merge">Fast forward merge</h4>
+<p>直接上图例，不多解释  </p>
+<pre><code>            <span class="comment">master</span>
+               <span class="comment">↓</span>
+<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span>        <span class="comment">issue03</span>
+                <span class="comment">\</span>          <span class="comment">↓</span>
+                 <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span>
+
+                            <span class="comment">master</span>
+                              <span class="comment">↓</span>
+<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span>
+                              <span class="comment">↑</span>
+                            <span class="comment">issue03</span>
+</code></pre><p>以上就是一个fast forward merge，那什么不是fast forward merge呢？请看下图  </p>
+<pre><code>            <span class="comment">master</span>
+               <span class="comment">↓</span>
+<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span>        <span class="comment">issue03</span>
+           <span class="comment">\</span>               <span class="comment">↓</span>
+            <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">H</span>
+
+                              <span class="comment">master</span>
+                              <span class="comment">↓</span>
+<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span> <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">I</span>
+           <span class="comment">\</span>                <span class="comment">/</span> <span class="comment">↑</span>
+            <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">H</span>  <span class="comment">issue03</span>
+</code></pre><h4 id="Three-way_merge">Three-way merge</h4>
+<p>two-way merge只用两个档案进行合并(svn默认是 two-way merge)<br>three-way merge 处理要合并的两个档案，还会奖赏两个档案的共同祖先。如此可大大减少人为处理conflict的情况。<br>为什么能减少人为处理conflict的情况呢？一图胜千言。<br><img src="/resources/three-way-merge.png" alt="Three-way merge">  </p>
+<h4 id="实用alias">实用alias</h4>
+<pre><code>// 每个commit显示一行，显示图形化的commit history，显示简短的SHA1
+alias <span class="keyword">log</span>=<span class="string">"git log --oneline --graph --decorate --color=always"</span>
+// 显示所有branch的commit history
+alias logg=<span class="string">"git log --graph --all --format=format:'<span class="variable">%C</span>(bold blue)<span class="variable">%h</span><span class="variable">%C</span>(reset) - <span class="variable">%C</span>(bold green)(<span class="variable">%ar</span>)<span class="variable">%C</span>(reset) <span class="variable">%C</span>(white)<span class="variable">%s</span><span class="variable">%C</span>(reset) <span class="variable">%C</span>(bold white)—     <span class="variable">%an</span><span class="variable">%C</span>(reset)<span class="variable">%C</span>(bold yellow)<span class="variable">%d</span><span class="variable">%C</span>(reset)' --abbrev-commit --date=relative"</span>
+</code></pre><h4 id="坚持新开branch进行开发需要遵循的原则">坚持新开branch进行开发需要遵循的原则</h4>
+<pre><code>1. 不要直接在任何已经与远端建立track关系的branch中进行修改  
+    目的：便于维护整洁的<span class="operator"><span class="keyword">commit</span> history
+
+<span class="number">2.</span> feature branch的周期越短越好，不要同时开太多feature branch
+
+<span class="number">3.</span> 在push之前先将本地分支与远端分支同步，推荐使用rebase的方式<span class="keyword">merge</span>
+
+<span class="number">4.</span> 只有在需要push时（如，完成一个功能开发），才将开发分支与主干分支进行合并  
+    目的：便于识别<span class="keyword">commit</span>是否push到远端，便于维护整洁的主干<span class="keyword">commit</span> history
+
+<span class="number">5.</span> 分支命名规则
+    与远端同步的分支，名字与远端分支一样。如dev -&gt; origin/dev
+    进行开发的分支命名不严格限制，但不得与上一类分支重名。
+        通过git <span class="keyword">log</span> <span class="comment">--graph即可看出开发分支与主干分支的关系</span></span>
+</code></pre><hr>
+<h3 id="FAQ">FAQ</h3>
+<hr>
+<h4 id="如何在git中添加空文件夹">如何在git中添加空文件夹</h4>
+<p>git木人的情况下空目录是不会commit出去的，这在某些情况下会遇到问题（比如Rails如果少了log或tmp目录会不能启动）。<br>解决办法就是在空目录下面touch一个空的档案，一般是.gitkeep。  </p>
+<h4 id="为什么说懂图论对理解git很有帮助">为什么说懂图论对理解git很有帮助</h4>
+<p>理解Git最好的办法，就是用图论中的节点和指针来思考，所有的git的指令操作，<br>都是操作这些节点，新增、修改、删除、变更。<br>首先Git对于所有的内容管理可以理解为一张有向无环图，<a href="https://codewords.recurse.com/issues/two/git-from-the-inside-out" target="_blank" rel="external">这是一篇很好解释文章</a>。<br>同时就自身体会而言，rebase中的base可以理解为两个branch的最小公共祖先。<br>而Fast forward merge可以理解为两个branch合并时，有一个branch是指向这个<br>base节点的。  </p>
+<h4 id="如何撤销merge操作">如何撤销merge操作</h4>
+<p>如果是刚刚merge完，则可以直接<code>git reset --hard HEAD~</code><br>如果已经添加了很多commit后，才想起来撤销merge，那就该好好反省了。  </p>
+<h4 id="如何合理的操作处理分支">如何合理的操作处理分支</h4>
+<pre><code><span class="comment">// push 操作</span>
+<span class="array"># git push origin b</span>1:rb1    <span class="comment">// 将本地的b1分支推送到远端分支rb1，当前分支不需要一定是b1</span>
+<span class="array"># git push origin b</span>1        <span class="comment">// 将本地的b1分支推送到远端分支b1，如果远端不存在b1则新建一个</span>
+<span class="array"># git push </span>-u origin b1     <span class="comment">// 第一次push时指定好track，之后就可以直接git push了</span>
+<span class="array"># git push                  </span><span class="comment">// 如果是在一个已经建立了track关系的local branch，则可直接push</span>
+<span class="array"># git push origin </span>:rb1      <span class="comment">// 删除远端分支rb1</span>
+
+<span class="comment">// fetch 操作</span>
+<span class="array"># git fetch </span>-a                  <span class="comment">// 获取远端所有分支</span>
+<span class="array"># git fetch origin b</span>2           <span class="comment">// 获取远端分支b2</span>
+<span class="array"># git branch b</span>2 origin/b2       <span class="comment">// 随后创建一个本地的b2分支与远端分支建立联系，最好名字一样，否则push时要手动指定</span>
+<span class="array"># git checkout </span>--track -b b2 origin/b2  <span class="comment">// 或者直接checkout到一个新建的b2分支   </span>
+
+<span class="comment">// merge 操作</span>
+<span class="array"># git cherry</span>-pick <span class="number">332</span>sd3f3      <span class="comment">// 仅将选定的commit apply/patch进入当前分支，相当于首先将332sd3fs打包成一个git格式的patch，然后apply进来。很干净的一种用法</span>
+<span class="array"># git merge b</span>1                  <span class="comment">// 将b1分支与current分支合并</span>
+
+<span class="comment">// pull 操作 = fetch + merge</span>
+<span class="array"># git pull origin b</span>10   <span class="comment">// 将远端的b10分支与当前分支进行合并，等价于下面两句</span>
+    <span class="array"># git fetch origin b</span>10
+    <span class="array"># git merge origin</span>/b10
+<span class="array"># git pull </span>--rebase origin b10  <span class="comment">// 推荐使用rebase方式合并：本地分支及它track的远端分支</span>
+
+<span class="comment">// remote 操作</span>
+<span class="array"># git remote prune origin   </span><span class="comment">// 删除不存在远端仓库的分支</span>
+</code></pre><h4 id="如何为一个新建的git添加remote">如何为一个新建的git添加remote</h4>
+<pre><code><span class="comment">// 添加remote的仓库地址，origin是名字</span>
+<span class="array"># git remote add origin git</span>:<span class="comment">//example.com/a.git    </span>
+</code></pre><h4 id="如何恢复某个被修改过的文件">如何恢复某个被修改过的文件</h4>
+<pre><code><span class="preprocessor"># git checkout file-name    </span>
+</code></pre><h4 id="如何整理git_working_area文件">如何整理git working area文件</h4>
+<pre><code><span class="array"># git clean </span>-f          <span class="comment">// 删除未被git管理的文件</span>
+<span class="array"># git clean </span>-f -d       <span class="comment">// 同时将未被git管理的目录也删除</span>
+<span class="array"># git clean </span>-f -X       <span class="comment">// 仅删除被.gitignore忽略的文件</span>
+<span class="array"># git clean </span>-f -x       <span class="comment">// 同时删除被.gitignore忽略的文件和未被管理的文件</span>
+<span class="array"># git clean </span>-f -x -d    <span class="comment">// 删除所有未被git管理的文件和目录</span>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" target="_blank" rel="external">Git 常用命令</a><br><a href="http://www.slideshare.net/epatey/perforce-convergence-vs-divergence/10" target="_blank" rel="external">The essence of a three-way merge</a><br><a href="https://ihower.tw/blog/archives/2620" target="_blank" rel="external">開branch 分支和操作遠端repo</a><br><a href=""></a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>git作为一个强大的工具，也就意味着它也同样的复杂。<br>长期使用下来难免会遇到很多奇奇怪怪的问题和一些小的知识点，<br>这个帖子就用来记录一下那些年某人踩过的的坑T_T  </p>
+<p>这篇会慢慢更新，当某个点内容较多后，会独立出去成为一篇独立的wiki<br>]]>
+    
+    </summary>
+    
+      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
+    
+      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[GIT系列四：在push之前对本地commit进行整理]]></title>
+    <link href="http://perthcharles.github.com/2015/08/25/clean-commit-log-before-push/"/>
+    <id>http://perthcharles.github.com/2015/08/25/clean-commit-log-before-push/</id>
+    <published>2015-08-25T03:58:42.000Z</published>
+    <updated>2015-08-25T08:12:34.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>在系列三中描述了commit消息的规范，但在实际操作中很难时刻做到那么严格的<br>控制，尤其是在本地做一些实验性的工作的时候。<br>但是如果需要push到远端去，则就必须保证commit消息的规范和commit的独立性。<br>因此就有了这样一个需求：在执行git push之前对本地的commit日志进行整理。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="一个好习惯">一个好习惯</h3>
+<p>本文讨论的一个重要前提是在执行git push之前，对于在本地还未提交commit进行整理！！！<br>本文讨论的一个重要前提是在执行git push之前，对于在本地还未提交commit进行整理！！！<br>本文讨论的一个重要前提是在执行git push之前，对于在本地还未提交commit进行整理！！！<br>重要的事情说三遍。<br>那为什么在git push之后不宜使用这些命令呢？<br>主要是因为本文设计到的命令都会重新提交commit，尽管有commit msg有时候不会变，但commit对应的SHA1哈希值会被改变。如果是已经push了的commit被改变了SHA1，则会造成比较严重的混乱。    </p>
+<p>所以这里推荐一个好习惯  </p>
+<pre><code>保持重要分支(如master)与远端的同步，开发一定要新开分支。  
+</code></pre><p>这样一来就能够快速的识别那些属于还未push的本地commit。<br>接下来就详细介绍整理本地commit的几个重要命令：amemd, reset和rebase  </p>
+<hr>
+<h3 id="amend">amend</h3>
+<p>amend会使用一个新的commit去替换最近的一次commit。<br>amend适用于：<br>a. 在提交commit后，才发现漏掉了某些修改，文件的情况<br>b. 修正一些typo  </p>
+<pre><code><span class="comment">// 先进行一些修改，然后使用--amend选项重新提交一次commit</span>
+<span class="array"># git commit </span>-a --amend             <span class="comment">// 弹出编辑窗口，重新提交新commit</span>
+<span class="array"># git commit </span>-a --amend -C HEAD     <span class="comment">// 直接上一个commit消息</span>
+</code></pre><hr>
+<h3 id="reset">reset</h3>
+<p>amend仅能替换最近一次commit，功能不够强大。比如想要快速的将working tree的修改和最近的两次commit合并得到一个新的commit则需要用到reset啦。<br>reset适用于：<br>a. 需要修改多个commit的情况，但也受限于修改从HEAD~开始连续的多个commit<br>b. 完全的删除前几个commit  </p>
+<pre><code><span class="array"># git reset </span>--soft HEAD~<span class="number">2</span>       <span class="comment">// 删掉前两个commit，并保留文件更改</span>
+<span class="array"># git reset </span>--hard HEAD~<span class="number">2</span>       <span class="comment">// 删掉前两个commit，并删除文件更改</span>
+</code></pre><p>另外，万一如果需要修改的commit已经push出去了（是否应该避免？），又最好不要reset，那么该怎么做呢？<br>那就需要使用revert命令，revert命令会接着重新提交一个新的commit，用以回滚上一个commit的修改。有点负负得正的感觉。  </p>
+<hr>
+<h3 id="rebase">rebase</h3>
+<p>reset受限于只能将从HEAD~开始的连续多个commit删除或(人工)合并。也还是不够强大。比如想要合并HEAD~2到HEAD~3的commit，删除HEAD~4的commit，则需要使用到rebase命令。<br>那到底什么是rebase呢？  </p>
+<pre><code>rebase的核心含义就是重新设定基准！  
+</code></pre><p>什么意思呢？<br>git对于commit的管理可以理解为一个有向无环图，你的某个branch一定是从另一个分支的某个节点开始分离出来的。比如下面情况下的dev分支的base就可以理解是B节点。<br>更专业的说法应该是：B是E(dev)和C(master)的最小公共祖先。    </p>
+<pre><code><span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span>   &lt;<span class="comment">=</span> <span class="comment">master</span>
+      <span class="comment">\</span>
+       <span class="comment">D</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">E</span> &lt;<span class="comment">=</span> <span class="comment">dev</span>
+</code></pre><p>rebase可以用于干什么？<br>a. 仅修改某些commit的msg<br>b. 变更commit顺序<br>c. 删掉某一个commit<br>d. 修改某一个commit对应的内容</p>
+<p>rebase的基本命令就是<code>git rebase -i HEAD~n</code>啦，具体的操作流程在执行的时候都有详细的引导，这里就不再重复。想了解细节的推荐看<a href="https://help.github.com/articles/using-git-rebase/" target="_blank" rel="external">这篇tutorial</a> — 其实更推荐找个git仓库实践一把。</p>
+<p>下面来介绍一下怎样处理常见的rebas冲突，至于rebase进阶用法，将在后续的wiki上介绍。  </p>
+<h4 id="解决rebase冲突">解决rebase冲突</h4>
+<p>当发生rebase无法顺利进行的时候，有以下几种选择：  </p>
+<pre><code><span class="comment">// a. 放弃rebase  </span>
+<span class="preprocessor"># git rebase --abort</span>
+<span class="comment">// b. 忽视冲突  -- 一般很少用</span>
+<span class="preprocessor"># git rebase --skip</span>
+
+<span class="comment">// c. 解决冲突</span>
+<span class="preprocessor"># git status                // 查看冲突类型，常见的是编辑冲突</span>
+<span class="preprocessor"># vim conflict-file.md      // 编辑冲突文件</span>
+<span class="preprocessor"># git add conflict-file.md  // 重新添加冲突文件</span>
+<span class="preprocessor"># git rebase --continue     // 继续rebase</span>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://gitready.com/intermediate/2009/03/16/rolling-back-changes-with-revert.html" target="_blank" rel="external">rolling back changes with revert</a><br><a href="https://ihower.tw/blog/archives/2622" target="_blank" rel="external">Git 版本控制系統3 - 還沒 push 前可以做的事</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>在系列三中描述了commit消息的规范，但在实际操作中很难时刻做到那么严格的<br>控制，尤其是在本地做一些实验性的工作的时候。<br>但是如果需要push到远端去，则就必须保证commit消息的规范和commit的独立性。<br>因此就有了这样一个需求：在执行git push之前对本地的commit日志进行整理。<br>]]>
+    
+    </summary>
+    
+      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
+    
+      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[GIT系列三：commit消息规范]]></title>
+    <link href="http://perthcharles.github.com/2015/08/25/git-commit-log-format/"/>
+    <id>http://perthcharles.github.com/2015/08/25/git-commit-log-format/</id>
+    <published>2015-08-25T03:24:27.000Z</published>
+    <updated>2015-08-25T03:52:57.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>维护一个良好的commit消息格式和规范，是一个优秀项目的重要前提。<br>本文就先来谈谈commit消息到底该怎么提交。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="提交commit的基本原则">提交commit的基本原则</h3>
+<pre><code><span class="bullet">1. </span>以一个小功能、小改进或一个bug fixed为单位
+<span class="bullet">2. </span>对应的unit test 程序放在同一个commit中
+<span class="bullet">3. </span>不相关的代码修改不要放在同一个commit
+<span class="bullet">4. </span>语法错误的半成品程序不能commit
+</code></pre><hr>
+<h3 id="commit消息格式">commit消息格式</h3>
+<p>这部分内容已经在具体的例子：<a href="http://perthcharles.github.io/2015/08/14/manage-project-code-like-linux-kernel/" target="_blank" rel="external">像linux kernel一样管理你的项目</a>描述过。<br>这里算是正式的整理进入wiki页面了。<br>至于如何保证做到这么干净利落的commit消息日志，则请移步后续对于rebase等命令的分析。commit的消息格式如下  </p>
+<pre><code>第一行用一句简短的话总结这个<span class="operator"><span class="keyword">commit</span>  
+
+第一行最好用一个描述性的前缀开始，比如  
+  <span class="string">"net:"</span>表示针对net子系统的修改  
+  <span class="string">"fix:"</span>表示这是一个bug fix  
+
+第二行为空行
+
+最后可以增加一些详细的描述，用以解释<span class="keyword">commit</span>具体干了什么，为什么这么干  </span>
+</code></pre><p>commit message格式的一个模板如下，为保持原文含义，直接贴上英文版。  </p>
+<pre><code>Short (<span class="number">50</span> <span class="keyword">chars</span> <span class="operator">or</span> less) summary <span class="operator">of</span> changes
+
+More <span class="keyword">detailed</span> explanatory <span class="keyword">text</span>, <span class="keyword">if</span> necessary.  Wrap <span class="keyword">it</span> <span class="built_in">to</span>
+about <span class="number">72</span> <span class="keyword">characters</span> <span class="operator">or</span> so.  In some contexts, <span class="operator">the</span> <span class="keyword">first</span>
+<span class="built_in">line</span> is treated <span class="keyword">as</span> <span class="operator">the</span> subject <span class="operator">of</span> <span class="operator">an</span> email <span class="operator">and</span> <span class="operator">the</span> rest <span class="operator">of</span>
+<span class="operator">the</span> <span class="keyword">text</span> <span class="keyword">as</span> <span class="operator">the</span> body.  The blank <span class="built_in">line</span> separating <span class="operator">the</span>
+summary <span class="built_in">from</span> <span class="operator">the</span> body is critical (unless you omit <span class="operator">the</span> body
+entirely); tools like rebase can <span class="built_in">get</span> confused <span class="keyword">if</span> you run
+<span class="operator">the</span> <span class="constant">two</span> together.
+
+Further paragraphs come <span class="keyword">after</span> blank <span class="keyword">lines</span>.
+
+  - Bullet points are okay, too
+
+  - Typically <span class="operator">a</span> hyphen <span class="operator">or</span> asterisk is used <span class="keyword">for</span> <span class="operator">the</span> bullet,
+    preceded <span class="keyword">by</span> <span class="operator">a</span> single <span class="constant">space</span>, <span class="operator">with</span> blank <span class="keyword">lines</span> <span class="operator">in</span>
+    between, but conventions vary here
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>维护一个良好的commit消息格式和规范，是一个优秀项目的重要前提。<br>本文就先来谈谈commit消息到底该怎么提交。<br>]]>
+    
+    </summary>
+    
+      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
+    
+      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[GIT系列二：手动提交一个commit]]></title>
+    <link href="http://perthcharles.github.com/2015/08/24/commit-a-simple-manually/"/>
+    <id>http://perthcharles.github.com/2015/08/24/commit-a-simple-manually/</id>
+    <published>2015-08-24T13:04:02.000Z</published>
+    <updated>2015-08-25T03:01:40.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>想要深入的了解一个工具，就必须完一些比较hack的用法。<br>为了更好的了解git内部的工作机制，本文就试图通过手动的编辑.git目录下的<br>文件，来完成一次commit的提交。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="-git目录下面的文件">.git目录下面的文件</h3>
+<pre><code><span class="comment"># git --version  // 当前git版本</span>
+    git version 2.3.2 (Apple Git-55)
+<span class="comment"># ls -1 .git</span>
+<span class="constant">objects</span>     &lt;= 
+branches    description info    refs
+
+<span class="constant">HEAD</span>            &lt;= 存放当前branch的HEAD指针
+<span class="constant">branches</span>        &lt;= 新版git没有使用该目录
+<span class="constant">config</span>          &lt;= 本地git仓库的配置文件
+<span class="constant">description</span>     &lt;= 仅用于gitweb程序
+<span class="constant">hooks</span>           &lt;= 一定在特定时间发生后被调用的脚本，可理解为钩子函数
+<span class="constant">index</span>           &lt;= 文件暂存区信息
+info/exclude    &lt;= 功能类似.gitignore的全局性排除文件
+<span class="constant">objects</span>         &lt;= 存放真实的数据文件的地方，文件名是SHA1哈希值
+refs/heads      &lt;= 存放各个分支的HEAD指针
+refs/tags       &lt;= 存放各个tag的commit指针
+refs/remotes    &lt;= 存放remote分支的HEAD指针
+</code></pre><p>通过分析可以看到，对于一个普通的commit而言，比较相关的应该是objects和HEAD指针  </p>
+<hr>
+<h3 id="正常的commit过程">正常的commit过程</h3>
+<pre><code><span class="preprocessor"># echo "hello world" &gt; hello</span>
+<span class="preprocessor"># git add hello</span>
+<span class="preprocessor"># git commit -am "add file"</span>
+</code></pre><p>在接下来的内容中，将介绍如何在直接编辑.git目录文件的情况下达到与上面命令一样的效果。  </p>
+<hr>
+<h3 id="手动提交一个commit的步骤">手动提交一个commit的步骤</h3>
+<p>git存储内容时，会有一个头部信息一并被保存。<br>比如如果是要存储”hello world\n”字符串，可以通过以下ruby脚本得到  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/ruby</span></div><div class="line"></div><div class="line"><span class="built_in">require</span> <span class="string">'digest/sha1'</span></div><div class="line"><span class="built_in">require</span> <span class="string">'zlib'</span></div><div class="line"><span class="built_in">require</span> <span class="string">'fileutils'</span></div><div class="line"></div><div class="line">content = <span class="string">"hello world\n"</span></div><div class="line">header = <span class="string">"blob #{content.length}\0"</span></div><div class="line">store = header + content</div><div class="line"></div><div class="line">sha1 = Digest::SHA1.hexdigest(store)</div><div class="line">puts <span class="string">"sha1:"</span> + sha1</div><div class="line"></div><div class="line">zlib_content = Zlib::Deflate.deflate(store)</div><div class="line">puts <span class="string">"zlib_contet:"</span> + zlib_content</div><div class="line"></div><div class="line">path = <span class="string">'.git/objects/'</span> + sha1[<span class="number">0</span>,<span class="number">2</span>] + <span class="string">'/'</span> + sha1[<span class="number">2</span>,<span class="number">38</span>]</div><div class="line">FileUtils.mkdir_p(File.dirname(path))</div><div class="line">File.<span class="built_in">open</span>(path, <span class="string">'w'</span>) { |f| f.<span class="built_in">write</span> zlib_content}</div></pre></td></tr></table></figure>
+
+
+
+<p>由于hello文件的内容是”hello world\n”，因此可以通过以上脚本首先生成<br>hello文件内容对应的object文件，文件类型是blob。可以通过一下命令判断生成的文件内容是否正确  </p>
+<pre><code># git <span class="keyword">cat</span>-<span class="keyword">file</span> -<span class="keyword">p</span> <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad  
+# git <span class="keyword">cat</span>-<span class="keyword">file</span> -<span class="keyword">t</span> <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad
+</code></pre><p>以上的object也可以通过一下一条命令得到  </p>
+<pre><code># echo <span class="string">"hello world"</span> | git hash-<span class="class"><span class="keyword">object</span> -<span class="title">w</span> --<span class="title">stdin</span></span>
+</code></pre><p>随后更新生成.git/index文件  </p>
+<pre><code># git <span class="keyword">update</span>-<span class="built_in">index</span> --<span class="built_in">add</span> --cacheinfo <span class="number">100644</span> <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad hello
+</code></pre><p>以上步骤仅是生成了”hello world” 对应的blob文件，但并没有制定这个内容对应的<br>文件名叫什么，也就是少了tree类型的object。接着执行一下命令  </p>
+<pre><code><span class="preprocessor"># git write-tree        // 生成指向3b18e5的tree文件，可以用下面两条命令验证</span>
+<span class="preprocessor"># git cat-file -p 7604755fe13e27f5327d6d13dc6663d44847562d</span>
+<span class="preprocessor"># git cat-file -t 7604755fe13e27f5327d6d13dc6663d44847562d</span>
+</code></pre><p>一个真正的commit还需要创建一个commit类型的object指向一个特定的tree节点  </p>
+<pre><code><span class="preprocessor"># git commit-tree 7604755fe -m "add file"</span>
+<span class="preprocessor"># git cat-file -p df36f6b4884ecf2ec519ddec85f959a83b4adec8</span>
+<span class="preprocessor"># git cat-file -t df36f6b4884ecf2ec519ddec85f959a83b4adec8</span>
+</code></pre><p>接着更新master的HEAD指针  </p>
+<pre><code># git <span class="operator"><span class="keyword">update</span>-ref refs/heads/<span class="keyword">master</span> df36f6b4884ecf2ec519ddec85f959a83b4adec8
+# git <span class="keyword">log</span>  &lt;= 至此就能看到一个完整的<span class="keyword">commit</span> <span class="keyword">log</span>
+# git checkout hello  &lt;= 将hello文件从.git库checkout出来，就算彻底的完成了一个<span class="keyword">commit</span>了</span>
+</code></pre><hr>
+<h3 id="总的来说">总的来说</h3>
+<pre><code><span class="comment">// 第一部分是完成git add的操作  </span>
+<span class="preprocessor"># echo "hello world" | git hash-object -w --stdin</span>
+    <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad    <span class="comment">// 生成blob文件</span>
+<span class="preprocessor"># git update-index --add --cacheinfo 100644 3b18e512dba79e4c8300dd08aeb37f8e728b8dad hello</span>
+
+<span class="comment">// 第二部分是完成git  commit的操作</span>
+<span class="preprocessor"># git write-tree</span>
+    <span class="number">7604755</span>fe13e27f5327d6d13dc6663d44847562d    <span class="comment">// 生成tree文件</span>
+<span class="preprocessor"># git commit-tree 7604755fe -m "add file"</span>
+    df36f6b4884ecf2ec519ddec85f959a83b4adec8    <span class="comment">// 生成commit</span>
+</code></pre><p>可以看出一个commit对应会有三种object文件生成，每种object文件的命名都是以sha1哈希值为依据的。<br>除了commit文件由于带有日期信息所以hash值会变化之外，其他两个文件的hash值都是固定不变的。  </p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://ihower.tw/git/files/ihower-git-internal.pdf" target="_blank" rel="external">Git internal</a><br><a href="http://git-scm.com/book/zh/v2/Git-%E5%86%85%E9%83%A8%E5%8E%9F%E7%90%86-Git-%E5%AF%B9%E8%B1%A1" target="_blank" rel="external">Git 内部原理 - Git 对象</a><br><a href="https://gist.github.com/ihower/6132576" target="_blank" rel="external">Git commit without commit</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>想要深入的了解一个工具，就必须完一些比较hack的用法。<br>为了更好的了解git内部的工作机制，本文就试图通过手动的编辑.git目录下的<br>文件，来完成一次commit的提交。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
+    
+      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[GIT系列一：使用gitolite搭建git仓库管理服务]]></title>
+    <link href="http://perthcharles.github.com/2015/08/24/setup-gitolite-service-git-1/"/>
+    <id>http://perthcharles.github.com/2015/08/24/setup-gitolite-service-git-1/</id>
+    <published>2015-08-24T01:40:40.000Z</published>
+    <updated>2015-08-25T03:55:11.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>当在工程实践中需要频繁使用git后发现，要达到真正的熟练掌握git并不是学会几个简单的git commit, git push 就能搞得定的。<br>因此开了这样一个系列，来集中梳理各种正确运用git及相关服务的要点。<br>不过既然是梳理，像那种直接man就能查到的简单用法就不会再赘述。重点在于梳理那些在使用git时会遇到的坑。<br>作为git工程实践系列的开篇，则是介绍如何使用gitolite在自己的机器上搭建git仓库管理服务。<br>只有在搭建好了一个良好的后台管理服务，才能为后续的git使用保驾护航。  </p>
+<pre><code>如果是想了解git基本操作，这是一个不错的开始：[<span class="link_label">Try git</span>](<span class="link_url">https://www.codeschool.com/courses/try-git</span>)  
+</code></pre><a id="more"></a>  
+
+<hr>
+<h3 id="安装gitolite">安装gitolite</h3>
+<pre><code><span class="comment">// 创建专用账号</span>
+@<span class="keyword">server</span> <span class="preprocessor"># adduser -m git -s /bin/bash</span>
+
+<span class="comment">// 将客户端公钥上传服务器</span>
+@admin-<span class="keyword">client</span> <span class="preprocessor"># scp ~/.ssh/id_ras.pub git@gitolite-server-ip:/home/git/admin.pub</span>
+
+<span class="comment">// 切换到专用账号git，然后安装gitolite</span>
+<span class="preprocessor"># sudo su git</span>
+$ mkdir -p ~/bin
+$ cd /home/git
+$ git clone git:<span class="comment">//github.com/sitaramc/gitolite    // 获取gitolite</span>
+$ git checkout -b newest-release v3<span class="number">.6</span><span class="number">.3</span>           <span class="comment">// 换到最新的一次release</span>
+$ gitolite/install -ln ~/bin             <span class="comment">// 安装gitolite到指定目录</span>
+
+<span class="comment">// 配置管理员公钥</span>
+$ bin/gitolite setup -pk admin.pub
+</code></pre><hr>
+<h3 id="克隆gitolite">克隆gitolite</h3>
+<p>至此可在admin-client克隆gitolite管理仓库</p>
+<pre><code>@admin-<span class="keyword">client</span> <span class="preprocessor"># git clone git@gitolite-server-ip:gitolite-admin</span>
+
+    <span class="comment">// MAC电脑下如果是新生成的id_ras.pub，则需要添加管理</span>
+    @admin-<span class="keyword">client</span> <span class="preprocessor"># ssh-add -K ~/.ssh/id_ras.pub</span>
+
+<span class="preprocessor"># cd gitolite-admin</span>
+<span class="preprocessor"># ls</span>
+conf    keydir        <span class="comment">// conf用于配置git项目权限，keydir用于存放git用户公钥</span>
+</code></pre><hr>
+<h3 id="新建GIT项目">新建GIT项目</h3>
+<pre><code><span class="comment">// 回到客户端，在gitolite的配置中，增加project项目，并设置admin访问权限</span>
+<span class="preprocessor"># cat conf/gitolite.conf</span>
+repo gitolite-admin
+    RW+     =   admin
+
+repo testing
+    RW+     =   @all
+
+repo git-learning
+    RW+     =   admin
+
+<span class="preprocessor"># 提交对gitolite配置文件的修改</span>
+<span class="preprocessor"># git commit -am 'add git project'</span>
+<span class="preprocessor"># git push origin master    // 至此，管理员可在客户端克隆git@gitolite-server-ip:project</span>
+
+<span class="comment">// 新的project.git会在执行git push自动创建，默认的目录是：/home/git/repositories</span>
+</code></pre><hr>
+<h3 id="新增GIT用户">新增GIT用户</h3>
+<pre><code>// 将要添加的用户的公钥上传到gitolite-admin/kerdir目录下
+$ <span class="keyword">ls</span> kerdir/
+admin.pub <span class="keyword">new</span>.pub
+
+// 配置用户<span class="keyword">new</span>的权限
+$ <span class="keyword">cat</span> <span class="keyword">conf</span>/gitolite.<span class="keyword">conf</span>
+repo gitolite-admin
+    RW+     =   admin
+
+repo testing
+    RW+     =   @all
+
+repo git-learning
+    RW+     =   admin
+    RW        =    <span class="keyword">new</span>
+
+// 然后提交
+$ git <span class="built_in">add</span> kerdir/<span class="keyword">new</span>.pub
+$ git commit -<span class="keyword">am</span> <span class="string">'add user new for project'</span>
+$ git push origin master
+</code></pre><hr>
+<h3 id="权限控制管理">权限控制管理</h3>
+<pre><code><span class="comment">/* 实例1 */</span>  
+repo project
+    RW+        =    admin    <span class="comment">// admin 有读，写，强制写的权限</span>
+    R        =    <span class="keyword">new</span>        <span class="comment">// new 仅有读权限，如果尝试提交会报错</span>
+
+<span class="comment">/* 实例2 */</span> 
+repo project
+    RW+            =    admin    <span class="comment">// admin 有读，写，强制写的权限</span>
+    <span class="comment">// new 对所有以dev开始的分支都有读写权限。即可以新建dev3，修改dev2分支 </span>
+    RW    dev        =    <span class="keyword">new</span>        
+
+<span class="comment">/* 实例3 */</span>
+repo project
+    RW+            =    admin
+    <span class="comment">// new 仅对dev分支有写权限，$表示精确匹配</span>
+    RW    dev$    =    <span class="keyword">new</span>
+
+<span class="comment">/* 实例4 */</span>
+repo project
+    ...
+    -    refs/tags/v[<span class="number">0</span>-<span class="number">9</span>]    = <span class="keyword">new</span>    <span class="comment">// new用户仅能创建除了以v加上数字开头之外的其他tag</span>
+
+<span class="comment">/* 实例5 */</span>
+repo project
+    ...
+    <span class="comment">// 除了根目录的Makefile文件外，new对其他文件都具有写权限</span>
+    -    NAME/Makefile    = <span class="keyword">new</span>
+    RW    Name/            = <span class="keyword">new</span>
+
+<span class="comment">/* 推荐用法 */</span>
+repo project
+    <span class="comment">// 有效防止误操作：</span>
+    <span class="comment">//     指定admin对branch的读写权限，防止误操作将本地的临时性branch推送到服务器端</span>
+    <span class="comment">//     如果确定需要新增一个branch，则在下面新增一行，例如新增dev分支</span>
+    RW+ master$     =   admin   <span class="comment">// admin 有读，写，强制写master分支的权限</span>
+    RW+ dev$        =   admin   <span class="comment">// admin 有读，写，强制写dev分支的权限</span>
+
+    RW  dev$             =  dev1 dev2     <span class="comment">// 普通developer仅能读写dev分支，且不能强制写</span>
+    -   refs/tags/v[<span class="number">0</span>-<span class="number">9</span>] =  dev2 dev2     <span class="comment">// 限制普通用户不能创建以v加上数字开头的release tag</span>
+    <span class="comment">// 如果不同的用户(组)分别负责完全独立的两个子系统，则可通过类似以下这种方式排除互相干扰</span>
+    -   NAME/net/        =  dev1    <span class="comment">// dev1 不能修改net子系统下的文件</span>
+    -   NAME/arch/       =  dev2    <span class="comment">// dev2 不能修改arch子系统下的文件</span>
+</code></pre><hr>
+<h3 id="配置gitweb">配置gitweb</h3>
+<p>本节主要参考<a href="http://zodiacg.net/2014/05/gitolite_gitweb_nginx/" target="_blank" rel="external">配置Gitolite+Gitweb+Nginx</a>  </p>
+<pre><code><span class="comment">// 安装gitweb 和用于代码高亮的highlight</span>
+$ sudo apt-get install -y gitweb highlight
+
+<span class="comment">// 修改文件权限，用于gitweb读取</span>
+$ chmod <span class="number">0027</span> /home/git.gitolite.rc
+$ sudo usermod -a -G git www-data   <span class="comment">// www-data 是运行nginx服务的用户</span>
+$ sudo chmod g+r    /home/git/projects.<span class="keyword">list</span>
+$ sudo chmod -R g+rx /home/git/repositories
+
+<span class="comment">// 将要显示的repo写入projects.list文件</span>
+$ cat projects.<span class="keyword">list</span>
+    testing.git
+
+<span class="comment">// 修改/etc/gitweb.conf，修改以下几个关键值</span>
+$ cat /etc/gitweb.conf
+    <span class="comment"># path to git projects (&lt;project&gt;.git)</span>
+    <span class="variable">$projectroot</span> = <span class="string">"/home/git/repositories/"</span>;
+
+    <span class="comment"># directory to use for temp files</span>
+    <span class="variable">$git_temp</span> = <span class="string">"/tmp"</span>;
+
+    <span class="comment"># target of the home link on top of all pages</span>
+    <span class="comment">#$home_link = $my_uri || "/";</span>
+
+    <span class="comment"># html text to include at home page</span>
+    <span class="comment">#$home_text = "indextext.html";</span>
+
+    <span class="comment"># file with project list; by default, simply scan the projectroot dir.</span>
+    <span class="variable">$projects_list</span> = <span class="string">"/home/git/projects.list"</span>;
+    <span class="variable">$strict_export</span> = <span class="number">1</span>;
+
+    <span class="comment"># stylesheet to use</span>
+    <span class="comment">#@stylesheets = ("static/gitweb.css");</span>
+
+    <span class="comment"># javascript code for gitweb</span>
+    <span class="variable">$javascript</span> = <span class="string">"static/gitweb.js"</span>;
+
+    <span class="comment"># logo to use</span>
+    <span class="variable">$logo</span> = <span class="string">"static/git-logo.png"</span>;
+
+    <span class="comment"># the 'favicon'</span>
+    <span class="comment">#$favicon = "static/git-favicon.png";</span>
+
+    <span class="comment"># git-diff-tree(1) options to use for generated patches</span>
+    <span class="comment">#@diff_opts = ("-M");</span>
+    @diff_opts = ();
+
+    <span class="variable">$feature</span> {<span class="string">'blame'</span>}{<span class="string">'default'</span>} = [<span class="number">1</span>];
+    <span class="variable">$feature</span> {<span class="string">'blame'</span>}{<span class="string">'override'</span>} = <span class="number">1</span>;
+
+    <span class="variable">$feature</span> {<span class="string">'snapshot'</span>}{<span class="string">'default'</span>} = [<span class="string">'zip'</span>, <span class="string">'tgz'</span>];
+    <span class="variable">$feature</span> {<span class="string">'snapshot'</span>}{<span class="string">'override'</span>} = <span class="number">1</span>;
+
+    <span class="variable">$feature</span>{<span class="string">'highlight'</span>}{<span class="string">'default'</span>} = [<span class="number">1</span>];
+
+<span class="comment">// 配置nginx</span>
+$ sudo apt-get install spawn-fcgi fcgiwrap
+<span class="comment">// 修改/etc/init/d/fcgi.fcgiwrap,将FCGI_USER FCGI_GROUP FCGI_SOCKET_OWNER FCGI_SOCKET_GROUP 都修改为运行web服务的用户</span>
+<span class="comment">// 在nginx的配置文件中添加一个新的server段</span>
+    server {
+        listen <span class="number">80</span>;
+        server_name gitweb.example.com;
+        access_log  /home/wwwlogs/access.log  main;
+
+        location / {
+            root /usr/share/gitweb;
+            index index.cgi;
+            <span class="keyword">include</span> fastcgi_params;
+            gzip off;
+            fastcgi_param GITWEB_CONFIG /etc/gitweb.conf;
+
+            <span class="keyword">if</span> (<span class="variable">$uri</span> ~ <span class="string">"/index.cgi"</span>) {
+                fastcgi_pass unix:/<span class="keyword">var</span>/run/fcgiwrap.socket;
+            }
+        }
+    }
+
+<span class="comment">// 重启fcgiwrap和nginx</span>
+$ sudo service fcgiwrap restart
+$ sudo nginx -s reload
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.ossxp.com/doc/git/gitolite.html" target="_blank" rel="external">Gitolite 构建 Git 服务器</a><br><a href="http://zodiacg.net/2014/05/gitolite_gitweb_nginx/" target="_blank" rel="external">配置Gitolite+Gitweb+Nginx</a><br><a href="http://gitolite.com/gitolite/gitolite.html" target="_blank" rel="external">gitolite all-in-one page</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>当在工程实践中需要频繁使用git后发现，要达到真正的熟练掌握git并不是学会几个简单的git commit, git push 就能搞得定的。<br>因此开了这样一个系列，来集中梳理各种正确运用git及相关服务的要点。<br>不过既然是梳理，像那种直接man就能查到的简单用法就不会再赘述。重点在于梳理那些在使用git时会遇到的坑。<br>作为git工程实践系列的开篇，则是介绍如何使用gitolite在自己的机器上搭建git仓库管理服务。<br>只有在搭建好了一个良好的后台管理服务，才能为后续的git使用保驾护航。  </p>
+<pre><code>如果是想了解git基本操作，这是一个不错的开始：[<span class="link_label">Try git</span>](<span class="link_url">https://www.codeschool.com/courses/try-git</span>)  
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
+    
+      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[个人git使用规范总结(持续更新)]]></title>
+    <link href="http://perthcharles.github.com/2015/08/20/git-specification/"/>
+    <id>http://perthcharles.github.com/2015/08/20/git-specification/</id>
+    <published>2015-08-20T12:24:58.000Z</published>
+    <updated>2015-08-25T03:24:14.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>一个工具的强大往往体现在它的灵活上，但在团队中必须制定一定的规范才能<br>进行高效的合作。<br>GIT就是这样一个强大到不行的工具，本文由于记录在实践中选择的一些实用技巧<br>和规范。<br>纪念那些年掉的坑T_T   </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="1-_实用alias">1. 实用alias</h3>
+<p>这个可以根据个人使用最频繁的命令来设置，然后保存到/etc/rc.local文件。    </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"># <span class="keyword">alias</span> gl=<span class="string">'git pull'</span></div><div class="line"># <span class="keyword">alias</span> gf=<span class="string">'git fetch'</span></div><div class="line"># <span class="keyword">alias</span> gb=<span class="string">'git branch'</span></div><div class="line"># <span class="keyword">alias</span> gco=<span class="string">'git checkout'</span></div><div class="line"># <span class="keyword">alias</span> gamend=<span class="string">'git commit --amend -C HEAD'</span></div><div class="line"># <span class="keyword">alias</span> gst=<span class="string">'git status'</span></div><div class="line"># <span class="keyword">alias</span> <span class="keyword">log</span>=<span class="string">'git log --oneline --graph --decorate --color=always'</span></div><div class="line"># <span class="keyword">alias</span> logg=<span class="string">'git log --graph --all --format=format:'</span>\<span class="string">''</span><span class="variable">%C</span>(bold blue)<span class="variable">%h</span><span class="variable">%C</span>(reset) - <span class="variable">%C</span>(bold green)(<span class="variable">%ar</span>)<span class="variable">%C</span>(reset) <span class="variable">%C</span>(white)<span class="variable">%s</span><span class="variable">%C</span>(reset) <span class="variable">%C</span>(bold white)—     <span class="variable">%an</span><span class="variable">%C</span>(reset)<span class="variable">%C</span>(bold yellow)<span class="variable">%d</span><span class="variable">%C</span>(reset)<span class="string">'\''</span> --abbrev-commit --<span class="keyword">date</span>=relative<span class="string">'</span></div></pre></td></tr></table></figure>
+
+
+
+<hr>
+<h3 id="2-_配置git">2. 配置git</h3>
+<p>这部分很简单，但是很重要。尤其是git配置中的name和email会出现在后续所有<br>用于标注身份的地方。<br>如果实在不放心，或者忘记了有没有做过user.name等配置，最直接的方法就是上config文件里面亲眼看一下。  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="array"># git config </span>-l                       <span class="comment">// 查看当前配置  </span></div><div class="line"><span class="array"># git config user.name </span><span class="string">"your-name"</span>    <span class="comment">// 配置你的名字</span></div><div class="line"><span class="array"># git config user.email </span><span class="string">"your-email"</span>  <span class="comment">// 配置你的邮箱</span></div><div class="line"><span class="array"># vim .git</span>/config                     <span class="comment">// 也可以直接在config文件中进行修改</span></div><div class="line"></div><div class="line"><span class="array"># vim .gitignore                      </span><span class="comment">// 添加.gitignore配置是一个好习惯  </span></div><div class="line">    比如常见的*.o  TODO tmp TMP文件</div><div class="line"></div><div class="line"><span class="array">#git checkout </span>-b your-feature-branch  <span class="comment">// 立即创建一个新分支使用，保持master分支整洁</span></div></pre></td></tr></table></figure>
+
+
+
+<hr>
+<h3 id="-_合并远端master">. 合并远端master</h3>
+<p>在开始修改和准备提交之前，<em>规范</em>的合并远端master和本地master显得非常重要。<br>这里的<em>规范</em>选用fetch + rebase的方式。至于为什么请参考<a href="http://www.cnblogs.com/iammatthew/archive/2011/12/06/2277383.html" target="_blank" rel="external">1</a>。  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># git checkout master</span></div><div class="line"><span class="preprocessor"># git fetch</span></div><div class="line"><span class="preprocessor"># git rebase origin/master</span></div></pre></td></tr></table></figure>
+
+<h3 id="-_解决冲突">. 解决冲突</h3>
+<h3 id="-_关于amend/reset/rebase">. 关于amend/reset/rebase</h3>
+<p>在这一节不打算详细解释这几个命令的用法，仅谈谈对这几个命令的理解和功能。<br>至于具体的用法和注意事项，<a href="https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history" target="_blank" rel="external">这是一篇很好的说明文章</a>。  </p>
+<p>关键切入点：把一个commit理解为一个规范的patch。  </p>
+<p>尽管这几个命令使用时需要比较谨慎，但是熟悉了rewrite git history才算是真的熟悉了git啊。  </p>
+<h3 id="-_清理本地仓库">. 清理本地仓库</h3>
+<p>长期使用下来，如果远端有些分支已经删除了，则需要清理本地repo。<br>否则git branch -a就会看到很多无用的分支。  </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="array"># git remote prune origin  </span><span class="comment">// prune会删除任何不存在于远端仓库的分支</span></div></pre></td></tr></table></figure>
+
+
+
+<hr>
+<h3 id="为什么使用git_format-patch生成patch至关重要">为什么使用git format-patch生成patch至关重要</h3>
+<hr>
+<h3 id="常用命令">常用命令</h3>
+<pre><code>git branch <span class="keyword">new</span>-branch-name origin/branch-name    <span class="comment">// 新建一个本地branch指向远端指定branch</span>
+</code></pre><hr>
+<h3 id="总结">总结</h3>
+<p>多看git help <command>，一些你认为git不支持的功能，可能加个选项就能实现了。  </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" target="_blank" rel="external">Git 常用命令</a><br><a href="http://www.ruanyifeng.com/blog/2015/08/git-use-process.html" target="_blank" rel="external">Git 使用规范流程</a><br><a href="https://github.com/thoughtbot/guides/tree/master/protocol/git" target="_blank" rel="external">Git Protocol</a><br><a href="https://ihower.tw/blog/archives/2622" target="_blank" rel="external">Git 版本控制系統3: 還沒 push 前可以做的事</a><br><a href="https://ihower.tw/git/" target="_blank" rel="external">Git 版本控制系統</a><br><a href="https://blog.yorkxin.org/posts/2011/07/29/git-rebase/" target="_blank" rel="external">Git-rebase 小筆記</a><br><a href="http://www.cnblogs.com/iammatthew/archive/2011/12/06/2277383.html" target="_blank" rel="external">从git merge 和 git rebase想到</a><br><a href="http://www.ruanyifeng.com/blog/2012/07/git.html" target="_blank" rel="external">Git分支管理策略</a><br><a href="http://nvie.com/posts/a-successful-git-branching-model/" target="_blank" rel="external">A successful Git branching model</a><br><a href="https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history" target="_blank" rel="external">Git Interactive Rebase, Squash, Amend and Other Ways of Rewriting History</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>一个工具的强大往往体现在它的灵活上，但在团队中必须制定一定的规范才能<br>进行高效的合作。<br>GIT就是这样一个强大到不行的工具，本文由于记录在实践中选择的一些实用技巧<br>和规范。<br>纪念那些年掉的坑T_T   </p>
+]]>
+    
+    </summary>
+    
+      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[像linux kernel一样管理你的项目]]></title>
     <link href="http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/"/>
     <id>http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/</id>
     <published>2015-08-14T02:34:06.000Z</published>
-    <updated>2015-08-14T09:43:43.000Z</updated>
+    <updated>2015-08-14T09:47:29.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>坚持良好的代码管理习惯，将极大的帮助我们做出更好的项目。<br>本文用于记录如何有效的使用git进行代码管理，像诸多优秀的项目一样。<br>本文尤其适合需要向其他项目提交patch的情形。不懂这句话的请参考标题，哈哈。  </p>
 <a id="more"></a>  
@@ -115,7 +887,8 @@ Further paragraphs come <span class="keyword">after</span> blank <span class="ke
 <span class="array"># git push origin </span>--tags <span class="comment">// 提交所有的tag</span>
 
 <span class="array"># git checkout </span>-b version <span class="number">2.0</span> v2<span class="number">.0</span>   <span class="comment">// 新建一个branch查看v2.0源码  </span>
-</code></pre><h3 id="参考资料">参考资料</h3>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
 <p><a href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html" target="_blank" rel="external">A Note About Git Commit Messages</a><br><a href="http://git-scm.com/book/ch5-2.html" target="_blank" rel="external">Distributed Git - Contributing to a Project</a><br><a href="http://git-scm.com/book/en/v2/Git-Tools-Rewriting-History" target="_blank" rel="external">Git Tools - Rewriting History</a><br><a href="http://linux.koolsolutions.com/2011/02/26/howto-create-and-submit-your-first-linux-kernel-patch/" target="_blank" rel="external">HOWTO: Create and submit your first Linux kernel patch using GIT</a>  </p>
 ]]></content>
     <summary type="html">
@@ -1274,419 +2047,6 @@ make life easier <span class="keyword">for</span> those around them.
     </summary>
     
       <category term="wiki-paper" scheme="http://perthcharles.github.com/categories/wiki-paper/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[OSI模型]]></title>
-    <link href="http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/"/>
-    <id>http://perthcharles.github.com/2015/01/26/wiki-network-osi-model/</id>
-    <published>2015-01-26T08:57:56.000Z</published>
-    <updated>2015-05-10T05:07:41.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>OSI model是Open System Interconnection reference model的缩写/简称，<br>是由国际标准化组织ISO提出，一个试图使各种计算机在世界范围内互连为网络的标准框架。<br>OSI model将计算机网络体系结构划分为七层，分别是Application Layer, Presentation Layer, Session Layer, Transport Layer, Network Layer, Data link Layer 和 Physical Layer。<br>这个页面主要简单介绍一下各个层次的功能。<br><a id="more"></a>  </p>
-<h3 id="1-_层次划分">1. 层次划分</h3>
-<hr>
-<p>下表来自wikipedia，但经过了一定的缩减。  </p>
-<table>
-<thead>
-<tr>
-<th>layer</th>
-<th>function</th>
-<th>examples</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Application</td>
-<td>High-level APIs, including resource sharing, remote file access, derectory services and virtual terminals</td>
-<td>HTTP, FTP, SMTP</td>
-</tr>
-<tr>
-<td>Presentation</td>
-<td>Translation of data between a networking service and an application, including character encoding and data compression</td>
-<td>ASCII, JPEG</td>
-</tr>
-<tr>
-<td>Session</td>
-<td>Managing communication sessions</td>
-<td>RPC</td>
-</tr>
-<tr>
-<td>Transport</td>
-<td>Reliable transmission of data segments between hosts</td>
-<td>TCP, UDP</td>
-</tr>
-<tr>
-<td>Network</td>
-<td>Structing and managing a multi-node network, including addressing and routing</td>
-<td>IPv4, IPv6</td>
-</tr>
-<tr>
-<td>Data link</td>
-<td>reliable transmission of data frames between two nodes connected by a physical layer</td>
-<td>PPP, IEEE 802.2</td>
-</tr>
-<tr>
-<td>Physical</td>
-<td>Transmission and reception of raw bit streams over a physical medium</td>
-<td>DSL</td>
-</tr>
-</tbody>
-</table>
-<p>Physical layer负责解决如何使用物理信号（如电信号，光信号）表达数字信号的问题，工作在这一层的设备主要有集线器；  </p>
-<p>Data link layer则通过使用CRC等技术将物理层提供的可能出错的信息进行校验检错和封装。MAC地址是这一层最具代表性的标志，交换机是这层的代表性网络设备；  </p>
-<p>Network layer的作用主要是决定如何将发送发的数据传到接收方，IP和routing是这一层最核心的技术，路由器则是最典型的三层设备；  </p>
-<p>Transport layer是两台计算机经过网络进行数据通信时，具有端到端connection概念的层次。有诸如TCP的可靠的端到端协议和UDP这中不可靠的端到端协议。一般在这一层还会做一些流量控制，拥塞控制和差错检验的工作；  </p>
-<p>Session layer的session一词就直接道出了这层的功能：会话。这层需要负责建立，管理和关闭所有涉及到的connections。  </p>
-<p>Presentation layer负责定义数据的呈现方式以及解析方式，如果把session layer比作一次中美双边会谈，那么那些个翻译官就好比是工作在presentation layer；  </p>
-<p>Application layer直接与User打交道的一层，它的任务也就是提供一些API，应用层序只需要使用这些API接口与负责网络通信的部分进行交互。  </p>
-<p>当然，由于OSI是一个比较抽象的框架，所以现实世界中还会存在一些cross-layer的东西存在，一个最简单地例子就是ARP/RARP。同时目前应用最广的TCP/IP stack也不是完全符合OSI模型的。    </p>
-<h3 id="参考资料">参考资料</h3>
-<hr>
-<p><a href="http://en.wikipedia.org/wiki/OSI_model#Description_of_OSI_layers" target="_blank" rel="external">OSI model</a>   </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>OSI model是Open System Interconnection reference model的缩写/简称，<br>是由国际标准化组织ISO提出，一个试图使各种计算机在世界范围内互连为网络的标准框架。<br>OSI model将计算机网络体系结构划分为七层，分别是Application Layer, Presentation Layer, Session Layer, Transport Layer, Network Layer, Data link Layer 和 Physical Layer。<br>这个页面主要简单介绍一下各个层次的功能。<br>]]>
-    
-    </summary>
-    
-      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[网络时钟同步协议-- NTP, PTP]]></title>
-    <link href="http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/"/>
-    <id>http://perthcharles.github.com/2015/01/20/ntp-ptp-intro/</id>
-    <published>2015-01-20T08:50:43.000Z</published>
-    <updated>2015-05-10T05:03:31.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br><a id="more"></a>  </p>
-<h3 id="1-_NTP及PTP简介">1. NTP及PTP简介</h3>
-<hr>
-<p>NTP(Network Time Protocol)是用于不同计算机之间同步时钟的网络协议。<br>它的设计目标是使所有的互连的机器之间的时钟与UTC时间只相差若干<em>毫秒</em>。  </p>
-<p>目前NTP协议已经是有第4版了，如果不需要了解NTP太多细节的话，看看<a href="http://en.wikipedia.org/wiki/Network_Time_Protocol" target="_blank" rel="external">这个wiki页面</a>应该就足够了。需要注意的就是它有clock strata的概念。    </p>
-<p>PTP(Precision Time Protocol)看名字就知道是一个比NTP更精确的时钟同步协议了，PTP的设计目标是使机器之间的时钟偏差在sub-microsecond范围—这是<a href="http://en.wikipedia.org/wiki/Precision_Time_Protocol" target="_blank" rel="external">wiki页面</a>上提到的，有其他的地方说的是偏差若干微秒，本文搭建的环境中测量到的偏差也在微秒级别，没有到sub-microsecond级别。在使用PTP协议时，需要了解的主要概念点就是它的master/slave机制。  </p>
-<p>接下来我们就介绍我搭建NTP和PTP环境的过程，所用到的操作系统是CentOS6.5，内核版本是3.10。其他软件的版本会在用到时提及。  </p>
-<h3 id="2-_搭建NTP服务">2. 搭建NTP服务</h3>
-<hr>
-<p>配置环境：两台服务器，一台做NTP服务器，一台做NTP的客户端。同时这两台机器都未联网。<br>NTP服务器地址：192.168.0.11<br>NTP客户端地址：192.168.0.22  </p>
-<p>A. 在192.168.0.11中启动NTP服务  </p>
-<pre><code>$ service iptables stop <span class="comment"> // 首先把防火墙关了  </span>
-$ yum list |grep ntp    <span class="comment"> // 看下yum源中是否有ntp软件    </span>
-$ yum install -y ntp    
-$ ntpd <span class="comment">--version  </span>
-    ntpd <span class="number">4.2</span><span class="number">.6</span>p5  
-$ vim /etc/ntp.conf     <span class="comment"> // 修改配置文件  </span>
-    restrict <span class="number">192.168</span><span class="number">.0</span><span class="number">.11</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> nomodify nostrap <span class="comment"> // 限制作为局域网NTP服务器</span>
-   <span class="comment"> // 下面两句很关键。含义是如果这台NTP服务器的server地址无法访问，  </span>
-   <span class="comment"> // 则将本地时间作为NTP服务时间，这个IP地址也是固定的，不要修改  </span>
-    server <span class="number">127.127</span><span class="number">.1</span><span class="number">.0</span>  
-    fudge  <span class="number">127.127</span><span class="number">.1</span><span class="number">.0</span> stratum <span class="number">10</span>   
-$ ntpd -p /var/run/ntpd.pid <span class="comment"> // 启动ntpd  </span>
-$ service ntpd start         <span class="comment"> // 第二种启动ntpd服务的方法  </span><span class="comment">
-// 等待5分钟  </span>
-$ ntpstat<span class="comment"> // 从这条命令应该能看到NTP时钟同步好了，正常的显示结果应该与下面类似  </span>
-    synchronised <span class="built_in">to</span> <span class="built_in">local</span> net <span class="keyword">at</span> stratum <span class="number">11</span>
-        <span class="built_in">time</span> correct <span class="built_in">to</span> <span class="operator">within</span> <span class="number">11</span> ms  
-        polling server every <span class="number">64</span> s
-</code></pre><p>B. 在192.168.0.22上启动NTP服务，选择192.168.0.11为NTP服务器  </p>
-<pre><code><span class="char">$ </span>service iptables stop
-<span class="char">$ </span>yum install -y ntp
-<span class="char">$ </span>vim /etc/ntp.conf  // 添加下面这个server地址，把其他的都注释掉  
-    server <span class="number">192.168</span><span class="number">.0</span><span class="number">.11</span>  
-<span class="char">$ </span>service ntpd start
-<span class="char">$ </span>netstat  // 等待若干时间应该就能够显示同步成功了  
-</code></pre><p>我的这两台实验机器是在同一个Rack的，结果显示差不多同步的偏差在30ms左右。<br>每个版本的ntpd配置文件可能有少许的差别，不过好在注释都做的不错，所以别的细节就不啰嗦了。  </p>
-<h3 id="3-_搭建PTP服务">3. 搭建PTP服务</h3>
-<hr>
-<p>从<a href="http://en.wikipedia.org/wiki/List_of_PTP_implementations" target="_blank" rel="external">List of PTP implementations</a>可以看到PTP的实现有很多很多种，可以是硬件实现的，可以是软件实现的也可以是软硬件结合实现的。本文中搭建的PTP服务是基于软件<a href="http://en.wikipedia.org/wiki/PTPd" target="_blank" rel="external">PTPd</a>。如果没有特殊的硬件的话，这算是一种非常方便的方法了。  </p>
-<pre><code>$ service iptables <span class="operator"><span class="keyword">stop</span> // 关掉防火墙  
-$ yum list |grep ptp    // 检查yum源  
-$ yum <span class="keyword">install</span> -y ptpd
-$ ptpd2 <span class="comment">--version  </span>
-    ptpd2 <span class="keyword">version</span> <span class="number">2.3</span><span class="number">.0</span>  
-// 弄一个管理脚本，从serverfault找来的 ：）    
-// http://serverfault.com/questions/<span class="number">329127</span>/ptp-<span class="keyword">time</span>-synchronization-<span class="keyword">on</span>-centos6-rhel
-$ vim ptpd.sh  // 将PTPADRGS 改为 PTPD_EXTRA_OPTIONS  
-$ chmod +x ptpd.sh 
-$ vim /etc/ptpd2.conf  // 修改配置文件  
-    ptpengine:preset=masterslave    // 对于<span class="keyword">master</span>主机，不要选masteronly，具体原因请查看<span class="keyword">help</span>  
-    ptpengine:preset=slaveonly      // 对于<span class="keyword">slave</span>主机  
-    // 其他选项也可以根据需要进行调整，比如<span class="keyword">log</span>是否开启，是否绑定CPU。这些看配置文件的注释就好了  
-$ vim /etc/sysconfig/ptpd2  // 修改启动命令，主要就是指定PTPD的配置文件  
-    PTPD_EXTRA_OPTIONS=<span class="string">"-c /etc/ptpd2.conf"</span>  
-// 现在就可以使用下面三个命令来启动，查看和关闭ptpd服务了  
-$ ./ptpd.sh <span class="keyword">start</span>  
-$ ./ptpd.sh <span class="keyword">status</span>  
-$ ./ptpd.sh <span class="keyword">stop</span>  </span>
-</code></pre><p>如果遇到任何问题，首先一定要看看help，使用-H选项的话还能看到非常详细的配置（虽然大多我可看不懂，不过不能不看，理解的越多，遇到的问题就会越少）。<br>如果log里面的信息看不懂，可以把代码下下来，一个grep搞定。  </p>
-<p>经测试，在我的机器上使用PTPD软件搭建的服务，时钟偏移的平均值能够达到5us左右。这个粒度基本能满足我们的需求了。  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://en.wikipedia.org/wiki/Network_Time_Protocol" target="_blank" rel="external">Network Time Protocol</a><br><a href="http://blog.chinaunix.net/uid-20551990-id-4308732.html" target="_blank" rel="external">CentOS 6.3搭建NTP服务器</a><br><a href="http://blog.meinbergglobal.com/2013/09/14/ieee-1588-accurate/" target="_blank" rel="external">Why is IEEE 1588 so accurate?</a><br><a href="http://en.wikipedia.org/wiki/Precision_Time_Protocol" target="_blank" rel="external">Precision Time Protocol</a><br><a href="http://en.wikipedia.org/wiki/List_of_PTP_implementations" target="_blank" rel="external">List of PTP implementations</a><br><a href="http://sourceforge.net/projects/ptpd/?source=typ_redirect" target="_blank" rel="external">ptpd source code</a><br><a href="http://serverfault.com/questions/329127/ptp-time-synchronization-on-centos6-rhel" target="_blank" rel="external">ptpd manage scripts</a><br><a href="http://www.h3c.com.cn/products___technology/technology/system_management/other_technology/technology_recommend/201008/686476_30003_0.htm" target="_blank" rel="external">PTP技术介绍 by H3C</a><br><a href="http://sourceforge.net/p/ptpd/wiki/Home/" target="_blank" rel="external">PTP FAQ</a><br><a href="http://blog.meinbergglobal.com/2013/11/22/ntp-vs-ptp-network-timing-smackdown/" target="_blank" rel="external">More: NTP vs PTP</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>这篇文章介绍一下两个时钟同步的网络协议：NTP和PTP。<br>这里不涉及协议的原理和具体实现(想了解的可自行Google)，重点是如何搭建起这两个服务。<br>]]>
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="NTP" scheme="http://perthcharles.github.com/tags/NTP/"/>
-    
-      <category term="PTP" scheme="http://perthcharles.github.com/tags/PTP/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[如何为hexo主题添加新layout]]></title>
-    <link href="http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/"/>
-    <id>http://perthcharles.github.com/2015/01/17/how-to-hack-hexo/</id>
-    <published>2015-01-17T08:09:48.000Z</published>
-    <updated>2015-05-10T08:13:33.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。<br>最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。<br>在找到<a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo</a>这个hexo的主题后，我就知道我想要的那个页面就是这个样子的。<br>但我暂时还不想完全改变博客的主题，所以就需要将Wixo主题实现的功能给融合进现有的<a href="https://github.com/hexojs/hexo-theme-landscape" target="_blank" rel="external">Landscape</a>主题中，整个过程记录成此文。<br><a id="more"></a>  </p>
-<h3 id="1-_Hexo主题的安装与使用">1. Hexo主题的安装与使用</h3>
-<hr>
-<p>Hexo安装一个主题的方法非常简单，只需要在<a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">theme list</a>中找准一个自己喜欢的主题，然后下载下来就可以了。<br>以默认landscape主题为例，具体步骤如下：  </p>
-<pre><code><span class="comment">// 将源码下载到你博客项目的themes目录下  </span>
-$ git <span class="keyword">clone</span> https:<span class="comment">//github.com/hexojs/hexo-theme-landscape.git themes/landscape</span>
-<span class="comment">// 编辑_config.yml，将theme设置为landscape  </span>
-$ vim _config.yml  
-  theme: landscape 
-</code></pre><h3 id="2-_Landscape主题的源码结构">2. Landscape主题的源码结构</h3>
-<hr>
-<p>关于hexo主题的源码结构，在<a href="http://hexo.io/docs/themes.html" target="_blank" rel="external">官方的文档:Themes</a>中有比较详细的介绍，_config.yml是主题的配置文件，scripts文件夹主要用于存放javascript脚本，source中主要存放CSS，图片等内容，layout中则实现了该主题支持的layout。<br>在layout文件夹中是一些ejs文件，EJS是Embedded JavsScript的缩写，这些ejs文件完成的功能我理解成整个博客框架的模板。  </p>
-<pre><code><span class="keyword">layout</span>.ejs：是整个博客的最基本的模板，所有的页面都在它基础上展开。  
-从源码可以到，它主要就是为每一个页面定义了一个统一的最基本的框架，比如head,sidebar,footer。      
-</code></pre><figure class="highlight title:"><figcaption><span>layout.ejs源码  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="vbscript">&lt;%- partial(<span class="comment">'_partial/head') %&gt;</span></span></div><div class="line"><span class="tag">&lt;<span class="title">body</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"container"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"wrap"</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/header', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">      <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"outer"</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">section</span> <span class="attribute">id</span>=<span class="value">"main"</span>&gt;</span><span class="vbscript">&lt;%- body %&gt;</span><span class="tag">&lt;/<span class="title">section</span>&gt;</span></div><div class="line">        <span class="vbscript">&lt;% <span class="keyword">if</span> (theme.sidebar && theme.sidebar !== <span class="comment">'bottom'){ %&gt;</span></span></div><div class="line">          <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/sidebar', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">        <span class="vbscript">&lt;% } %&gt;</span></div><div class="line">      <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/footer', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">    <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/mobile-nav', null, {cache: !config.relative_link}) %&gt;</span></span></div><div class="line">    <span class="vbscript">&lt;%- partial(<span class="comment">'_partial/after-footer') %&gt;</span></span></div><div class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>而最常见的post和page都是在layout.ejs的基础上，补全了<strong><em>body</em></strong>部分。而且从源码来看，post和page的layout细节上是完全一致的，唯一的不同是hexo对于post和page这两类layout的处理方式不一样，具体可以去看看文档。    </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">post</span>.ejs源码：  </div><div class="line">    &lt;%- partial(<span class="string">'_partial/article'</span>, {<span class="built_in">post</span>: page, index: <span class="constant">false</span>}) %&gt;  </div><div class="line">page.ejs源码：  </div><div class="line">    &lt;%- partial(<span class="string">'_partial/article'</span>, {<span class="built_in">post</span>: page, index: <span class="constant">false</span>}) %&gt;</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="3-_如何将wixo主题的layout添加进landscape主题？">3. 如何将wixo主题的layout添加进landscape主题？</h3>
-<hr>
-<p>通过大致分析了landscape主题layout的源码，具体怎么hack landscape主题就不难了。目前的实现方法如下：<br>a. 在layout文件夹中增加wiki-index.ejs这个layout，源码基本参照<a href="https://github.com/wzpan/hexo-theme-wixo/blob/master/layout/_partial/index.ejs" target="_blank" rel="external">wixo的index.ejs</a>；<br>b. 将wixo需要的CSS和JS都放到landscape的相应位置，然后在wiki-index.ejs中引用；<br>c. 为博客建一个layout是wiki-index.ejs的post，然后将它的链接放到导航栏中；<br>d. 从下面wiki-index.ejs的实现中，可以看到我使用了一个trick来生成wiki页面。wiki-index页面只会解析名字是以”wiki-“开头的category。这可能会对原始博客的categories widget造成干扰，有待进一步改善。  </p>
-<figure class="highlight title:"><figcaption><span>wiki-index.ejs源码  </span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/bootstrap-responsive.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/bootstrap.min.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/font-awesome.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/google-fonts.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/responsive.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/sidenav.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/style.css']) %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- css([<span class="comment">'css/wiki/highlight.css']) %&gt;</span></span></div><div class="line"></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery-2.0.3.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery.imagesloaded.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/jquery.tableofcontents.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/gallery.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/main.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/bootstrap.min.js') %&gt;</span></span></div><div class="line"><span class="vbscript">&lt;%- js(<span class="comment">'js/wiki/tocgenerator.min.js') %&gt;</span></span></div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"row page"</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"col-md-12"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-group"</span> <span class="attribute">id</span>=<span class="value">"notebook"</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;% site.categories.sort(<span class="comment">'name').each(function(cat){ %&gt;</span></span></div><div class="line">      <span class="vbscript">&lt;% <span class="keyword">if</span>(cat.name.substring(<span class="number">0</span>, <span class="number">5</span>) == <span class="comment">'wiki-') { %&gt;</span></span></div><div class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel panel-default"</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-heading"</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">a</span> <span class="attribute">class</span>=<span class="value">"panel-title"</span> <span class="attribute">data-toggle</span>=<span class="value">"collapse"</span> <span class="attribute">data-parent</span>=<span class="value">"#notebook"</span> <span class="attribute">href</span>=<span class="value">"#&lt;%= cat.name %&gt;"</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">i</span> <span class="attribute">class</span>=<span class="value">"fa fa-folder"</span>&gt;</span><span class="tag">&lt;/<span class="title">i</span>&gt;</span> <span class="vbscript">&lt;%= cat.name %&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"&lt;%= cat.name %&gt;"</span> <span class="attribute">class</span>=<span class="value">"panel-collapse collapse"</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"panel-body"</span>&gt;</span></div><div class="line">              <span class="vbscript">&lt;%- list_posts({orderby:<span class="string">"date"</span>,order:<span class="number">1</span>,count:<span class="number">65535</span>,query:{categories:cat.name}}) %&gt;</span>              <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line">      <span class="vbscript">&lt;% } %&gt;</span></div><div class="line">      <span class="vbscript">&lt;% }); %&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span><span class="comment">&lt;!-- accordion --&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="title">div</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></div></pre></td></tr></table></figure>
-
-
-
-
-<p>最后非常感谢Wixo的作者<a href="https://github.com/wzpan" target="_blank" rel="external">wzpan</a>实现了这么美观又实用的一个主题。  </p>
-<h3 id="参考资料">参考资料</h3>
-<hr>
-<p><a href="http://hexo.io/docs/" target="_blank" rel="external">Hexo: Documentation</a><br><a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo - a wiki theme for Hexo</a><br><a href="http://hahack.tk/hexo-theme-wixo/#" target="_blank" rel="external">Wixo demo</a><br><a href="https://github.com/wzpan/hexo-theme-wixo" target="_blank" rel="external">Wixo source code</a><br><a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">Hexo: theme list</a><br><a href="http://kevinsfork.info/2015/02/25/hexo-lightum-enhance/" target="_blank" rel="external">Hexo折腾笔记（二）博客优化与定制</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>在使用小组内部的paper reading list的时候，突然想到应该给我自己的博客也添加一个类似的页面或功能，用来比较系统的整理一些知识点。<br>最初的idea只是想添加一个简单地页面，它默认情况下以列表的形式显示条目名称，而条目对应的具体内容则是被点击后才展开。但后来又想，如果每次添加或者删除某个条目时，都需要对这个页面进行修改，可能维护起来不太方便。<br>在找到<a href="http://hahack.com/codes/hexo-theme-wixo/" target="_blank" rel="external">Wixo</a>这个hexo的主题后，我就知道我想要的那个页面就是这个样子的。<br>但我暂时还不想完全改变博客的主题，所以就需要将Wixo主题实现的功能给融合进现有的<a href="https://github.com/hexojs/hexo-theme-landscape" target="_blank" rel="external">Landscape</a>主题中，整个过程记录成此文。<br>]]>
-    
-    </summary>
-    
-      <category term="hexo" scheme="http://perthcharles.github.com/tags/hexo/"/>
-    
-      <category term="wixo" scheme="http://perthcharles.github.com/tags/wixo/"/>
-    
-      <category term="博客搭建" scheme="http://perthcharles.github.com/categories/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[test-wiki]]></title>
-    <link href="http://perthcharles.github.com/2015/01/14/test-wiki/"/>
-    <id>http://perthcharles.github.com/2015/01/14/test-wiki/</id>
-    <published>2015-01-14T13:34:08.000Z</published>
-    <updated>2015-05-10T05:06:05.000Z</updated>
-    <content type="html"><![CDATA[]]></content>
-    <summary type="html">
-    <![CDATA[]]>
-    </summary>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[tcpprobe, observe the TCP flow with kprobes]]></title>
-    <link href="http://perthcharles.github.com/2014/12/19/tcp-probe-intro/"/>
-    <id>http://perthcharles.github.com/2014/12/19/tcp-probe-intro/</id>
-    <published>2014-12-19T02:49:23.000Z</published>
-    <updated>2015-05-10T05:05:48.000Z</updated>
-    <content type="html"><![CDATA[<p>这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.<br>主要说说这个内核模块：  </p>
-<ol>
-<li>tcpprobe是什么？  </li>
-<li>tcpprobe的基本用法？  </li>
-<li>tcpprobe是怎么实现的？  </li>
-<li>实践中如何用好tcpprobe？  </li>
-</ol>
-<a id="more"></a>  
-
-<hr>
-<h4 id="1-_tcp_probe_是什么？">1. tcp probe 是什么？</h4>
-<p>下面摘录<a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/tcpprobe" target="_blank" rel="external">LINUX FOUNDATION对于tcpprobe</a>上对于tcpprobe的一段解释：  </p>
-<pre><code>tcpprobe is <span class="operator">a</span> module that records <span class="operator">the</span> state <span class="operator">of</span> <span class="operator">a</span> TCP connection <span class="operator">in</span> response <span class="built_in">to</span> incoming packets.  
-It works <span class="keyword">by</span> inserting <span class="operator">a</span> hook <span class="keyword">into</span> <span class="operator">the</span> tcp_recv processing path <span class="keyword">using</span> kprobe, so that <span class="operator">the</span> 
-congestion window <span class="operator">and</span> sequence <span class="built_in">number</span> can be captured.  
-</code></pre><p>首先tcpprobe是一个内核模块，可以按需加载与卸载。在下文的实践中如何用好tcpprobe可以看出模块化的好处。<br>同时tcpprobe是用于监听某些特定TCP的，而不是整个TCP/IP协议栈的内容。在使用tcpprobe模块时需要指定特定的端口号用于监听。<br>这个限制主要是出于效率上的考虑，但是基本上也能满足大部分的需求了，后面我们也将介绍如何根据需要实现我们自己的限制条件。<br>最后tcpprobe是基于kprobe机制实现的，它能捕捉cwnd和seq等信息。这些内容将在后续的内容中具体介绍。  </p>
-<hr>
-<h4 id="2-_tcpprobe的基本用法">2. tcpprobe的基本用法</h4>
-<p>Linux Foundation上有一个简单地例子，这里我结合我的实际使用给出一个更加具体的例子。  </p>
-<p>2.1 编译tcpprobe模块  </p>
-<pre><code><span class="comment">// 方法1：tcpprobe是一个内核模块，在Linux 3.10中它的实现代码是net/ipv4/tcp_probe.c  </span>
-<span class="comment">//        可以设置在编译内核时，将tcpprobe也编译了。方法就是在.config中添加</span>
-CONFIG_NET_TCPPROBE=m  
-
-<span class="comment">// 方法2：可以像一个普通内核模块一样，只编译tcpprobe模块，然后加载  </span>
-# vim Makefile    <span class="comment">// 为tcpprobe模块建立一个新Makefile文件，最好把整个tcp_probe.c和Makefile放到单独的一个文件夹中</span>
-obj-m += tcp_probe.o
-all:
-    make -C <span class="regexp">/lib/m</span>odules<span class="regexp">/`uname -r`/</span>build M=${PWD} modules  
-clean:
-    make -C <span class="regexp">/lib/m</span>odules<span class="regexp">/`uname -r`/</span>build M=${PWD} clean
-</code></pre><p>2.2 tcpprobe模块的加载与卸载  </p>
-<pre><code><span class="comment">// 如果是通过修改.config来编译tcpprobe的，可以使用modprobe加载    </span>
-<span class="preprocessor"># modprobe tcp_probe port=5001          // 监听所有本地端口是5001的TCP流，仅在cwnd变化时捕捉信息  </span>
-<span class="preprocessor"># modprobe tcp_probe full=1 port=5001   // full选项表示每次收到数据包都捕捉信息</span>
-
-<span class="comment">// 如果是普通内核模块形式编译的，则使用insmod加载  </span>
-<span class="preprocessor"># insmod tcp_probe.ko full=1 port=5001  </span>
-
-<span class="comment">// 卸掉tcpprobe模块的命令也很简单，只要当前没有任务在使用tcpprobe模块即可卸载  </span>
-<span class="preprocessor"># rmmod tcp_probe  </span>
-</code></pre><p>2.3 tcpprobe模块的使用<br>加载tcpprobe模块后，会新增一个/proc/net/tcpprobe的接口，可以通过这个接口获取tcpprobe捕捉的信息。  </p>
-<pre><code><span class="preprocessor"># cat /proc/net/tcpprobe &gt; data.out &amp;    // tcpprobe捕捉的信息是持续性的，因此读这个接口可以放到后台读  </span>
-<span class="preprocessor"># pid=$!   // 保存上一个读命令的pid，用于结束读tcpprobe接口  </span>
-<span class="preprocessor"># iperf -c otherhost    // 使用iperf建立一个TCP流  </span>
-<span class="preprocessor"># kill $pid  </span>
-</code></pre><p>记录在data.out中的数据大致是这个样子：  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">11<span class="class">.172120204</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842ccad</span> 0<span class="tag">x84299c5</span> 10 168 14608 143  </div><div class="line">11<span class="class">.172141113</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842ccad</span> 0<span class="tag">x842b60d</span> 11 168 29088 137  </div><div class="line">11<span class="class">.172283353</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.2</span><span class="pseudo">:8089</span> 193<span class="class">.168</span><span class="class">.0</span><span class="class">.25</span><span class="pseudo">:54320</span> 32 0<span class="tag">x842f9ed</span> 0<span class="tag">x842bbb5</span> 11 168 31984 133</div></pre></td></tr></table></figure>
-
-
-<p>每行的各列分别为：  </p>
-<pre><code>timestamp  
-saddr:port  <span class="comment">// 源IP及端口，我的数据是在发送端捕捉的，所以port是固定的8089    </span>
-daddr:port  <span class="comment">// 目的IP及端口  </span>
-skb-&gt;len    <span class="comment">// 收到的数据包skb大小，收到的都是ACK包，所以len都比较小。  </span>
-snd_nxt     <span class="comment">// 下一个待发送数据的序列号  </span>
-snd_una     <span class="comment">// 待确认数据的序列号  </span>
-snd_cwnd    <span class="comment">// 拥塞窗口大小  </span>
-ssthresh    <span class="comment">// 慢启动阈值  </span>
-snd_wnd     <span class="comment">// 接收窗口大小  </span>
-srtt        <span class="comment">// smoothed RTT  </span>
-</code></pre><p>可以使用简单地文本处理及gnuplot将得到的数据进行可视化，不过这里就不展开了。  </p>
-<hr>
-<h4 id="3-_tcpprobe是怎么实现的？">3. tcpprobe是怎么实现的？</h4>
-<p>tcpprobe是一个机遇kprobe机制实现的模块，代码量其实不大，这节算是我的一个学习笔记吧。  </p>
-<p>首先tcpprobe定义了两个由于记录捕捉信息的数据结构：struct tcp_log和static struct tcp_probe。<br>tcp_log的元素基本就是上面介绍的一行中各列的数据，而tcp_probe结构体算是一个管理结构体，比如spinlock和用于判断cwnd是否改变的lastcwnd。  </p>
-<p>作为一个内核模块，必不可少的就是初始化和退出函数。下面先总体上说下这两个函数完成的任务。  </p>
-<pre><code><span class="keyword">static</span> __init <span class="type">int</span> tcpprobe_init(<span class="type">void</span>)  
-    =&gt; spin_lock_init(&amp;tcp_probe.lock)  // 初始化tcp_probe结构体中的内容  
-    =&gt; tcp_probe.log = kcalloc(bufsize, sizeof(struct tcp_log), <span class="type">GFP_KERNEL</span>) // 为捕捉数据分配内存空间  
-    =&gt; proc_create(procname, <span class="type">S_URUSR</span>, init_net.proc_net, &amp;tcpprobe_fops)    // 为tcpprobe模块创建一个<span class="keyword">proc</span>文件系统接口  
-    =&gt; register_jprobe(&amp;tcp_jprobe) // 将tcp_jprobe注册到内核中  
-
-<span class="keyword">static</span> __exit <span class="type">void</span> tcpprobe_exit(<span class="type">void</span>)
-    =&gt; remove_proc_entry(procname, init_net.proc_net);  // 删除tcpprobe模块的<span class="keyword">proc</span>接口  
-    =&gt; unregister_jprobe(&amp;tcp_jprobe);  // 注销tcp_jprobe
-    =&gt; kfree(tcp_probe.log)      // 释放内存
-</code></pre><p>tcp_probe中锁的初始化和内存分配就不说了，先介绍一下proc_create()函数创建的proc接口，再说说register_jprobe()函数。<br>proc_create()函数的原型如下，在include/linux/proc_fs.h中实现。  </p>
-<pre><code><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct</span> proc_dir_entry *proc_create(
-        <span class="keyword">const</span> <span class="keyword">char</span> *name, umode_t mode, <span class="keyword">struct</span> proc_dir_entry *parent,
-        <span class="keyword">const</span> <span class="keyword">struct</span> file_operations *proc_fops)
-</code></pre><p>tcpprobe模块中的各个参数的含义如下：  </p>
-<ol>
-<li>name      = “tcpprobe”  </li>
-<li>mode      = S_IRUSR, 允许读文件  </li>
-<li>parent    = init_net.proc_net，新建的proc接口将出现在/proc/net/目录中  </li>
-<li>proc_fops = &amp;tcpprobe_fops  </li>
-</ol>
-<p>tcpprobe_fops结构体的声明如下  </p>
-<pre><code>static const struct file_operations <span class="variable">tcpprobe_fops =</span> {
-    .<span class="variable">owner   =</span> THIS_MODULE,
-    .<span class="variable">open    =</span> tcpprobe_open,  
-    .<span class="variable">read    =</span> tcpprobe_read,  
-    .<span class="variable">llseek  =</span> noop_llseek,
-};
-</code></pre><p>proc接口也是被当做文件来处理的，且由于是只读的，所以主要需要实现open和read这两个函数。<br>tcpprobe_open()主要就是将tcp_probe结构体的各项内容进行reset，<br>tcpprobe_read()则是读取已经记录的数据，当没有数据可读时则睡眠，正常情况就将tcp_probe.log数组的最后一项读取出来。  </p>
-<p>至此还只是建好了一个只读的proc接口，但是数据的采集函数并没有注册到内核中，接下来就简单说说tcp_jprobe这个数据结构体。<br>register_jprobe()函数的原型如下，在kernel/kprobes.c中实现。  </p>
-<pre><code><span class="keyword">int</span> __kprobes register_jprobe(<span class="keyword">struct</span> jprobe *jp)  
-</code></pre><p>tcp_jprobe结构体的定义如下：  </p>
-<pre><code>static struct jprobe <span class="variable">tcp_jprobe =</span> {
-    .<span class="variable">kp =</span> {
-        .<span class="variable">symbol_name  =</span> <span class="string">"tcp_rcv_established"</span>,
-    },
-    .<span class="variable">entry =</span> jtcp_rcv_established,
-};
-</code></pre><p>可以看出来，tcpprobe其实是用的jprobe方式实现的，监听tcp_rcv_established函数(这也是为什么tcpprobe不会抓取三次握手时候的包信息的原因)。<br>对kprobe和jprobe感兴趣的话，可以看看最后给出的几个参考资料。  </p>
-<p>最后说说jtcp_rcv_established()函数，由于它是用于监听tcp_rcv_established()函数的，因此函数的参数需要完全一致，从而jtcp_rcv_established()就拿到了一个TCP流最关键的sk结构体。<br>具体实现就是如果这个包的Port是监听的那一个，则往tcp_probe.log中新写入一项，然后唤醒等待数据的读进程。<br>还有一点就是tcp_probe.log是以一个循环数组形式实现的，再具体点就是那种保留一项不用的实现。代码就补解释了。  </p>
-<h4 id="4-_实践中如何用好tcpprobe？">4. 实践中如何用好tcpprobe？</h4>
-<p>在实践中往往会发现tcpprobe的功能还不够强大，但只要适当修改，利用tcpprobe的实现原理还是能做很多的事情的。<br>tcpprobe算是目前为止我了解到的用于分析Linux内核TCP流的最赞的工具之一了。  </p>
-<p>首先，由于tcpprobe能够拿到TCP流的sk结构体，其实它能用于打印输出的信息远远不止是cwnd。<br>sk结构体是内核中记录一个TCP流最关键的数据结构，里面包含一条TCP流几乎任何的信息。<br>比如内存相关的可以看发送缓冲区的大小和占用情况，接收缓存区的大小。<br>其实只要在内核中拿到了一条TCP流的sk结构体，几乎可以对这条TCP流做任何事情。<br>所以建议在使用tcpprobe的时候，根据自己的需求修改tcp_probe.log结构体的内容。  </p>
-<p>其次，有时候无法或不便知道端口号，tcpprobe的现有实现就无法满足要求了。但是其实只要根据实际情况适当的修改tcpprobe模块，或许就能达到目的。比如如果我们知道src IP和dst IP，那么只要修改jtcp_rcv_established()函数记录数据的判断条件即可。  </p>
-<p>最后如果对TCP的内核实现熟悉的话，甚至可以改掉tcpprobe的监听入口函数。比如我们想监听skb发送时的一些信息，可以把监听入口函数改为tcp_transmit_skb()。  </p>
-<p>以上。</p>
-<hr>
-<h4 id="参考资料">参考资料</h4>
-<p><a href="http://www.linuxfoundation.org/collaborate/workgroups/networking/tcpprobe" target="_blank" rel="external">tcpprobe by LINUX FOUNDATION</a><br><a href="http://www.ibm.com/developerworks/cn/linux/l-kprobes.html" target="_blank" rel="external">使用Kprobes调试内核 by IBM</a><br><a href="https://www.redhat.com/magazine/005mar05/features/kprobes/" target="_blank" rel="external">Gaining insight into the linux kernel with kprobes</a><br><a href="http://www.opensourceforu.com/2011/04/kernel-debugging-using-kprobe-and-jprobe/" target="_blank" rel="external">Kernel Debugging Using Kprobe and Jprobe</a><br><a href="http://lwn.net/Articles/132196/" target="_blank" rel="external">An introduction to KProbes</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>这篇文章介绍最近用到的一个监听TCP信息的内核模块：tcpprobe.<br>主要说说这个内核模块：  </p>
-<ol>
-<li>tcpprobe是什么？  </li>
-<li>tcpprobe的基本用法？  </li>
-<li>tcpprobe是怎么实现的？  </li>
-<li>实践中如何用好tcpprobe？  </li>
-</ol>
-]]>
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[tshark, network protocol analyzer]]></title>
-    <link href="http://perthcharles.github.com/2014/12/16/tshark-intro/"/>
-    <id>http://perthcharles.github.com/2014/12/16/tshark-intro/</id>
-    <published>2014-12-16T09:17:05.000Z</published>
-    <updated>2015-05-10T05:06:26.000Z</updated>
-    <content type="html"><![CDATA[<p>分析过网络trace的同学一定对tcpdump和wireshark比较熟悉，但是wireshark毕竟是一个图形界面，如果想对整个抓包和分析包的过程都脚本化，wireshark可能就不能满足需求了。<br>Google找到了tshark，terminal wireshark，果断用起来啊，当然类似的工具还有tcptrace。<br>基本的用法Google一下就能找到，tshark能做的事情还是听多的。结合shell和gunplot用起来的话基本上能满足基本需求了。  </p>
-<hr>
-<p><a href="https://www.wireshark.org/docs/man-pages/tshark.html" target="_blank" rel="external">tshark man page</a><br><a href="http://www.tcptrace.org/" target="_blank" rel="external">tcptrace</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>分析过网络trace的同学一定对tcpdump和wireshark比较熟悉，但是wireshark毕竟是一个图形界面，如果想对整个抓包和分析包的过程都脚本化，wireshark可能就不能满足需求了。<br>Google找到了tshark，terminal wireshark]]>
-    </summary>
-    
-      <category term="tshark" scheme="http://perthcharles.github.com/tags/tshark/"/>
-    
-      <category term="wireshark" scheme="http://perthcharles.github.com/tags/wireshark/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP ADI in Linux Phase 1]]></title>
-    <link href="http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/"/>
-    <id>http://perthcharles.github.com/2014/12/16/tcp-design-and-implementation-phase1/</id>
-    <published>2014-12-16T08:11:42.000Z</published>
-    <updated>2015-05-10T05:05:37.000Z</updated>
-    <content type="html"><![CDATA[<p>对Linux TCP implementation的阅读暂时先告一段落。以后有需求的时候再来加深理解。<br>顺道分享一个总结性的<a href="http://vdisk.weibo.com/s/B_gfVkmzsvB60" target="_blank" rel="external">PPT</a>。  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>对Linux TCP implementation的阅读暂时先告一段落。以后有需求的时候再来加深理解。<br>顺道分享一个总结性的<a href="http://vdisk.weibo.com/s/B_gfVkmzsvB60" target="_blank" rel="ex]]>
-    </summary>
-    
-      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="读书笔记" scheme="http://perthcharles.github.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
     
   </entry>
   

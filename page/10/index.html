@@ -71,66 +71,10 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-linux-using-10" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-yahoo-yql" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/09/01/linux-using-10/" class="article-date">
-  <time datetime="2013-09-01T04:00:02.000Z" itemprop="datePublished">9月 1 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Shell/">Shell</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/09/01/linux-using-10/">linux命令学习（十）：awk</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <!-- add for TOC @ by charles -->
-        
-        <h3 id="awk命令">awk命令</h3>
-<p>awk对比sed：awk主要针对行内数据进行操作，sed主要是以行为单位进行操作<br>命令语法格式：  </p>
-<pre><code><span class="array">#awk </span><span class="string">'条件类型1{动作1} 条件类型2{动作2} ...'</span> filename
-</code></pre><p>awk过于复杂，所以以后慢慢练习。  </p>
-<p>1.awk 计算方差  </p>
-<pre><code><span class="comment">#awk '{a[++i]=$1;} END{for(i in a)sum += a[i];ave=sum/NR;for(i in a) delta += (a[i]-ave)*(a[i]-ave);print delta/NR}' tmp</span>
-</code></pre><p>2.awk 实例一则<br><a href="http://perthcharles.github.io/%E6%96%87%E6%9C%AC%E5%A4%84%E7%90%86/2013/06/19/choose-multi-line-from-text/" target="_blank" rel="external">从文本中抽取出指定的行</a>  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://bbs.chinaunix.net/thread-3605498-1-1.html" target="_blank" rel="external">怎么样对文本进行指定行的数据提取操作？</a>  </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/09/01/linux-using-10/" data-id="gz8o528rt4zssau1" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/09/01/linux-using-10/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-change-library-path" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/08/31/change-library-path/" class="article-date">
-  <time datetime="2013-08-31T04:23:22.000Z" itemprop="datePublished">8月 31 2013</time>
+    <a href="/2013/09/28/yahoo-yql/" class="article-date">
+  <time datetime="2013-09-28T04:00:00.000Z" itemprop="datePublished">9月 28 2013</time>
 </a>
     
   </div>
@@ -141,7 +85,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/31/change-library-path/">linux 安装软件问题：XXX share library can not found</a>
+      <a class="article-title" href="/2013/09/28/yahoo-yql/">YQL学习笔记</a>
     </h1>
   
 
@@ -149,173 +93,23 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <!-- add for TOC @ by charles -->
-        
-        <h3 id="问题">问题</h3>
-<p>当跑某些软件的时候，可能会遇到下面的错误：<br>    “XXX share library” can not found<br>如果你可以确定这个库你已经安装好了，则可能是环境变量没有设置正确。主要环境变量就是LD_LIBRARY_PATH。  </p>
-<h3 id="解决方法">解决方法</h3>
-<pre><code><span class="variable">#whereis</span> XXX <span class="comment">//如果库的文件名是libXXX.so</span>
-<span class="variable">#export</span> LD_LIBRARY_PATH<span class="subst">=</span><span class="variable">$LD_LIBRARY_PATH</span>:/the<span class="attribute">-result</span><span class="attribute">-of</span><span class="attribute">-last</span><span class="attribute">-commond</span>/lib<span class="subst">/</span>
-</code></pre><p>如想免去开机重启后的重复设置，将上面的export语句写到.bashrc文件中即可。  </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/31/change-library-path/" data-id="58gbemq7p97jxbvf" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/08/31/change-library-path/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-linux-using-9" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/08/31/linux-using-9/" class="article-date">
-  <time datetime="2013-08-31T03:23:42.000Z" itemprop="datePublished">8月 31 2013</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/Shell/">Shell</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/31/linux-using-9/">linux命令学习（九）:eval,tail,head,seq</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <!-- add for TOC @ by charles -->
-        
-        <h2 id="eval">eval</h2>
-<p>查看系统自带的解释：  </p>
-<pre><code>#eval [arg ...]
-    The  <span class="keyword">args</span>  are <span class="keyword">read</span> <span class="built_in">and</span> concatenated together into <span class="keyword">a</span> single  
-    <span class="keyword">command</span>.  This <span class="keyword">command</span> <span class="keyword">is</span> then <span class="keyword">read</span> <span class="built_in">and</span> executed by the <span class="keyword">shell</span>,  
-    <span class="built_in">and</span> its  <span class="keyword">exit</span> status <span class="keyword">is</span> returned <span class="keyword">as</span> the value of <span class="built_in">eval</span>.   
-    If there are <span class="keyword">no</span> <span class="keyword">args</span>, <span class="built_in">or</span> <span class="keyword">only</span> null arguments, <span class="built_in">eval</span> returns <span class="number">0</span>.
-</code></pre><p>可以看出eval给shell提供了一种”根据变量的值，运行时确定所执行命令”的机制。<br>实践过程中遇到的一种情况就是”包含变量的变量名的赋值”操作。如下面这段代码：  </p>
-<pre><code>//用一个<span class="keyword">for</span>循环，给名称为test_1,test_2等变量赋值
-<span class="comment">#cat val_in_val.sh</span>
-<span class="shebang">#!/bin/bash</span>
-array=(<span class="number">11</span> <span class="number">22</span> <span class="number">33</span>)
-<span class="keyword">for</span> i <span class="keyword">in</span> $(seq <span class="number">3</span>)
-<span class="keyword">do</span>
-    <span class="comment">#下行等价于： test_1=${array[0]}   (i=0时)</span>
-    <span class="built_in">eval</span> test_<span class="variable">${i}</span>=<span class="variable">${array[$((i-1))]}</span>
-
-    <span class="comment">#下面命令原理类似。其中'\'的作用是在eval执行时，</span>
-    <span class="comment">#直接保留'$'符号而不作为求值符号处理</span>
-    <span class="comment">#执行eval后，脚本中执行的等价于</span>
-    <span class="comment">#echo "test_1=$test_1" (i=0时)</span>
-    <span class="built_in">eval</span> <span class="built_in">echo</span> <span class="string">"test_<span class="variable">${i}</span>=\$test_<span class="variable">${i}</span>"</span>
-<span class="keyword">done</span>
-<span class="comment">#sh val_in_val.sh</span>
-test_1=<span class="number">11</span>
-test_2=<span class="number">22</span>
-test_3=<span class="number">33</span>
-</code></pre><h3 id="head">head</h3>
-<p>用于输出文件的起始的部分数据  </p>
-<pre><code><span class="array">#head </span>-n <span class="number">2</span> file      <span class="comment">//输出file文件的前两行</span>
-<span class="array">#head </span>-n -<span class="number">2</span> file    <span class="comment">//显示除最后2行之外的其他行</span>
-<span class="array">#head </span>-c <span class="number">2</span> file        <span class="comment">//显示文件的头两个byte</span>
-<span class="array">#head </span>-c -<span class="number">2</span> file    <span class="comment">//显示除最后两个byte之外的所有内容</span>
-</code></pre><h3 id="tail">tail</h3>
-<p>基本用法与head类似，但是也有更多高级的用法，详细内容请查看man tail<br>单纯就输出而言，没有’-‘符号的作用，而是’+’符号的应用。注意与head区分开。  </p>
-<pre><code><span class="array">#tail </span>-n <span class="number">2</span> file        <span class="comment">//输出file文件的最后2行</span>
-<span class="array">#tail </span>-n +<span class="number">2</span> file    <span class="comment">//输出文件除其实2行之外的内容</span>
-<span class="array">#tail </span>-c <span class="number">2</span> file        <span class="comment">//输出file文件的最后2个byte</span>
-<span class="array">#tail </span>-c +<span class="number">2</span> file    <span class="comment">//输出file文件除起始2字节之外的内容</span>
-</code></pre><h3 id="seq">seq</h3>
-<p>打印一连串的数字，命令比较简单，直接上实例  </p>
-<pre><code><span class="comment">#seq 4</span>
-1
-2
-3
-4
-<span class="comment">#seq -s '#' 3 6        //替换默认的分隔符\n为'#'</span>
-3<span class="comment">#4#5#6</span>
-<span class="comment">#seq -f s%3g -s ' ' 3 0.5 4 //以步长0.5，按指定格式输出</span>
-s  3 s3.5 s  4
-<span class="comment">#seq -f %f -s ' ' 3 0.5 4 //浮点格式输出</span>
-3.000000 3.500000 4.00000
-<span class="comment">#seq -s '' 10 |sed 's/[0-9]/*/g'    //输出11个*</span>
-<span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span><span class="keyword">*</span>
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/31/linux-using-9/" data-id="k4dmlioxtvjqie9z" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/08/31/linux-using-9/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-c-setbuf" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/08/28/c-setbuf/" class="article-date">
-  <time datetime="2013-08-28T13:02:42.000Z" itemprop="datePublished">8月 28 2013</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/28/c-setbuf/">[C语言函数] 使用setbuf减少写文件操作I/O的操作</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="问题背景">问题背景</h2>
-<p>在日常的工作中，经常会需要使用fprint、fwrite之类的函数写文件。<br>当需要写或读的数据量较大时，使用操作系统默认的策略可能就不够高效。<br>通常的做法就是使用自定义的缓冲区减少I/O操作。下面分二进制文件和文本文件的读写进行说明。  </p>
+        <h3 id="简介">简介</h3>
+<p>YQL是雅虎提供的一种类似SQL的数据查询服务。<br>设计出发点是把整个Web当成一个巨大的数据库供开发者使用。  </p>
 
         
           <p class="article-more-link">
-            <a href="/2013/08/28/c-setbuf/#more">Read More</a>
+            <a href="/2013/09/28/yahoo-yql/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/28/c-setbuf/" data-id="vuqp8ofzm9llepmh" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/09/28/yahoo-yql/" data-id="8pb30fnunwotrvxs" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/08/28/c-setbuf/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/09/28/yahoo-yql/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C-C/">C/C++</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/YQL/">YQL</a></li></ul>
 
     </footer>
   </div>
@@ -325,10 +119,10 @@ s  3 s3.5 s  4
 
 
   
-    <article id="post-kvm-storage" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-python-learning-3" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/08/26/kvm-storage/" class="article-date">
-  <time datetime="2013-08-26T15:00:23.000Z" itemprop="datePublished">8月 26 2013</time>
+    <a href="/2013/09/14/python-learning-3/" class="article-date">
+  <time datetime="2013-09-14T14:00:00.000Z" itemprop="datePublished">9月 14 2013</time>
 </a>
     
   </div>
@@ -339,7 +133,7 @@ s  3 s3.5 s  4
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/26/kvm-storage/">KVM虚拟机镜像(disk img)的共享--尝试</a>
+      <a class="article-title" href="/2013/09/14/python-learning-3/">[python学习笔记之三]lists 和 dictionaries</a>
     </h1>
   
 
@@ -347,27 +141,169 @@ s  3 s3.5 s  4
     
     <div class="article-entry" itemprop="articleBody">
       
-        <!-- add for TOC @ by charles -->
-        
-        <h2 id="共享disk文件">共享disk文件</h2>
-<p>virt-install disk选项中有关于disk权限的参数：perms<br>默认值为：rw(read/write),还有ro(readonly)和sh(shared read/write)。<br>所以可以尝试从一个img启动多个虚拟机，但可能每个虚拟机都要有私有的根文件系统的img。<br>下面是<a href="https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Virtualization/sect-Virtualization-Shared_storage_and_virtualization-Using_iSCSI_for_storing_virtual_disk_images.html" target="_blank" rel="external">Using shared storage with virtual disk images</a>中的一些解释：<br>    The virt-install command can be used to install new guests from the command line. The —disk argument can take the name of a storage pool, followed by the name of any contained volumes. Continuing this example, the following command will begin the installation of a guest with two disks; the first disk is the root file system, the second disk can be shared between multiple guests for common data:</p>
-<pre><code><span class="comment"># virt-install --accelerate --name rhelx86_64 --ram 800 --vnc --disk \ vol=kvmguest/10.0.0.1 --disk vol=kvmguest/10.0.0.2,perms=sh --pxe</span>
-The <span class="keyword">second</span> disk has <span class="operator">the</span> &lt;shareable/&gt; flag <span class="built_in">set</span>. Critical <span class="keyword">for</span> <span class="operator">the</span> disk <span class="built_in">to</span> be safely shared between guests, this ensures that <span class="operator">the</span> SELinux labelling will be appropriate <span class="keyword">for</span> multiple guests <span class="built_in">to</span> access <span class="operator">the</span> disk <span class="operator">and</span> that all I/O caching is disabled <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">host</span>.</span>
-</code></pre><h2 id="我的设想：">我的设想：</h2>
-<p>首先尝试sh启动多个虚拟机，不行则尝试尝试ro+sh启动一个，然后多个虚拟机<br>最后实践发现将img的perms=sh的VMs可以依次起来，但是毕竟共享的是系统盘，终究还是会出现系统方面的错误，所以不推荐。  </p>
-<h2 id="perms=sh的用途">perms=sh的用途</h2>
-<p>最后可行的方式就是只共享一些纯数据盘，这样只要操作得当，基本不会出现问题。  </p>
+        <h3 id="List">List</h3>
+<p>声明一个list: list_name = [item1, item2]<br>中括号对应list<br>与C中的数据较类似，但也具有重大区别：list的长度是可变的！<br>    //给list添加新元素<br>    list_name.append(item)<br>    //获取list的长度<br>    len(list_name)<br>    //取部分list，类似对字符串的操作<br>    my_list = [0, 1, 2, 3]<br>    my_slice = my_list[1:3]    //结果是my_slice = [1, 2]</p>
 
+        
+          <p class="article-more-link">
+            <a href="/2013/09/14/python-learning-3/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/26/kvm-storage/" data-id="fifeqmza4x8vo15o" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/09/14/python-learning-3/" data-id="94ka7oh6wm4jcwjv" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/08/26/kvm-storage/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/09/14/python-learning-3/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KVM/">KVM</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
 
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-python-learning-2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/09/14/python-learning-2/" class="article-date">
+  <time datetime="2013-09-14T04:01:01.000Z" itemprop="datePublished">9月 14 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/09/14/python-learning-2/">[python学习笔记之二]常用模块和方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="模块加载方法">模块加载方法</h3>
+<p>1.generic imports<br>语法：import [module]<br>这种方式称之为generic import.在使用模块中的函数时，需要加上模块的前缀<br>如下例：<br>    import math<br>    print math.sqrt(25)</p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/09/14/python-learning-2/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/09/14/python-learning-2/" data-id="xewnx7ldpskv9mp1" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/09/14/python-learning-2/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-linux-tex" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/09/14/linux-tex/" class="article-date">
+  <time datetime="2013-09-14T04:00:00.000Z" itemprop="datePublished">9月 14 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/09/14/linux-tex/">[latex]linux环境下的latex安装</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本来想着使用yum安装的，结果发现没有直接的rpm包<br>网上有许多的方法，特别是对于中文的问题的解决<br>但是都过于复杂，可能是懒人有懒福吧。总算找到一种最简单的安装办法<br>详见<a href="http://blog.chinaunix.net/uid-20940095-id-66105.html" target="_blank" rel="external">这篇博客:linux下texlive 2010 简单安装教程</a>，非常感谢这位大牛的指点。让我节省了不少时间。  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/09/14/linux-tex/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/09/14/linux-tex/" data-id="xbk3lksa6z02m1rf" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/09/14/linux-tex/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/latex/">latex</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-c-and-pointer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/09/05/c-and-pointer/" class="article-date">
+  <time datetime="2013-09-05T04:00:00.000Z" itemprop="datePublished">9月 5 2013</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/读书笔记/">读书笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/09/05/c-and-pointer/">C和指针[Kenneth A.Reek 著]</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="第一章：快速上手">第一章：快速上手</h3>
+<p>1.使用scanf函数进行用户输入的时候，需要注意：<br>使用所有格式码(除了%c之外)时，输入值之前的空白(空格、制表符、换行符等)会被跳<br>过，值后面的空白表示该值的结束。也就是说只有%c还会响应用户的空白输入，其他都<br>会忽略重复的空白。  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/09/05/c-and-pointer/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/09/05/c-and-pointer/" data-id="enaacm1gola0mspr" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/09/05/c-and-pointer/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
     </footer>
   </div>
   
@@ -378,7 +314,7 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
   
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/9/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="page-number" href="/page/9/">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/">11</a><a class="page-number" href="/page/12/">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/11/">Next &raquo;</a>
+      <a class="extend prev" rel="prev" href="/page/9/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="page-number" href="/page/9/">9</a><span class="page-number current">10</span><a class="page-number" href="/page/11/">11</a><a class="page-number" href="/page/12/">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/21/">21</a><a class="extend next" rel="next" href="/page/11/">Next &raquo;</a>
     </nav>
   
 </section>
@@ -389,7 +325,7 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -399,6 +335,34 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-faq/">GIT系列五：小知识点及FAQ</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/clean-commit-log-before-push/">GIT系列四：在push之前对本地commit进行整理</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-commit-log-format/">GIT系列三：commit消息规范</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/commit-a-simple-manually/">GIT系列二：手动提交一个commit</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/setup-gitolite-service-git-1/">GIT系列一：使用gitolite搭建git仓库管理服务</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/20/git-specification/">个人git使用规范总结(持续更新)</a>
+          </li>
         
           <li>
             <a href="/2015/08/14/manage-project-code-like-linux-kernel/">像linux kernel一样管理你的项目</a>
@@ -432,34 +396,6 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
             <a href="/2015/05/07/skill-list/">技艺培养(基于知道创宇技能表v2.2)</a>
           </li>
         
-          <li>
-            <a href="/2015/05/06/coding-style/">Linux内核编码风格</a>
-          </li>
-        
-          <li>
-            <a href="/2015/03/27/alfred/">Alfred 使用记录</a>
-          </li>
-        
-          <li>
-            <a href="/2015/03/06/what-is-a-full-stack-developer/">Full Stack developer是怎样的一种存在？</a>
-          </li>
-        
-          <li>
-            <a href="/2015/02/06/linux-using-11/">linux命令学习（十一）：lsof, vnstat, fuser, host, at, cron</a>
-          </li>
-        
-          <li>
-            <a href="/2015/02/05/wiki-network-paper-stack-specialization/">Network stack specialization for performance</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/26/wiki-network-osi-model/">OSI模型</a>
-          </li>
-        
-          <li>
-            <a href="/2015/01/20/ntp-ptp-intro/">网络时钟同步协议-- NTP, PTP</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -491,7 +427,7 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BFS/" style="font-size: 11.43px;">BFS</a><a href="/tags/C-C/" style="font-size: 17.14px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.43px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.43px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.71px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.43px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 14.29px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.43px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.43px;">Mapreduce</a><a href="/tags/NTP/" style="font-size: 11.43px;">NTP</a><a href="/tags/PTP/" style="font-size: 11.43px;">PTP</a><a href="/tags/TCP/" style="font-size: 18.57px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.86px;">Tools</a><a href="/tags/X11/" style="font-size: 12.86px;">X11</a><a href="/tags/YQL/" style="font-size: 11.43px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.43px;">YUI</a><a href="/tags/assembly/" style="font-size: 12.86px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.43px;">chrome</a><a href="/tags/excel/" style="font-size: 12.86px;">excel</a><a href="/tags/google/" style="font-size: 11.43px;">google</a><a href="/tags/hexo/" style="font-size: 12.86px;">hexo</a><a href="/tags/http-load/" style="font-size: 11.43px;">http_load</a><a href="/tags/http-load-test/" style="font-size: 10.00px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.43px;">javascript</a><a href="/tags/latex/" style="font-size: 12.86px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.43px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.43px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.43px;">matlab</a><a href="/tags/mount/" style="font-size: 11.43px;">mount</a><a href="/tags/nginx/" style="font-size: 11.43px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.43px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.43px;">papers</a><a href="/tags/python/" style="font-size: 14.29px;">python</a><a href="/tags/ssh/" style="font-size: 11.43px;">ssh</a><a href="/tags/tc/" style="font-size: 11.43px;">tc</a><a href="/tags/tcp/" style="font-size: 10.00px;">tcp</a><a href="/tags/tcpdump/" style="font-size: 11.43px;">tcpdump</a><a href="/tags/tcptrace/" style="font-size: 11.43px;">tcptrace</a><a href="/tags/test/" style="font-size: 11.43px;">test</a>
+      <a href="/tags/BFS/" style="font-size: 11.25px;">BFS</a><a href="/tags/C-C/" style="font-size: 17.50px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.25px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.25px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.25px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 13.75px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.25px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.25px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 11.25px;">NTP</a><a href="/tags/PAWS/" style="font-size: 11.25px;">PAWS</a><a href="/tags/PTP/" style="font-size: 11.25px;">PTP</a><a href="/tags/RTTM/" style="font-size: 11.25px;">RTTM</a><a href="/tags/TCP/" style="font-size: 18.75px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.50px;">Tools</a><a href="/tags/X11/" style="font-size: 12.50px;">X11</a><a href="/tags/YQL/" style="font-size: 11.25px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.25px;">YUI</a><a href="/tags/assembly/" style="font-size: 12.50px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.25px;">chrome</a><a href="/tags/excel/" style="font-size: 12.50px;">excel</a><a href="/tags/git/" style="font-size: 16.25px;">git</a><a href="/tags/google/" style="font-size: 11.25px;">google</a><a href="/tags/hexo/" style="font-size: 12.50px;">hexo</a><a href="/tags/http-load/" style="font-size: 11.25px;">http_load</a><a href="/tags/http-load-test/" style="font-size: 10.00px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.25px;">javascript</a><a href="/tags/latex/" style="font-size: 12.50px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.25px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.25px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.25px;">matlab</a><a href="/tags/mount/" style="font-size: 11.25px;">mount</a><a href="/tags/nginx/" style="font-size: 11.25px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.25px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.25px;">papers</a><a href="/tags/python/" style="font-size: 13.75px;">python</a><a href="/tags/ssh/" style="font-size: 11.25px;">ssh</a><a href="/tags/tc/" style="font-size: 11.25px;">tc</a>
     </div>
   </div>
 
@@ -500,7 +436,7 @@ The <span class="keyword">second</span> disk has <span class="operator">the</spa
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>TCP timestamp | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="tcp_timestamps是在RFC 1323中定义的一个TCP选项。这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP timestamp">
+<meta property="og:url" content="http://perthcharles.github.com/2015/08/27/timestamp-intro/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="tcp_timestamps是在RFC 1323中定义的一个TCP选项。这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP timestamp">
+<meta name="twitter:description" content="tcp_timestamps是在RFC 1323中定义的一个TCP选项。这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-timestamp-intro" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/08/27/timestamp-intro/" class="article-date">
+  <time datetime="2015-08-27T13:00:35.000Z" itemprop="datePublished">8月 27 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      TCP timestamp
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#关于RFC1323"><span class="toc-text">关于RFC1323</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tcp_timestamps_的设计"><span class="toc-text">tcp_timestamps 的设计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么需要timestamp"><span class="toc-text">为什么需要timestamp</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开启timestamp会有什么负面影响?"><span class="toc-text">开启timestamp会有什么负面影响?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是RTTM"><span class="toc-text">什么是RTTM</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是PAWS"><span class="toc-text">什么是PAWS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<p>tcp_timestamps是在<a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323</a>中定义的一个TCP选项。<br>这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="关于RFC1323">关于RFC1323</h3>
+<p>这是一篇介绍针对High-bandwidth, Long delay链路设计的一些TCP扩展选项的资料。强烈推荐阅读！<br>但这篇RFC其实已经被<a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC7323</a>所取代，不过RFC1323对于了解timestamp相关的基本概念来说还是足够了的。关于RFC7323也会在后续的wiki中详细的介绍。  </p>
+<p>High-bandiwidth, Long delay链路面临的性能问题  </p>
+<pre><code>a. Window Size limit  
+TCP头部仅16字节用于存放receive window，这在高BDP的链路中往往是不够用的  
+解决办法就是引入window scale选项，然后real<span class="emphasis">_rcv_</span>wnd = rcv<span class="emphasis">_wnd_</span>in<span class="emphasis">_tcp_</span>header * (2^win_scale)  
+
+b. Recovery from Losses  
+当BDP很大时，意味着需要更大的cwnd来充分利用带宽。如果发生网络丢包，则对这类链路的影响是巨大的。  
+优化办法(真的不能说解决T_T)就是引入[<span class="link_label">SACK</span>](<span class="link_url">https://tools.ietf.org/html/rfc2018</span>)机制，来为发送方重传提供更加准确的信息。  
+
+c. Round-Trip Measurement  
+TCP作为可靠的传输协议，一个重要的机制就是超时重传。因此如何计算一个准确(合适)的
+RTO对于TCP性能有着重要的影响。而tcp_timestamp选项正是<span class="emphasis">*主要*</span>为此而设计的。  
+</code></pre><p>上一句话强调”主要”是因为tcp_timestamp还被用于PAWS机制，而这一重要用途却时常被忽略。<br>作为一个可靠的传输协议，TCP除了考虑如何应对性能问题，还需要考虑可靠性问题。<br>即使这些问题发生的概率较低，PAWS就是其中一个例子。<br>PAWS(Protect Against Wrapped Sequence numbers)一句话解释如下，后面会详细介绍  </p>
+<pre><code>在高带宽下，TCP序列号可能在较短的时间内就被重复使用(recycle/wrapped)
+就可能导致同一条TCP流在短时间内出现序号一样的两个合法的数据包及其确认包！
+</code></pre><p>补充一句：什么用wrapped形容序列号被重复使用？因为压圈了呀 :)  </p>
+<hr>
+<h3 id="tcp_timestamps_的设计">tcp_timestamps 的设计</h3>
+<p>tcp_timestamps的本质是记录数据包的发送时间。基本的步骤如下  </p>
+<pre><code><span class="bullet">1. </span>发送方在发送数据时，将一个timestamp(表示发送时间)放在包里面
+<span class="bullet">2. </span>接收方在收到数据包后，在对应的ACK包中将收到的timestamp返回给发送方(echo back)
+<span class="bullet">3. </span>发送发收到ACK包后，用当前时刻now - ACK包中的timestamp就能得到准确的RTT
+</code></pre><p>当然实际运用中要考虑到RTT的波动，因此有了后续的(Round-Trip Time Measurement)RTTM机制</p>
+<p>TCP Timestamps Option (TSopt)具体设计如下  </p>
+<pre><code>Kind: 8             // 标记唯一的选项类型，比如window scale是3
+<span class="header">Length: 10 bytes    // 标记Timestamps选项的字节数
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span>
+<span class="header">| Kind=8 | Length=10 | TS Value (TSval) | TS ECho Reply (TSecr) |
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span>
+<span class="code">    1          1             4                       4</span>
+</code></pre><p>timestamps一个双向的选项，当一方不开启时，两方都将停用timestamps。<br>比如client端发送的SYN包中带有timestamp选项，但server端并没有开启该选项。<br>则回复的SYN-ACK将不带timestamp选项，同时client后续回复的ACK也不会带有timestamp选项。<br>当然，如果client发送的SYN包中就不带timestamp，双向都将停用timestamp。  </p>
+<hr>
+<h3 id="为什么需要timestamp">为什么需要timestamp</h3>
+<p>如果没有timestamp，RTT的计算会怎样？  </p>
+<pre><code><span class="number">1</span>. <span class="constant">TCP层</span>在发送出一个<span class="constant">SKB时</span>，使用skb-&gt;<span class="keyword">when</span>记录发送出去的时间
+<span class="number">2</span>. <span class="constant">TCP层</span>在收到<span class="constant">SKB数</span>据包的确认时，使用now - skb-&gt;<span class="keyword">when</span>来计算<span class="constant">RTT</span>
+</code></pre><p>但上面的机制在丢包发生时会有问题，比如</p>
+<pre><code><span class="bullet">1. </span>TCP层第一次发送SKB的时间是send<span class="emphasis">_time1, TCP层重传一个数据包的时间是send_</span>time2
+<span class="bullet">2. </span>当TCP层收到SKB的确认包的时间是recv_time
+</code></pre><p>但是RTT应该是 (recv_time - send_time1)呢，还是(recv_time - send_time2)呢？  </p>
+<p>以上两种方式都不可取！因为无法判断出recv_time对应的ACK是确认第一次数据包的发送还是确认<br>重传数据包。因此TCP协议栈只能选择非重传数据包进行RTT采样。但是当出现严重丢包(比如整个窗口全部丢失)时，就完全没有数据包可以用于RTT采样。这样后续计算SRTT和RTO就会出现较大的偏差。  </p>
+<p>timestamp选项很好的解决了上述问题，因为ACK包里面带的TSecr值，一定是触发这个ACK的数据包在发送端发送的时间。不管数据包是否重传都能准确的计算RTT(前提是TSecr遵循RTTM中的计算原则)。  </p>
+<p>当然timestamp不仅解决了RTT计算的问题，还很好的为PAWS机制提供的信息依据。  </p>
+<hr>
+<h3 id="开启timestamp会有什么负面影响?">开启timestamp会有什么负面影响?</h3>
+<p>这部分内容以后会根据更多的实际经验来补充。目前列举一些找到的分析。  </p>
+<pre><code><span class="number">1.</span> <span class="number">10</span>字节的TCP header开销
+
+<span class="number">2.</span> The TCP Timestamp when enabled will allow you <span class="built_in">to</span> guess <span class="operator">the</span> uptime
+   <span class="operator">of</span> <span class="operator">a</span> target <span class="keyword">system</span> (nmap v -O . Knowing how <span class="keyword">long</span> <span class="operator">a</span> <span class="keyword">system</span> has been
+   up will enable you <span class="built_in">to</span> determine whether security patches that <span class="built_in">require</span>
+   reboot has been applied <span class="operator">or</span> <span class="operator">not</span>.
+        引自：<span class="keyword">http</span>://stackoverflow.com/questions/<span class="number">7880383</span>/what-benefit-is-conferred-<span class="keyword">by</span>-tcp-timestamp
+        注：如果通过热补丁修复bug，是否就能够避免这个问题？  
+</code></pre><hr>
+<h3 id="什么是RTTM">什么是RTTM</h3>
+<p>RTTM规定了一些使用TSecr计算RTT的原则，具体如下<br>(英文水平有限，为保持原意就使用RFC中的原话了)  </p>
+<pre><code><span class="operator">a</span>.  A TSecr <span class="built_in">value</span> received <span class="operator">in</span> <span class="operator">a</span> segment is used <span class="built_in">to</span> update <span class="operator">the</span>
+    averaged RTT measurement only <span class="keyword">if</span> <span class="operator">the</span> segment acknowledges
+    some <span class="built_in">new</span> data
+b.  The data-sender TCP must measure <span class="operator">the</span> <span class="keyword">effective</span> RTT, including <span class="operator">the</span> additional
+    <span class="built_in">time</span> due <span class="built_in">to</span> delayed ACKs. Thus, when delayed ACKs are <span class="operator">in</span> use, <span class="operator">the</span> receiver should
+    reply <span class="operator">with</span> <span class="operator">the</span> TSval field <span class="built_in">from</span> <span class="operator">the</span> earliest
+c.  An ACK <span class="keyword">for</span> <span class="operator">an</span> out-<span class="operator">of</span>-order segment should therefore contain <span class="operator">the</span> 
+    timestamp <span class="built_in">from</span> <span class="operator">the</span> most recent segment that advanced <span class="operator">the</span> window
+d.  The timestamp <span class="built_in">from</span> <span class="operator">the</span> latest segment (which filled <span class="operator">the</span> hole) must be echoed
+        在ACK被重传的数据时，应该使用重传数据包中的TSval进行回复
+</code></pre><p>如果对以上的特殊情况有疑问，还请直接去看RFC，里面有example解释。  </p>
+<p>最后，实际上计算RTO除了以上使用TSecr的原则外，还有一些更复杂的计算方法<a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC 7323</a>。<br>比如对于每一个RTT采样R，  </p>
+<pre><code><span class="constant">RTTVAR</span> = (<span class="number">1</span> - beta) * RTTVAR + beta * |SRTT - R|
+<span class="constant">SRTT</span> = (<span class="number">1</span> - alpha) * SRTT + alpha * R
+</code></pre><hr>
+<h3 id="什么是PAWS">什么是PAWS</h3>
+<p>PAWS — Protect Againest Wrapped Sequence numbers<br>目的是解决在高带宽下，TCP序号可能被重复使用而带来的问题。  </p>
+<p>PAWS同样依赖于timestamp，并且假设在一个TCP流中，<em>按序</em>收到的所有TCP包的timestamp值<br>都是线性递增的。而在正常情况下，每条TCP流<em>按序</em>发送的数据包所带的timestamp值<br>也确实是线性增加的。<br>至于为什么要强调<em>按序</em>，请先自行思考。:)  </p>
+<p>首先给出几个变量的定义，之后具体介绍PAWS的工作过程  </p>
+<pre><code>Per-Connection State Variables
+<span class="label">    TS.Recent:</span>       Latest received Timestamp
+<span class="label">    Last.ACK.sent:</span>   Last ACK field sent
+
+<span class="preprocessor">Option</span> Fields <span class="keyword">in</span> Current <span class="built_in">Segment</span>
+<span class="label">    SEG.TSval:</span>   TSval field from TSopt <span class="keyword">in</span> current <span class="built_in">segment</span>.
+<span class="label">    SEG.TSecr:</span>   TSecr field from TSopt <span class="keyword">in</span> current <span class="built_in">segment</span>.
+</code></pre><p>TS.Recent存放着<em>按序</em>达到的所有TCP数据包的最晚的一个时间戳，即只有在<br><code>SEG.SEQ &lt;= Last.ACK.sent &lt; SEG.SEG + SEG.LEN</code>(有新的数据被按序确认了)时，<br>才会去更新TS.Recent的值。  </p>
+<pre><code>假设三个数据包的*第一次*发送时间分别是<span class="literal">A</span>，B和C(<span class="literal">A</span> &lt; B &lt; C)，但<span class="literal">A</span>和C含有相同的序列号。
+而<span class="literal">A</span>数据包由于某种原因，在阻塞在了网络中，因此发送方进行了重传，重传时间为A2
+
+PAWS要解决的主要问题就是：
+    当接收端在接收到A2后，又接着确认到了数据包B，下一个想接收的数据是数据包C
+    此时如果收到了数据包<span class="literal">A</span>(<span class="literal">A</span>从阻塞中恢复过来了，但并未真的丢失)，
+    由于<span class="literal">A</span>与C的序列号是相同的。如果没有别的保护措施就会出现数据紊乱，没有做到可靠传输
+
+PAWS的做法就是，如果收到的一个TCP数据包的timestamp值小于TS.Recnt，则会丢弃该数据包。  
+因此数据包<span class="literal">A</span>到达接收方后，接收方的TS.Recent应该是数据包B中的timestamp
+而<span class="literal">A</span> &lt; B，故<span class="literal">A</span>包就会被丢弃。而真正有效的数据C到达接收后，由于B &lt; C，因此能被正常接收
+</code></pre><p>PAWS的更多细节  </p>
+<pre><code><span class="number">1.</span> It is recommended that RST segments NOT carry timestamps, <span class="operator">and</span> that
+RST segments be acceptable regardless <span class="operator">of</span> their timestamp.
+
+<span class="number">2.</span> PAWS is defined strictly <span class="operator">within</span> <span class="operator">a</span> single connection; <span class="operator">the</span> <span class="keyword">last</span> timestamp is
+TS.Recent is kept <span class="operator">in</span> <span class="operator">the</span> connection control block, <span class="operator">and</span>
+discarded when <span class="operator">a</span> connection is closed.
+
+<span class="number">3.</span> An additional mechanism could be added <span class="built_in">to</span> <span class="operator">the</span> TCP, <span class="operator">a</span> per-host
+cache <span class="operator">of</span> <span class="operator">the</span> <span class="keyword">last</span> timestamp received <span class="built_in">from</span> <span class="keyword">any</span> connection.
+This <span class="built_in">value</span> could <span class="keyword">then</span> be used <span class="operator">in</span> <span class="operator">the</span> PAWS mechanism <span class="built_in">to</span> reject
+old duplicate segments <span class="built_in">from</span> earlier incarnations <span class="operator">of</span> <span class="operator">the</span>
+connection, <span class="keyword">if</span> <span class="operator">the</span> timestamp clock can be guaranteed <span class="built_in">to</span> have
+ticked <span class="keyword">at</span> least once since <span class="operator">the</span> old connection was <span class="built_in">open</span>.
+</code></pre><p>从第三点可以看到，如果针对per-host的使用PAWS中的机制，则会解决TIME-WAIT中考虑的上一个流<br>的数据包在下一条流中被当做有效数据包的情况，这样就没有必要等待2*MSL来结束TIME-WAIT了。<br>只要等待足够的RTO，解决好需要重传最后一个ACK的情况就可以了。<br>因此Linux就实现了这样一种机制：</p>
+<pre><code>当timestamp和tw_recycle两个选项同时开启的情况下，开启per-host的PAWS机制。
+从而能快速回收处于<span class="typename">TIME</span>-<span class="keyword">WAIT</span>状态的TCP流。
+</code></pre><p>但这样真的就能完美的解决令无数人头疼的TIME-WAIT吗？答案是否定的！<br>因为公网中存在太多的NAT设置，当使用per-host的PAWS机制时，是无法保证timestamp是线性递增这一假设的。因为使用同一个NAT地址的两个真实的机器，他们的timestamp是不能保证同步的(其实一致也没有用，NAT就是per-host PAWS机制的死敌)。<br>关于这个问题也会在以后的一篇介绍TIME-WAIT的wiki中进一步详细介绍。  </p>
+<hr>
+<h3 id="总结">总结</h3>
+<pre><code>timestamp为TCP/IP协议栈提供了两个功能：  
+    <span class="operator">a</span>. 更加准确的RTT测量数据，尤其是有丢包时  <span class="comment">-- RTTM  </span>
+    b. 保证了在极端情况下，TCP的可靠性        <span class="comment">-- PAWS  </span>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt" target="_blank" rel="external">Documentation: ip-sysctl.txt</a><br><a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323: TCP Extensions for High Performance</a><br><a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC 7323: TCP Extensions for High Performance</a><br><a href="https://tools.ietf.org/html/rfc2018" target="_blank" rel="external">SACK</a><br><a href="http://stackoverflow.com/questions/7880383/what-benefit-is-conferred-by-tcp-timestamp" target="_blank" rel="external">What benefit is conferred by TCP timestamp?</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/08/27/timestamp-intro/" data-id="16hvybi856axd0oy" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/08/27/timestamp-intro/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PAWS/">PAWS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RTTM/">RTTM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/timestamp/">timestamp</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/08/25/git-faq/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">GIT系列五：小知识点及FAQ</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-faq/">GIT系列五：小知识点及FAQ</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/clean-commit-log-before-push/">GIT系列四：在push之前对本地commit进行整理</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-commit-log-format/">GIT系列三：commit消息规范</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/commit-a-simple-manually/">GIT系列二：手动提交一个commit</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/setup-gitolite-service-git-1/">GIT系列一：使用gitolite搭建git仓库管理服务</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/20/git-specification/">个人git使用规范总结(持续更新)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/14/manage-project-code-like-linux-kernel/">像linux kernel一样管理你的项目</a>
+          </li>
+        
+          <li>
+            <a href="/2015/07/08/iso-yum/">使用ISO镜像配置yum源</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/18/wiki-network-tcp-random-early-drop/">Random early detection</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/">Understand the Performance of Pacing</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/16/wiki-network-tcp-frto/">TCP FRTO机制</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/15/server-load-test/">服务器负载压力测试相关工具</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/12/tc-tutorial/">TC 实践</a>
+          </li>
+        
+          <li>
+            <a href="/2015/05/07/skill-list/">技艺培养(基于知道创宇技能表v2.2)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.25px;">BFS</a><a href="/tags/C-C/" style="font-size: 17.50px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.25px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.25px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.25px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 13.75px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.25px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.25px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 11.25px;">NTP</a><a href="/tags/PAWS/" style="font-size: 11.25px;">PAWS</a><a href="/tags/PTP/" style="font-size: 11.25px;">PTP</a><a href="/tags/RTTM/" style="font-size: 11.25px;">RTTM</a><a href="/tags/TCP/" style="font-size: 18.75px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.50px;">Tools</a><a href="/tags/X11/" style="font-size: 12.50px;">X11</a><a href="/tags/YQL/" style="font-size: 11.25px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.25px;">YUI</a><a href="/tags/assembly/" style="font-size: 12.50px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.25px;">chrome</a><a href="/tags/excel/" style="font-size: 12.50px;">excel</a><a href="/tags/git/" style="font-size: 16.25px;">git</a><a href="/tags/google/" style="font-size: 11.25px;">google</a><a href="/tags/hexo/" style="font-size: 12.50px;">hexo</a><a href="/tags/http-load/" style="font-size: 11.25px;">http_load</a><a href="/tags/http-load-test/" style="font-size: 10.00px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.25px;">javascript</a><a href="/tags/latex/" style="font-size: 12.50px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.25px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.25px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.25px;">matlab</a><a href="/tags/mount/" style="font-size: 11.25px;">mount</a><a href="/tags/nginx/" style="font-size: 11.25px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.25px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.25px;">papers</a><a href="/tags/python/" style="font-size: 13.75px;">python</a><a href="/tags/ssh/" style="font-size: 11.25px;">ssh</a><a href="/tags/tc/" style="font-size: 11.25px;">tc</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/08/27/timestamp-intro/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

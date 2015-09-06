@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-08-31T08:11:14.539Z</updated>
+  <updated>2015-09-06T10:04:20.557Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,238 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[RTO的计算方法(基于RFC6298和Linux 3.10)]]></title>
+    <link href="http://perthcharles.github.com/2015/09/06/wiki-rtt-estimator/"/>
+    <id>http://perthcharles.github.com/2015/09/06/wiki-rtt-estimator/</id>
+    <published>2015-09-06T04:51:17.000Z</published>
+    <updated>2015-09-06T10:03:58.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>RTO的准确计算对于TCP的可靠性传输和性能都具有重要作用。<br>这篇文章首先介绍最新的RFC中对于RTO的计算方法，然后结合Linux 3.10的源码对<br>具体的实现进行分析和理解。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="RTO计算算法">RTO计算算法</h3>
+<pre><code><span class="number">1.1</span>. 在没有任何rtt sample的时候，RTO &lt;- TCP_TIMEOUT_INIT (<span class="number">1</span>s)
+   多次重传时同样适用指数回避算法(backoff)增加RTO  
+
+<span class="number">1.2</span>. 获得第一个RTT sample后，
+    SRTT &lt;- RTT
+    RTTVAR &lt;- RTT/<span class="number">2</span>
+    RTO &lt;- SRTT + max(G, K * RTTVAR)
+其中K=<span class="number">4</span>, G表示timestamp的粒度(在CONFIG_HZ=<span class="number">1000</span>时，粒度为<span class="number">1</span>ms)
+
+<span class="number">1.3</span>. 后续获得更多RTT sample后，
+    RTTVAR &lt;- (<span class="number">1</span> - beta) * RTTVAR + beta * |SRTT - R|
+    SRTT &lt;- (<span class="number">1</span> - alpha) * SRTT + alpha * R
+其中beta = <span class="number">1</span>/<span class="number">4</span>, alpha = <span class="number">1</span>/<span class="number">8</span>
+
+<span class="number">1.4</span>. Whenever RTO <span class="keyword">is</span> computed, <span class="keyword">if</span> <span class="keyword">it</span> <span class="keyword">is</span> <span class="keyword">less than</span> <span class="number">1</span> <span class="keyword">second</span>, <span class="keyword">then</span> <span class="keyword">the</span>
+   RTO SHOULD be rounder up <span class="keyword">to</span> <span class="number">1</span> <span class="keyword">second</span>.
+
+<span class="number">1.5</span>. A maximum value MAY be placed <span class="function_start"><span class="keyword">on</span></span> RTO provided <span class="keyword">it</span> <span class="keyword">is</span> <span class="keyword">at</span> least <span class="number">60</span> seconds.
+</code></pre><p>RTTVAR表示的是平滑过的平均偏差，SRTT表示的平滑过的RTT。这两个值的具体含义会在后面介绍<br>具体实现的时候进一步的解释。<br>以上是计算一个初始RTO值的过程，当连续出现RTO超时后，<br>RTO值会用一个叫做指数回避的策略进行调整，下面来具体介绍。  </p>
+<hr>
+<h3 id="RTO_timer的管理">RTO timer的管理</h3>
+<pre><code><span class="number">2.1</span>. 发送一个带有数据的包后，如果RTO <span class="built_in">timer</span>未启动，启动RTO <span class="built_in">timer</span>  
+
+<span class="number">2.2</span>. 当所有发送的数据都被确认后，关闭RTO <span class="built_in">timer</span>
+
+<span class="number">2.3</span>. 当收到一个ACK确认了新数据后，重新设置RTO时间为当前RTO值
+
+如果RTO超时了
+<span class="number">2.4</span>. 重传最早的一个未被确认的数据包(序号最小的，即tp-&gt;snd_una)
+
+<span class="number">2.5</span>. RTO &lt;- RTO * <span class="number">2</span> (<span class="string">"back off the timer"</span>，即指数回避策略)
+
+<span class="number">2.6</span>. 重现设定RTO时间为当前RTO值
+
+<span class="number">2.7</span>. 如果是在等待SYN包的ACK时RTO超时的，在连接建立之后，会将RTO从TCP_TIMEOUT_INIT
+   改为TCP_TIMEOUT_FALLBACK(<span class="number">3</span>s)
+   就是如果syn包被重传过，则上一节第一步中的RTO则会从<span class="number">1</span>s被重设为<span class="number">3</span>s。
+</code></pre><hr>
+<h3 id="RFC6298中的其他要点">RFC6298中的其他要点</h3>
+<pre><code>Note that <span class="operator">a</span> TCP implementation MAY <span class="built_in">clear</span> SRTT <span class="operator">and</span> RTTVAR <span class="keyword">after</span>
+backing off <span class="operator">the</span> timer multiple times <span class="keyword">as</span> <span class="keyword">it</span> is likely that <span class="operator">the</span> current
+SRTT <span class="operator">and</span> RTTVAR are bogus <span class="operator">in</span> this situation.  Once SRTT <span class="operator">and</span> RTTVAR
+are cleared, they should be initialized <span class="operator">with</span> <span class="operator">the</span> next RTT sample
+taken per (<span class="number">1.2</span>) rather than <span class="keyword">using</span> (<span class="number">1.3</span>). 
+
+<span class="number">1.1</span>和<span class="number">2.7</span>是RFC6298与RFC2988的主要不同，RFC6298在Appendix A中详细解释了为什么将INIT_RTO从
+<span class="number">3</span>s降到<span class="number">1</span>s。里面有一些dataset的测试数据证明，有兴趣的话可以看一看。  
+</code></pre><hr>
+<h3 id="Linux实现之RTO计算">Linux实现之RTO计算</h3>
+<p>以下开始分析Linux 3.10关于RTO的具体实现，序号与RFC原理中的需要一一对应。<br>首先是RTO计算相关的部分。<br>在理解这部分代码之前，有几个关键变量需要解释一下。<br>tp-&gt;srtt实际上存的是8<em>SRTT，而tp-&gt;rttvar实际上存储的是4</em>RTTVAR。<br>所以在后续代码注释中，也会使用大小写加以区分。使用大写时与RFC定义的变量含义一致。  </p>
+<pre><code><span class="number">1.1</span><span class="built_in">.</span> 对应在net/ipv4/tcp<span class="built_in">.</span>c line372 tcp_init_sock()
+    <span class="attribute">...</span>
+    tcp_init_xmit_timers(sk);       <span class="comment">// 初始化tcp中timer对应的处理函数</span>
+    <span class="attribute">...</span>
+    icsk<span class="subst">-&gt;</span>icsk_rto <span class="subst">=</span> TCP_TIMEOUT_INIT;  <span class="comment">// 初始RTO设为1s</span>
+    tp<span class="subst">-&gt;</span>mdev <span class="subst">=</span> TCP_TIMEOUT_INIT;        <span class="comment">// 初始medium deviation为1s</span>
+    <span class="attribute">...</span>
+
+<span class="number">1.2</span><span class="built_in">.</span> 对应net/ipv4/tcp_input<span class="built_in">.</span>c line639 tcp_rtt_estimator()
+    <span class="attribute">...</span>
+    <span class="keyword">if</span> (tp<span class="subst">-&gt;</span>srtt <span class="subst">!=</span> <span class="number">0</span>) {
+        <span class="attribute">...</span>
+    } <span class="keyword">else</span> {    <span class="comment">// 第一次获取RTT sample</span>
+        tp<span class="subst">-&gt;</span>srtt <span class="subst">=</span> m <span class="subst">&lt;&lt;</span> <span class="number">3</span>;  <span class="comment">// SRTT = RTT, 需要注意的是tp-&gt;srtt存的是8*SRTT</span>
+
+        <span class="comment">/* RTTVAR = RTT/2, 需要注意的是tp-&gt;rttvar存的是4*RTTVAR
+         * tcp_rto_min(sk)限制了rttvar的最小值为TCP_RTO_MIN(HZ/5)=200ms */</span>
+        tp<span class="subst">-&gt;</span>mdev <span class="subst">=</span> m <span class="subst">&lt;&lt;</span> <span class="number">1</span>;  
+        tp<span class="subst">-&gt;</span>mdev_max <span class="subst">=</span> tp<span class="subst">-&gt;</span>rttvar <span class="subst">=</span> <span class="keyword">max</span>(tp<span class="subst">-&gt;</span>mdev, tcp_rto_min(sk));
+
+        <span class="comment">/* 记录引起rttvar改变的序列号，用于后续判断是否过了一个RTT，这是常用技巧 */</span>
+        tp<span class="subst">-&gt;</span>rtt_seq <span class="subst">=</span> tp<span class="subst">-&gt;</span>snd_nxt;  <span class="comment">// 注意这里是snd_nxt，不是snd_una</span>
+    }
+
+<span class="number">1.3</span><span class="built_in">.</span> 对应net/ipv4/tcp_input<span class="built_in">.</span>c line639 tcp_rtt_estimator()
+    long m <span class="subst">=</span> mrtt; <span class="comment">// RTT</span>
+    <span class="keyword">if</span> (m <span class="subst">==</span> <span class="number">0</span>)
+        m <span class="subst">=</span> <span class="number">1</span>;
+    <span class="keyword">if</span> (tp<span class="subst">-&gt;</span>srtt <span class="subst">!=</span> <span class="number">0</span>) {
+        m <span class="subst">-=</span> (tp<span class="subst">-&gt;</span>srtt <span class="subst">&gt;&gt;</span> <span class="number">3</span>);   <span class="comment">// m = RTT - SRTT</span>
+        tp<span class="subst">-&gt;</span>srtt <span class="subst">+=</span> m;          <span class="comment">// 8SRTT = 7 * SRTT + 1 * RTT</span>
+        <span class="keyword">if</span> (m <span class="subst">&lt;</span> <span class="number">0</span>) {
+            m <span class="subst">=</span> <span class="attribute">-m</span>;             <span class="comment">// m = |RTT - SRTT|</span>
+            m <span class="subst">-=</span> (tp<span class="subst">-&gt;</span>mdev <span class="subst">&gt;&gt;</span> <span class="number">2</span>);   <span class="comment">// m = |RTT - SRTT| - RTTVAR</span>
+            <span class="keyword">if</span> (m <span class="subst">&gt;</span> <span class="number">0</span>)  
+                <span class="comment">/* 此处m&gt;0意味着，RTT与SRTT之间的波动过大，甚至烧过了RTTVAR
+                 * 因此选择使用更小的beta值= 1/(4*8)
+                 *      执行下面语句后，再执行tp-&gt;mdev += m则会得到如下结果
+                 *      RTTVAR = (1-1/32)RTTVAR + |RTT - SRTT|
+                 * 这样做的目的是避免突发的RTT变化，对RTTVAR的历史记录造成过大的影响
+                 */</span>
+                m <span class="subst">&gt;&gt;=</span> <span class="number">3</span>;    <span class="comment">// m = 1/8 (|RTT - SRTT| - RTTVAR)</span>
+        } <span class="keyword">else</span> {
+            m <span class="subst">-=</span> (tp<span class="subst">-&gt;</span>mdev <span class="subst">&gt;&gt;</span> <span class="number">2</span>);   <span class="comment">// m = |RTT - SRTT| - RTTVAR</span>
+        }
+        tp<span class="subst">-&gt;</span>mdev <span class="subst">+=</span> m;              <span class="comment">// 4RTTVAR = 3RTTVAR + |RTT - SRTT|</span>
+        <span class="keyword">if</span> (tp<span class="subst">-&gt;</span>mdev <span class="subst">&gt;</span> tp<span class="subst">-&gt;</span>mdev_max) {
+            tp<span class="subst">-&gt;</span>mdev_max <span class="subst">=</span> tp<span class="subst">-&gt;</span>mdev;
+            <span class="keyword">if</span> (tp<span class="subst">-&gt;</span>mdev_max <span class="subst">&gt;</span> tp<span class="subst">-&gt;</span>rttvar)
+                <span class="comment">/* 真正的RTTVAR会取一个RTT中最大的RTTVAR，是一种相对保守的策
+                 * 因为计算略微偏大的RTO不会引起大问题，
+                 * 但如果计算的RTO偏小则可能引起spurious retransmission
+                tp-&gt;rttvar = tp-&gt;mdev_max;  
+        }
+        /* 如果过了一个RTT，则重置mdev_max，并适当调整rttvar */</span>
+        <span class="keyword">if</span> (after(tp<span class="subst">-&gt;</span>snd_una, tp<span class="subst">-&gt;</span>rtt_seq)) {  
+            <span class="comment">/* 目前看到的代码里面唯一可能导致mdev_max &lt; rttvar的代码就是
+             *      tp-&gt;mdev_max = tcp_rto_min(sk);
+             */</span>
+            <span class="keyword">if</span> (tp<span class="subst">-&gt;</span>mdev_max <span class="subst">&lt;</span> tp<span class="subst">-&gt;</span>rttvar)
+                tp<span class="subst">-&gt;</span>rttvar <span class="subst">-=</span> (tp<span class="subst">-&gt;</span>rttvar <span class="subst">-</span> tp<span class="subst">-&gt;</span>mdev_max) <span class="subst">&gt;&gt;</span> <span class="number">2</span>;
+            tp<span class="subst">-&gt;</span>rtt_seq <span class="subst">=</span> tp<span class="subst">-&gt;</span>snd_nxt;
+            tp<span class="subst">-&gt;</span>mdev_max <span class="subst">=</span> tcp_rto_min(sk);     <span class="comment">// 每过一个RTT重置mdev_max</span>
+        }
+    }
+
+<span class="number">1.4</span> 根据代码和实际测量值，均未发现Linux有将RTO设置round <span class="keyword">to</span> <span class="number">1</span>s了
+
+<span class="number">1.5</span> net/ipv4/tcp_input<span class="built_in">.</span>c line705 tcp_set_rto()
+    <span class="comment">/*1.2和1.3都只是计算srtt和rttvar，并未计算rto */</span>
+    inet_csk(sk)<span class="subst">-&gt;</span>icsk_rto <span class="subst">=</span> __tcp_set_rto(tp);     <span class="comment">// 根据srtt和rttvar计算rto</span>
+    tcp_bound_rto(sk);                              <span class="comment">// 限制rto的最大值</span>
+
+其中，__tcp_set_rto(tp)和tcp_bound_rto(sk)的代码如下：
+    static <span class="keyword">inline</span> u32 __tcp_set_rto(const struct tcp_sock <span class="subst">*</span>tp)
+    {
+        <span class="keyword">return</span> (tp<span class="subst">-&gt;</span>srtt <span class="subst">&gt;&gt;</span> <span class="number">3</span>) <span class="subst">+</span> tp<span class="subst">-&gt;</span>rttvar;    <span class="comment">// RTO = SRTT + 4 * RTTVAR</span>
+    }
+
+    static <span class="keyword">inline</span> <span class="literal">void</span> tcp_bound_rto(const struct sock <span class="subst">*</span>sk)
+    {
+        <span class="keyword">if</span> (inet_csk(sk)<span class="subst">-&gt;</span>icsk_rto <span class="subst">&gt;</span> TCP_RTO_MAX)
+            inet_csk(sk)<span class="subst">-&gt;</span>icsk_rto <span class="subst">=</span> TCP_RTO_MAX;   <span class="comment">// TCP_RTO_MAX = 120s</span>
+    }
+</code></pre><p>为了更好的理解RTT采样和RTO的整体流程，可以参考<a href="http://blog.csdn.net/zhangskd/article/details/7196707" target="_blank" rel="external">这篇资料</a>，尤其是最后一张函数关系调用图。<br>关键就是理解下面这个函数的调用过程  </p>
+<pre><code><span class="keyword">void</span> tcp_valid_rtt_meas(<span class="class"><span class="keyword">struct</span> <span class="title">sock</span> *sk, u32 seq_rtt)
+</span>{
+    tcp_rtt_estimator(sk, seq_rtt);     <span class="comment">// 根据RTT sample，更新SRTT和RTTVAR</span>
+    tcp_set_rto(sk);                    <span class="comment">// 重新计算RTO值</span>
+    inet_csk(sk)-&gt;icsk_backoff = <span class="number">0</span>;     <span class="comment">// 将backoff清零</span>
+}
+</code></pre><hr>
+<h3 id="Linux实现之RTO_timer的管理">Linux实现之RTO timer的管理</h3>
+<pre><code><span class="number">2.1</span> net/ipv4/tcp_output.c line72 tcp_event_new_data_sent()
+<span class="keyword">...</span>
+unsigned int prior_packets = tp-&gt;packets_out;
+<span class="keyword">...</span>
+tp-&gt;packets_out += tcp_skb_pcount(skb); // 更新已经发出未被确认的数据包数目
+<span class="keyword">if</span> (!prior_packets      // 如果prior_packets=<span class="number">0</span>，表示之前未发送过数据，因此需要启动timer
+    ||<span class="keyword">...</span>)
+    tcp_rearm_rto(sk);  // 启动RTO timer
+
+<span class="number">2.2</span> net/ipv4/tcp_input.c line2926 tcp_rearm_rto()
+<span class="keyword">...</span>
+/* 如果packet_out=<span class="number">0</span>，则停掉RTO timer */
+<span class="keyword">if</span> (!tp-&gt;packets_out) {
+    inet_csk_clear_xmit_timer(sk, ICSK_TIME_RETRANS);   
+}
+
+<span class="number">2.3</span> net/ipv4/tcp_input.c line3105 tcp_clean_rtx_queue()
+<span class="keyword">...</span>
+<span class="keyword">if</span> (flag &amp; FLA_ACKED) {
+    <span class="keyword">...</span>
+    tcp_ack_update_rtt(sk, flag, seq_rtt);  // 得到一个RTT sample，更新RTO
+    tcp_rearm_rto(sk);                      // 重设RTO timer
+    <span class="keyword">...</span>
+}
+
+<span class="number">2.4</span>+<span class="number">2.5</span>+<span class="number">2.6</span> net/ipv4/tcp_timer.c line340 tcp_retransmit_timer()
+<span class="keyword">...</span>
+tcp_enter_loss(sk, <span class="number">0</span>);  // 进入RTO超时重传阶段
+<span class="keyword">if</span> (tcp_retransmit_skb(sk, tcp_write_queue_head(sk)) &gt; <span class="number">0</span>) // 重传第一个未确认的数据包
+<span class="keyword">...</span>
+
+/* 如果这是一个thin的TCP流，则不适用backoff机制 
+ * 什么是thin tcp呢？就是网络中in_flight的数据包很少的流
+ * 具体请看tcp_stream_is_thin(tp)
+ */
+<span class="keyword">if</span> (STREAM IS THIN ?) { 
+    icsk-&gt;icsk_backoff = <span class="number">0</span>;
+    icsk-&gt;icsk_rto = min(__tcp_set_rto(tp), TCP_RTO_MAX);
+} <span class="keyword">else</span> {
+    /* Use normal (exponential) backoff */  
+    icsk-&gt;icsk_rto = min(icsk-&gt;icsk_rto &lt;&lt; <span class="number">1</span>, TCP_RTO_MAX); // 步骤<span class="number">2.5</span>
+}
+/* 步骤<span class="number">2.6</span> 重设RTO timer */
+inet_csk_reset_xmit_timer(sk, ICSK_TIME_RETRANS, icsk-&gt;icsk_rto, TCP_RTO_MAX);
+
+<span class="number">2.7</span> net/ipv4/tcp_metrics.c line441 tcp_init_metrics()
+/* tcp_init_metrics是在TCP建立连接之后进行的初始化动作
+ * 一个明显的例子： tcp_finish_connect() =&gt; tcp_init_metrics()
+ */
+<span class="keyword">...</span>
+<span class="keyword">if</span> (tp-&gt;srtt == <span class="number">0</span>) {
+    /* 如果在3WHS阶段没有获得srtt，基本就意味着发生了重传 */
+    tp-&gt;mdev = tp-&gt;mdev_max = tp-&gt;rttvar = TCP_TIMEOUT_FALLBACK;
+    inet_csk(sk)-&gt;icsk_rto = TCP_TIMEOUT_FALLBACK;
+}  
+</code></pre><p>至此，基本上把Linux 3.10中关于RTO的基本逻辑弄清楚了。RFC6298中proposed的算法的<br>主要步骤也找到了对应的代码实现位置。   </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://tools.ietf.org/html/rfc6298" target="_blank" rel="external">RFC 6298</a><br><a href="http://blog.csdn.net/zhangskd/article/details/7196707" target="_blank" rel="external">TCP中RTT的测量和RTO的计算</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>RTO的准确计算对于TCP的可靠性传输和性能都具有重要作用。<br>这篇文章首先介绍最新的RFC中对于RTO的计算方法，然后结合Linux 3.10的源码对<br>具体的实现进行分析和理解。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="rtt" scheme="http://perthcharles.github.com/tags/rtt/"/>
+    
+      <category term="rto" scheme="http://perthcharles.github.com/tags/rto/"/>
+    
+      <category term="rfc6298" scheme="http://perthcharles.github.com/tags/rfc6298/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[TCP timestamp]]></title>
@@ -274,7 +506,7 @@ inet_twsh_schedule(tw, &amp;tcp_death_row, timeo, TCP_TIMEWAIT_LEN);
     <link href="http://perthcharles.github.com/2015/08/25/git-faq/"/>
     <id>http://perthcharles.github.com/2015/08/25/git-faq/</id>
     <published>2015-08-25T07:38:40.000Z</published>
-    <updated>2015-08-25T14:32:01.000Z</updated>
+    <updated>2015-08-31T14:20:20.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>git作为一个强大的工具，也就意味着它也同样的复杂。<br>长期使用下来难免会遇到很多奇奇怪怪的问题和一些小的知识点，<br>这个帖子就用来记录一下那些年某人踩过的的坑T_T  </p>
 <p>这篇会慢慢更新，当某个点内容较多后，会独立出去成为一篇独立的wiki<br><a id="more"></a>  </p>
@@ -374,9 +606,13 @@ alias logg=<span class="string">"git log --graph --all --format=format:'<span cl
 <span class="array"># git clean </span>-f -X       <span class="comment">// 仅删除被.gitignore忽略的文件</span>
 <span class="array"># git clean </span>-f -x       <span class="comment">// 同时删除被.gitignore忽略的文件和未被管理的文件</span>
 <span class="array"># git clean </span>-f -x -d    <span class="comment">// 删除所有未被git管理的文件和目录</span>
-</code></pre><hr>
+</code></pre><h4 id="如何创建一个独立的分支？">如何创建一个独立的分支？</h4>
+<pre><code><span class="array"># git checkout </span>--orphan newbranch  <span class="comment">// git v1.7.2</span>
+</code></pre><h4 id="有哪些经典的git_workflow可以参考学习？">有哪些经典的git workflow可以参考学习？</h4>
+<p><a href="https://guides.github.com/introduction/flow/index.html" target="_blank" rel="external">1. Github Flow</a><br><a href="http://nvie.com/posts/a-successful-git-branching-model/" target="_blank" rel="external">2. GitFlow</a>  </p>
+<hr>
 <h3 id="参考资料">参考资料</h3>
-<p><a href="http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" target="_blank" rel="external">Git 常用命令</a><br><a href="http://www.slideshare.net/epatey/perforce-convergence-vs-divergence/10" target="_blank" rel="external">The essence of a three-way merge</a><br><a href="https://ihower.tw/blog/archives/2620" target="_blank" rel="external">開branch 分支和操作遠端repo</a><br><a href=""></a>  </p>
+<p><a href="http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" target="_blank" rel="external">Git 常用命令</a><br><a href="http://www.slideshare.net/epatey/perforce-convergence-vs-divergence/10" target="_blank" rel="external">The essence of a three-way merge</a><br><a href="https://ihower.tw/blog/archives/2620" target="_blank" rel="external">開branch 分支和操作遠端repo</a>  </p>
 ]]></content>
     <summary type="html">
     <![CDATA[<hr>
@@ -826,69 +1062,6 @@ $ sudo nginx -s reload
       <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
     
       <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[个人git使用规范总结(持续更新)]]></title>
-    <link href="http://perthcharles.github.com/2015/08/20/git-specification/"/>
-    <id>http://perthcharles.github.com/2015/08/20/git-specification/</id>
-    <published>2015-08-20T12:24:58.000Z</published>
-    <updated>2015-08-25T03:24:14.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>一个工具的强大往往体现在它的灵活上，但在团队中必须制定一定的规范才能<br>进行高效的合作。<br>GIT就是这样一个强大到不行的工具，本文由于记录在实践中选择的一些实用技巧<br>和规范。<br>纪念那些年掉的坑T_T   </p>
-<a id="more"></a>  
-
-<hr>
-<h3 id="1-_实用alias">1. 实用alias</h3>
-<p>这个可以根据个人使用最频繁的命令来设置，然后保存到/etc/rc.local文件。    </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"># <span class="keyword">alias</span> gl=<span class="string">'git pull'</span></div><div class="line"># <span class="keyword">alias</span> gf=<span class="string">'git fetch'</span></div><div class="line"># <span class="keyword">alias</span> gb=<span class="string">'git branch'</span></div><div class="line"># <span class="keyword">alias</span> gco=<span class="string">'git checkout'</span></div><div class="line"># <span class="keyword">alias</span> gamend=<span class="string">'git commit --amend -C HEAD'</span></div><div class="line"># <span class="keyword">alias</span> gst=<span class="string">'git status'</span></div><div class="line"># <span class="keyword">alias</span> <span class="keyword">log</span>=<span class="string">'git log --oneline --graph --decorate --color=always'</span></div><div class="line"># <span class="keyword">alias</span> logg=<span class="string">'git log --graph --all --format=format:'</span>\<span class="string">''</span><span class="variable">%C</span>(bold blue)<span class="variable">%h</span><span class="variable">%C</span>(reset) - <span class="variable">%C</span>(bold green)(<span class="variable">%ar</span>)<span class="variable">%C</span>(reset) <span class="variable">%C</span>(white)<span class="variable">%s</span><span class="variable">%C</span>(reset) <span class="variable">%C</span>(bold white)—     <span class="variable">%an</span><span class="variable">%C</span>(reset)<span class="variable">%C</span>(bold yellow)<span class="variable">%d</span><span class="variable">%C</span>(reset)<span class="string">'\''</span> --abbrev-commit --<span class="keyword">date</span>=relative<span class="string">'</span></div></pre></td></tr></table></figure>
-
-
-
-<hr>
-<h3 id="2-_配置git">2. 配置git</h3>
-<p>这部分很简单，但是很重要。尤其是git配置中的name和email会出现在后续所有<br>用于标注身份的地方。<br>如果实在不放心，或者忘记了有没有做过user.name等配置，最直接的方法就是上config文件里面亲眼看一下。  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="array"># git config </span>-l                       <span class="comment">// 查看当前配置  </span></div><div class="line"><span class="array"># git config user.name </span><span class="string">"your-name"</span>    <span class="comment">// 配置你的名字</span></div><div class="line"><span class="array"># git config user.email </span><span class="string">"your-email"</span>  <span class="comment">// 配置你的邮箱</span></div><div class="line"><span class="array"># vim .git</span>/config                     <span class="comment">// 也可以直接在config文件中进行修改</span></div><div class="line"></div><div class="line"><span class="array"># vim .gitignore                      </span><span class="comment">// 添加.gitignore配置是一个好习惯  </span></div><div class="line">    比如常见的*.o  TODO tmp TMP文件</div><div class="line"></div><div class="line"><span class="array">#git checkout </span>-b your-feature-branch  <span class="comment">// 立即创建一个新分支使用，保持master分支整洁</span></div></pre></td></tr></table></figure>
-
-
-
-<hr>
-<h3 id="-_合并远端master">. 合并远端master</h3>
-<p>在开始修改和准备提交之前，<em>规范</em>的合并远端master和本地master显得非常重要。<br>这里的<em>规范</em>选用fetch + rebase的方式。至于为什么请参考<a href="http://www.cnblogs.com/iammatthew/archive/2011/12/06/2277383.html" target="_blank" rel="external">1</a>。  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># git checkout master</span></div><div class="line"><span class="preprocessor"># git fetch</span></div><div class="line"><span class="preprocessor"># git rebase origin/master</span></div></pre></td></tr></table></figure>
-
-<h3 id="-_解决冲突">. 解决冲突</h3>
-<h3 id="-_关于amend/reset/rebase">. 关于amend/reset/rebase</h3>
-<p>在这一节不打算详细解释这几个命令的用法，仅谈谈对这几个命令的理解和功能。<br>至于具体的用法和注意事项，<a href="https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history" target="_blank" rel="external">这是一篇很好的说明文章</a>。  </p>
-<p>关键切入点：把一个commit理解为一个规范的patch。  </p>
-<p>尽管这几个命令使用时需要比较谨慎，但是熟悉了rewrite git history才算是真的熟悉了git啊。  </p>
-<h3 id="-_清理本地仓库">. 清理本地仓库</h3>
-<p>长期使用下来，如果远端有些分支已经删除了，则需要清理本地repo。<br>否则git branch -a就会看到很多无用的分支。  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="array"># git remote prune origin  </span><span class="comment">// prune会删除任何不存在于远端仓库的分支</span></div></pre></td></tr></table></figure>
-
-
-
-<hr>
-<h3 id="为什么使用git_format-patch生成patch至关重要">为什么使用git format-patch生成patch至关重要</h3>
-<hr>
-<h3 id="常用命令">常用命令</h3>
-<pre><code>git branch <span class="keyword">new</span>-branch-name origin/branch-name    <span class="comment">// 新建一个本地branch指向远端指定branch</span>
-</code></pre><hr>
-<h3 id="总结">总结</h3>
-<p>多看git help <command>，一些你认为git不支持的功能，可能加个选项就能实现了。  </p>
-<hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" target="_blank" rel="external">Git 常用命令</a><br><a href="http://www.ruanyifeng.com/blog/2015/08/git-use-process.html" target="_blank" rel="external">Git 使用规范流程</a><br><a href="https://github.com/thoughtbot/guides/tree/master/protocol/git" target="_blank" rel="external">Git Protocol</a><br><a href="https://ihower.tw/blog/archives/2622" target="_blank" rel="external">Git 版本控制系統3: 還沒 push 前可以做的事</a><br><a href="https://ihower.tw/git/" target="_blank" rel="external">Git 版本控制系統</a><br><a href="https://blog.yorkxin.org/posts/2011/07/29/git-rebase/" target="_blank" rel="external">Git-rebase 小筆記</a><br><a href="http://www.cnblogs.com/iammatthew/archive/2011/12/06/2277383.html" target="_blank" rel="external">从git merge 和 git rebase想到</a><br><a href="http://www.ruanyifeng.com/blog/2012/07/git.html" target="_blank" rel="external">Git分支管理策略</a><br><a href="http://nvie.com/posts/a-successful-git-branching-model/" target="_blank" rel="external">A successful Git branching model</a><br><a href="https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history" target="_blank" rel="external">Git Interactive Rebase, Squash, Amend and Other Ways of Rewriting History</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>一个工具的强大往往体现在它的灵活上，但在团队中必须制定一定的规范才能<br>进行高效的合作。<br>GIT就是这样一个强大到不行的工具，本文由于记录在实践中选择的一些实用技巧<br>和规范。<br>纪念那些年掉的坑T_T   </p>
-]]>
-    
-    </summary>
-    
-      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
     
   </entry>
   

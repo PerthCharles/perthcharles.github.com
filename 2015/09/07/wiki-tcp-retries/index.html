@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>聊一聊重传次数 | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在RTO的计算方法中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊一聊重传次数">
+<meta property="og:url" content="http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="在RTO的计算方法中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="聊一聊重传次数">
+<meta name="twitter:description" content="在RTO的计算方法中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-wiki-tcp-retries" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/09/07/wiki-tcp-retries/" class="article-date">
+  <time datetime="2015-09-07T13:40:02.000Z" itemprop="datePublished">9月 7 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      聊一聊重传次数
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#听说Linux有两个参数限制超时重传次数"><span class="toc-text">听说Linux有两个参数限制超时重传次数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#重传超过tcp_retries1会怎样"><span class="toc-text">重传超过tcp_retries1会怎样</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#重传超过tcp_retries2会怎样"><span class="toc-text">重传超过tcp_retries2会怎样</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#retries限制的重传次数吗"><span class="toc-text">retries限制的重传次数吗</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#另外几个小问题"><span class="toc-text">另外几个小问题</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<p>在<a href="http://perthcharles.github.io/2015/09/06/wiki-rtt-estimator/" target="_blank" rel="external">RTO的计算方法</a>中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。<br>但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？<br>当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。<br>在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="听说Linux有两个参数限制超时重传次数">听说Linux有两个参数限制超时重传次数</h3>
+<p>没错，Linux中确实定义了两个参数来限定超时重传的次数的，以下是源码中Documentation/networking/ip-sysctl.txt文档中的描述  </p>
+<pre><code>tcp_retries1 - INTEGER
+    This <span class="built_in">value</span> influences <span class="operator">the</span> <span class="built_in">time</span>, <span class="keyword">after</span> which TCP decides, that
+    something is wrong due <span class="built_in">to</span> unacknowledged RTO retransmissions,
+    <span class="operator">and</span> reports this suspicion <span class="built_in">to</span> <span class="operator">the</span> network layer.
+    See tcp_retries2 <span class="keyword">for</span> more details.
+
+    RFC <span class="number">1122</span> recommends <span class="keyword">at</span> least <span class="number">3</span> retransmissions, which is <span class="operator">the</span>
+    default.
+
+tcp_retries2 - INTEGER
+    This <span class="built_in">value</span> influences <span class="operator">the</span> timeout <span class="operator">of</span> <span class="operator">an</span> alive TCP connection,
+    when RTO retransmissions remain unacknowledged.
+    Given <span class="operator">a</span> <span class="built_in">value</span> <span class="operator">of</span> N, <span class="operator">a</span> hypothetical TCP connection following
+    exponential backoff <span class="operator">with</span> <span class="operator">an</span> initial RTO <span class="operator">of</span> TCP_RTO_MIN would
+    retransmit N times <span class="keyword">before</span> killing <span class="operator">the</span> connection <span class="keyword">at</span> <span class="operator">the</span> (N+<span class="number">1</span>)th RTO.
+
+    The default <span class="built_in">value</span> <span class="operator">of</span> <span class="number">15</span> yields <span class="operator">a</span> hypothetical timeout <span class="operator">of</span> <span class="number">924.6</span>
+    <span class="built_in">seconds</span> <span class="operator">and</span> is <span class="operator">a</span> <span class="built_in">lower</span> bound <span class="keyword">for</span> <span class="operator">the</span> <span class="keyword">effective</span> timeout.
+    TCP will effectively <span class="built_in">time</span> out <span class="keyword">at</span> <span class="operator">the</span> <span class="keyword">first</span> RTO which exceeds <span class="operator">the</span>
+    hypothetical timeout.
+
+    RFC <span class="number">1122</span> recommends <span class="keyword">at</span> least <span class="number">100</span> <span class="built_in">seconds</span> <span class="keyword">for</span> <span class="operator">the</span> timeout,
+    which corresponds <span class="built_in">to</span> <span class="operator">a</span> <span class="built_in">value</span> <span class="operator">of</span> <span class="keyword">at</span> least <span class="number">8.</span>
+</code></pre><p>就是这样一段话，可能由于过于概括，会令人产生很多疑问，甚至产生一些误解。<br>比如常见的问题有：<br>a. 超过tcp_retries1这个阈值后，到底是report了怎样一种suspicion呢？<br>b. tcp_retries1和tcp_retries2的数字是表示RTO重传的次数上限，对吗？<br>c. 文档中提到，924.6s is a lower bound for the effective timeout。<br>这里的effective timeout是指什么？<br>为什么是lower bound，tcp_retries2不应该是限制重传次数的upper bound吗？  </p>
+<p>下面就结合Linux 3.10的源码来逐个解释一下以上几个问题。并在最后给出一个总结。  </p>
+<hr>
+<h3 id="重传超过tcp_retries1会怎样">重传超过tcp_retries1会怎样</h3>
+<p>文档中说的suspicion到底是什么呢？来看一下tcp_retries1相关的代码部分  </p>
+<pre><code>// RTO timer的处理函数是tcp_retransmit_timer()，与tcp_retries1相关的代码调用关系如下  
+tcp_retransmit_timer()
+    =&gt; tcp_write_timeout()  // 判断是否重传了足够的久
+        =&gt; retransmit_timed_out(sk, sysctl_tcp_retries1, <span class="number">0</span>, <span class="number">0</span>)  // 判断是否超过了阈值
+
+// tcp_write_timeout()的具体相关内容  
+<span class="keyword">...</span>
+<span class="keyword">if</span> ((<span class="number">1</span> &lt;&lt; sk-&gt;sk_state) &amp; (TCPF_SYN_SENT | TCPF_SYN_RECV)) {
+    // 如果超时发生在三次握手期间，此时有专门的tcp_syn_retries来负责限定重传次数
+    <span class="keyword">...</span>
+} <span class="keyword">else</span> {    // 如果超时发生在数据发送期间
+    // 这个函数负责判断重传是否超过阈值，返回真表示超过。后续会详细分析这个函数  
+    <span class="keyword">if</span> (retransmits_timed_out(sk, sysctl_tcp_retries1, <span class="number">0</span>, <span class="number">0</span>)) { 
+        /* Black hole detection */
+        tcp_mtu_probing(icsk, sk);  // 如果开启tcp_mtu_probing(默认关闭)了，则执行PMTU
+
+        dst_negative_advice(sk);    // 更新路由缓存
+    }
+    <span class="keyword">...</span>
+}
+</code></pre><hr>
+<h3 id="重传超过tcp_retries2会怎样">重传超过tcp_retries2会怎样</h3>
+<p>会直接放弃重传，关闭TCP流  </p>
+<pre><code>// 依然还是在tcp_write_timeout()中，retry_until一般是tcp_retries2
+<span class="keyword">...</span>
+<span class="keyword">if</span> (retransmits_timed_out(sk, retry_until, syn_set ? <span class="number">0</span> : icsk-&gt;icsk_user_timeout, syn_set)) {
+    /* Has it gone just too far? */
+    tcp_write_err(sk);      // 调用tcp_done关闭TCP流
+    <span class="keyword">return</span> <span class="number">1</span>;
+}
+</code></pre><p>从以上的代码可以看到，一旦重传超过阈值tcp_retries1，主要的动作就是更新路由缓存。<br>用以避免由于路由选路变化带来的问题。  </p>
+<hr>
+<h3 id="retries限制的重传次数吗">retries限制的重传次数吗</h3>
+<p>咋一看文档，很容易想到retries的数字就是限定的重传的次数，甚至源码中对于retries常量TCP_RETR1的注释中都写这如下这样一段  </p>
+<pre><code><span class="comment">#define TCP_RETR1       3   /*</span>
+                             * This is how many retries <span class="keyword">it</span> does <span class="keyword">before</span> <span class="keyword">it</span>
+                             * tries <span class="built_in">to</span> figure out <span class="keyword">if</span> <span class="operator">the</span> gateway is
+                             * down. Minimal RFC <span class="built_in">value</span> is <span class="number">3</span>; <span class="keyword">it</span> corresponds
+                             * <span class="built_in">to</span> ~<span class="number">3</span><span class="built_in">sec</span>-<span class="number">8</span><span class="built_in">min</span> depending <span class="command"><span class="keyword">on</span> <span class="title">RTO</span>.</span>
+                             */
+</code></pre><p>那就就来看看retransmits_timed_out的具体实现，看看到底是不是限制的重传次数  </p>
+<pre><code>/* This <span class="reserved">function</span> calculates a <span class="string">"timeout"</span> which <span class="keyword">is</span> equivalent to the timeout <span class="keyword">of</span> a
+ * TCP connection after <span class="string">"boundary"</span> unsuccessful, exponentially backed-<span class="literal">off</span>
+ * retransmissions <span class="reserved">with</span> an initial RTO <span class="keyword">of</span> TCP_RTO_MIN <span class="keyword">or</span> TCP_TIMEOUT_INIT <span class="keyword">if</span>
+ * syn_set flag <span class="keyword">is</span> set.
+ */
+static bool retransmits_timed_out(struct sock *sk,
+                              unsigned int boundary,
+                              unsigned int timeout,
+                              bool syn_set)
+{
+    unsigned int linear_backoff_thresh, start_ts;
+    <span class="regexp">//</span> 如果是在三次握手阶段，syn_set为真
+    unsigned int rto_base = syn_set ? TCP_TIMEOUT_INIT : TCP_RTO_MIN;
+
+    <span class="keyword">if</span> <span class="function"><span class="params">(!inet_csk(sk)-&gt;icsk_retransmits)</span>
+            <span class="title">return</span> <span class="title">false</span>;
+
+    // <span class="title">retrans_stamp</span>记录的是数据包第一次发送的时间，在<span class="title">tcp_retransmit_skb</span><span class="params">()</span>中设置
+    <span class="title">if</span> <span class="params">(unlikely(!tcp_sk(sk)-&gt;retrans_stamp))</span>
+            <span class="title">start_ts</span> = <span class="title">TCP_SKB_CB</span><span class="params">(tcp_write_queue_head(sk))</span>-&gt;</span><span class="keyword">when</span>;
+    <span class="keyword">else</span>
+            start_ts = tcp_sk<span class="function"><span class="params">(sk)</span>-&gt;</span>retrans_stamp;
+
+    <span class="regexp">//</span> 如果用户态未指定timeout，则算一个出来
+    <span class="keyword">if</span> (likely(timeout == <span class="number">0</span>)) {
+            /* 下面的计算过程，其实就是算一下如果以rto_base为第一次重传间隔，
+             * 重传boundary次需要多长时间
+             */
+            linear_backoff_thresh = ilog2(TCP_RTO_MAX/rto_base);
+
+            <span class="keyword">if</span> (boundary &lt;= linear_backoff_thresh)
+                    timeout = ((<span class="number">2</span> &lt;&lt; boundary) - <span class="number">1</span>) * rto_base;
+            <span class="keyword">else</span>
+                    timeout = ((<span class="number">2</span> &lt;&lt; linear_backoff_thresh) - <span class="number">1</span>) * rto_base +
+                            (boundary - linear_backoff_thresh) * TCP_RTO_MAX;
+    }
+    <span class="regexp">//</span> 如果数据包第一次发送的时间距离现在的时间间隔，超过了timeout值，则认为重传超于阈值了
+    <span class="keyword">return</span> (tcp_time_stamp - start_ts) &gt;= timeout;
+}
+</code></pre><p>从以上的代码分析可以看到，真正起到限制重传次数的并不是真正的重传次数。<br>而是以tcp_retries1或tcp_retries2为boundary，以rto_base(如TCP_RTO_MIN 200ms)为初始RTO，计算得到一个timeout值出来。如果重传间隔超过这个timeout，则认为超过了阈值。<br>上面这段话太绕了，下面举两个个例子来说明  </p>
+<pre><code>已判断是否放弃TCP流为例，如果<span class="variable">tcp_retries2=</span><span class="number">15</span>，那么计算得到的<span class="variable">timeout=</span><span class="number">924600</span>ms。
+
+<span class="number">1</span>. 如果RTT比较小，那么RTO初始值就约等于下限<span class="number">200</span>ms
+   由于timeout总时长是<span class="number">924600</span>ms，表现出来的现象刚好就是重传了<span class="number">15</span>次，超过了timeout值，从而放弃TCP流
+
+<span class="number">2</span>. 如果RTT较大，比如RTO初始值计算得到的是<span class="number">1000</span>ms
+   那么根本不需要重传<span class="number">15</span>次，重传总间隔就会超过<span class="number">924600</span>ms。
+   比如我测试的一个<span class="variable">RTT=</span><span class="number">400</span>ms的情况，当<span class="variable">tcp_retries2=</span><span class="number">10</span>时，仅重传了<span class="number">3</span>次就放弃了TCP流
+</code></pre><hr>
+<h3 id="另外几个小问题">另外几个小问题</h3>
+<p>理解了Linux决定重传次数的真实机制，就不难回答一下几个问题了  </p>
+<pre><code><span class="input"><span class="prompt">&gt;&gt;</span> effective timeout指的是什么？  </span>
+<span class="input"><span class="prompt">&lt;&lt; 就是retransmits_timed_out计算得到的timeout值
+
+&gt;&gt;</span> <span class="number">924.6</span>s是怎么算出来的？</span>
+&lt;&lt; <span class="number">924.6</span>s = (( <span class="number">2</span> &lt;&lt; <span class="number">9</span>) -<span class="number">1</span>) * <span class="number">200</span>ms + (<span class="number">15</span> - <span class="number">9</span>) * <span class="number">120</span>s
+<span class="input"><span class="prompt">
+&gt;&gt;</span> 为什么<span class="number">924.6</span>s是lower bound？</span>
+&lt;&lt; 重传总间隔必须大于timeout值，即 (tcp_time_stamp - start_ts) &gt;= timeout
+</code></pre><p>所以综合上述，Linux并不是直接拿tcp_retries1和tcp_retries2来限制重传次数的，而是用计算得到<br>的一个timeout值来判断是否要放弃重传的。真正的重传次数与RTT相关。  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/" data-id="kbj6aal3t9qy4ke7" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rto/">rto</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tcp/">tcp</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/09/06/wiki-rtt-estimator/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">RTO的计算方法(基于RFC6298和Linux 3.10)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/09/07/wiki-tcp-retries/">聊一聊重传次数</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/06/wiki-rtt-estimator/">RTO的计算方法(基于RFC6298和Linux 3.10)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-NAT/">一个NAT问题引起的思考</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-faq/">GIT系列五：小知识点及FAQ</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/clean-commit-log-before-push/">GIT系列四：在push之前对本地commit进行整理</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-commit-log-format/">GIT系列三：commit消息规范</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/commit-a-simple-manually/">GIT系列二：手动提交一个commit</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/setup-gitolite-service-git-1/">GIT系列一：使用gitolite搭建git仓库管理服务</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/14/manage-project-code-like-linux-kernel/">像linux kernel一样管理你的项目</a>
+          </li>
+        
+          <li>
+            <a href="/2015/07/08/iso-yum/">使用ISO镜像配置yum源</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/18/wiki-network-tcp-random-early-drop/">Random early detection</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/">Understand the Performance of Pacing</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/16/wiki-network-tcp-frto/">TCP FRTO机制</a>
+          </li>
+        
+          <li>
+            <a href="/2015/06/15/server-load-test/">服务器负载压力测试相关工具</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 11.43px;">BFS</a><a href="/tags/C-C/" style="font-size: 17.14px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.43px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.43px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.71px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.43px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 14.29px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.43px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.43px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 11.43px;">NAT</a><a href="/tags/NTP/" style="font-size: 11.43px;">NTP</a><a href="/tags/PAWS/" style="font-size: 11.43px;">PAWS</a><a href="/tags/PTP/" style="font-size: 11.43px;">PTP</a><a href="/tags/RTTM/" style="font-size: 11.43px;">RTTM</a><a href="/tags/TCP/" style="font-size: 18.57px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.86px;">Tools</a><a href="/tags/X11/" style="font-size: 12.86px;">X11</a><a href="/tags/YQL/" style="font-size: 11.43px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.43px;">YUI</a><a href="/tags/assembly/" style="font-size: 12.86px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.43px;">chrome</a><a href="/tags/excel/" style="font-size: 12.86px;">excel</a><a href="/tags/git/" style="font-size: 15.71px;">git</a><a href="/tags/google/" style="font-size: 11.43px;">google</a><a href="/tags/hexo/" style="font-size: 12.86px;">hexo</a><a href="/tags/http-load/" style="font-size: 11.43px;">http_load</a><a href="/tags/http-load-test/" style="font-size: 10.00px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.43px;">javascript</a><a href="/tags/latex/" style="font-size: 12.86px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.43px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.43px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.43px;">matlab</a><a href="/tags/mount/" style="font-size: 11.43px;">mount</a><a href="/tags/nginx/" style="font-size: 11.43px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.43px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.43px;">papers</a><a href="/tags/python/" style="font-size: 14.29px;">python</a><a href="/tags/rfc6298/" style="font-size: 11.43px;">rfc6298</a><a href="/tags/rto/" style="font-size: 12.86px;">rto</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

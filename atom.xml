@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-06T10:04:20.557Z</updated>
+  <updated>2015-09-07T15:16:40.812Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,161 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[聊一聊重传次数]]></title>
+    <link href="http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/"/>
+    <id>http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/</id>
+    <published>2015-09-07T13:40:02.000Z</published>
+    <updated>2015-09-07T15:16:36.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>在<a href="http://perthcharles.github.io/2015/09/06/wiki-rtt-estimator/" target="_blank" rel="external">RTO的计算方法</a>中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。<br>但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？<br>当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。<br>在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="听说Linux有两个参数限制超时重传次数">听说Linux有两个参数限制超时重传次数</h3>
+<p>没错，Linux中确实定义了两个参数来限定超时重传的次数的，以下是源码中Documentation/networking/ip-sysctl.txt文档中的描述  </p>
+<pre><code>tcp_retries1 - INTEGER
+    This <span class="built_in">value</span> influences <span class="operator">the</span> <span class="built_in">time</span>, <span class="keyword">after</span> which TCP decides, that
+    something is wrong due <span class="built_in">to</span> unacknowledged RTO retransmissions,
+    <span class="operator">and</span> reports this suspicion <span class="built_in">to</span> <span class="operator">the</span> network layer.
+    See tcp_retries2 <span class="keyword">for</span> more details.
+
+    RFC <span class="number">1122</span> recommends <span class="keyword">at</span> least <span class="number">3</span> retransmissions, which is <span class="operator">the</span>
+    default.
+
+tcp_retries2 - INTEGER
+    This <span class="built_in">value</span> influences <span class="operator">the</span> timeout <span class="operator">of</span> <span class="operator">an</span> alive TCP connection,
+    when RTO retransmissions remain unacknowledged.
+    Given <span class="operator">a</span> <span class="built_in">value</span> <span class="operator">of</span> N, <span class="operator">a</span> hypothetical TCP connection following
+    exponential backoff <span class="operator">with</span> <span class="operator">an</span> initial RTO <span class="operator">of</span> TCP_RTO_MIN would
+    retransmit N times <span class="keyword">before</span> killing <span class="operator">the</span> connection <span class="keyword">at</span> <span class="operator">the</span> (N+<span class="number">1</span>)th RTO.
+
+    The default <span class="built_in">value</span> <span class="operator">of</span> <span class="number">15</span> yields <span class="operator">a</span> hypothetical timeout <span class="operator">of</span> <span class="number">924.6</span>
+    <span class="built_in">seconds</span> <span class="operator">and</span> is <span class="operator">a</span> <span class="built_in">lower</span> bound <span class="keyword">for</span> <span class="operator">the</span> <span class="keyword">effective</span> timeout.
+    TCP will effectively <span class="built_in">time</span> out <span class="keyword">at</span> <span class="operator">the</span> <span class="keyword">first</span> RTO which exceeds <span class="operator">the</span>
+    hypothetical timeout.
+
+    RFC <span class="number">1122</span> recommends <span class="keyword">at</span> least <span class="number">100</span> <span class="built_in">seconds</span> <span class="keyword">for</span> <span class="operator">the</span> timeout,
+    which corresponds <span class="built_in">to</span> <span class="operator">a</span> <span class="built_in">value</span> <span class="operator">of</span> <span class="keyword">at</span> least <span class="number">8.</span>
+</code></pre><p>就是这样一段话，可能由于过于概括，会令人产生很多疑问，甚至产生一些误解。<br>比如常见的问题有：<br>a. 超过tcp_retries1这个阈值后，到底是report了怎样一种suspicion呢？<br>b. tcp_retries1和tcp_retries2的数字是表示RTO重传的次数上限，对吗？<br>c. 文档中提到，924.6s is a lower bound for the effective timeout。<br>这里的effective timeout是指什么？<br>为什么是lower bound，tcp_retries2不应该是限制重传次数的upper bound吗？  </p>
+<p>下面就结合Linux 3.10的源码来逐个解释一下以上几个问题。并在最后给出一个总结。  </p>
+<hr>
+<h3 id="重传超过tcp_retries1会怎样">重传超过tcp_retries1会怎样</h3>
+<p>文档中说的suspicion到底是什么呢？来看一下tcp_retries1相关的代码部分  </p>
+<pre><code>// RTO timer的处理函数是tcp_retransmit_timer()，与tcp_retries1相关的代码调用关系如下  
+tcp_retransmit_timer()
+    =&gt; tcp_write_timeout()  // 判断是否重传了足够的久
+        =&gt; retransmit_timed_out(sk, sysctl_tcp_retries1, <span class="number">0</span>, <span class="number">0</span>)  // 判断是否超过了阈值
+
+// tcp_write_timeout()的具体相关内容  
+<span class="keyword">...</span>
+<span class="keyword">if</span> ((<span class="number">1</span> &lt;&lt; sk-&gt;sk_state) &amp; (TCPF_SYN_SENT | TCPF_SYN_RECV)) {
+    // 如果超时发生在三次握手期间，此时有专门的tcp_syn_retries来负责限定重传次数
+    <span class="keyword">...</span>
+} <span class="keyword">else</span> {    // 如果超时发生在数据发送期间
+    // 这个函数负责判断重传是否超过阈值，返回真表示超过。后续会详细分析这个函数  
+    <span class="keyword">if</span> (retransmits_timed_out(sk, sysctl_tcp_retries1, <span class="number">0</span>, <span class="number">0</span>)) { 
+        /* Black hole detection */
+        tcp_mtu_probing(icsk, sk);  // 如果开启tcp_mtu_probing(默认关闭)了，则执行PMTU
+
+        dst_negative_advice(sk);    // 更新路由缓存
+    }
+    <span class="keyword">...</span>
+}
+</code></pre><hr>
+<h3 id="重传超过tcp_retries2会怎样">重传超过tcp_retries2会怎样</h3>
+<p>会直接放弃重传，关闭TCP流  </p>
+<pre><code>// 依然还是在tcp_write_timeout()中，retry_until一般是tcp_retries2
+<span class="keyword">...</span>
+<span class="keyword">if</span> (retransmits_timed_out(sk, retry_until, syn_set ? <span class="number">0</span> : icsk-&gt;icsk_user_timeout, syn_set)) {
+    /* Has it gone just too far? */
+    tcp_write_err(sk);      // 调用tcp_done关闭TCP流
+    <span class="keyword">return</span> <span class="number">1</span>;
+}
+</code></pre><p>从以上的代码可以看到，一旦重传超过阈值tcp_retries1，主要的动作就是更新路由缓存。<br>用以避免由于路由选路变化带来的问题。  </p>
+<hr>
+<h3 id="retries限制的重传次数吗">retries限制的重传次数吗</h3>
+<p>咋一看文档，很容易想到retries的数字就是限定的重传的次数，甚至源码中对于retries常量TCP_RETR1的注释中都写这如下这样一段  </p>
+<pre><code><span class="comment">#define TCP_RETR1       3   /*</span>
+                             * This is how many retries <span class="keyword">it</span> does <span class="keyword">before</span> <span class="keyword">it</span>
+                             * tries <span class="built_in">to</span> figure out <span class="keyword">if</span> <span class="operator">the</span> gateway is
+                             * down. Minimal RFC <span class="built_in">value</span> is <span class="number">3</span>; <span class="keyword">it</span> corresponds
+                             * <span class="built_in">to</span> ~<span class="number">3</span><span class="built_in">sec</span>-<span class="number">8</span><span class="built_in">min</span> depending <span class="command"><span class="keyword">on</span> <span class="title">RTO</span>.</span>
+                             */
+</code></pre><p>那就就来看看retransmits_timed_out的具体实现，看看到底是不是限制的重传次数  </p>
+<pre><code>/* This <span class="reserved">function</span> calculates a <span class="string">"timeout"</span> which <span class="keyword">is</span> equivalent to the timeout <span class="keyword">of</span> a
+ * TCP connection after <span class="string">"boundary"</span> unsuccessful, exponentially backed-<span class="literal">off</span>
+ * retransmissions <span class="reserved">with</span> an initial RTO <span class="keyword">of</span> TCP_RTO_MIN <span class="keyword">or</span> TCP_TIMEOUT_INIT <span class="keyword">if</span>
+ * syn_set flag <span class="keyword">is</span> set.
+ */
+static bool retransmits_timed_out(struct sock *sk,
+                              unsigned int boundary,
+                              unsigned int timeout,
+                              bool syn_set)
+{
+    unsigned int linear_backoff_thresh, start_ts;
+    <span class="regexp">//</span> 如果是在三次握手阶段，syn_set为真
+    unsigned int rto_base = syn_set ? TCP_TIMEOUT_INIT : TCP_RTO_MIN;
+
+    <span class="keyword">if</span> <span class="function"><span class="params">(!inet_csk(sk)-&gt;icsk_retransmits)</span>
+            <span class="title">return</span> <span class="title">false</span>;
+
+    // <span class="title">retrans_stamp</span>记录的是数据包第一次发送的时间，在<span class="title">tcp_retransmit_skb</span><span class="params">()</span>中设置
+    <span class="title">if</span> <span class="params">(unlikely(!tcp_sk(sk)-&gt;retrans_stamp))</span>
+            <span class="title">start_ts</span> = <span class="title">TCP_SKB_CB</span><span class="params">(tcp_write_queue_head(sk))</span>-&gt;</span><span class="keyword">when</span>;
+    <span class="keyword">else</span>
+            start_ts = tcp_sk<span class="function"><span class="params">(sk)</span>-&gt;</span>retrans_stamp;
+
+    <span class="regexp">//</span> 如果用户态未指定timeout，则算一个出来
+    <span class="keyword">if</span> (likely(timeout == <span class="number">0</span>)) {
+            /* 下面的计算过程，其实就是算一下如果以rto_base为第一次重传间隔，
+             * 重传boundary次需要多长时间
+             */
+            linear_backoff_thresh = ilog2(TCP_RTO_MAX/rto_base);
+
+            <span class="keyword">if</span> (boundary &lt;= linear_backoff_thresh)
+                    timeout = ((<span class="number">2</span> &lt;&lt; boundary) - <span class="number">1</span>) * rto_base;
+            <span class="keyword">else</span>
+                    timeout = ((<span class="number">2</span> &lt;&lt; linear_backoff_thresh) - <span class="number">1</span>) * rto_base +
+                            (boundary - linear_backoff_thresh) * TCP_RTO_MAX;
+    }
+    <span class="regexp">//</span> 如果数据包第一次发送的时间距离现在的时间间隔，超过了timeout值，则认为重传超于阈值了
+    <span class="keyword">return</span> (tcp_time_stamp - start_ts) &gt;= timeout;
+}
+</code></pre><p>从以上的代码分析可以看到，真正起到限制重传次数的并不是真正的重传次数。<br>而是以tcp_retries1或tcp_retries2为boundary，以rto_base(如TCP_RTO_MIN 200ms)为初始RTO，计算得到一个timeout值出来。如果重传间隔超过这个timeout，则认为超过了阈值。<br>上面这段话太绕了，下面举两个个例子来说明  </p>
+<pre><code>已判断是否放弃TCP流为例，如果<span class="variable">tcp_retries2=</span><span class="number">15</span>，那么计算得到的<span class="variable">timeout=</span><span class="number">924600</span>ms。
+
+<span class="number">1</span>. 如果RTT比较小，那么RTO初始值就约等于下限<span class="number">200</span>ms
+   由于timeout总时长是<span class="number">924600</span>ms，表现出来的现象刚好就是重传了<span class="number">15</span>次，超过了timeout值，从而放弃TCP流
+
+<span class="number">2</span>. 如果RTT较大，比如RTO初始值计算得到的是<span class="number">1000</span>ms
+   那么根本不需要重传<span class="number">15</span>次，重传总间隔就会超过<span class="number">924600</span>ms。
+   比如我测试的一个<span class="variable">RTT=</span><span class="number">400</span>ms的情况，当<span class="variable">tcp_retries2=</span><span class="number">10</span>时，仅重传了<span class="number">3</span>次就放弃了TCP流
+</code></pre><hr>
+<h3 id="另外几个小问题">另外几个小问题</h3>
+<p>理解了Linux决定重传次数的真实机制，就不难回答一下几个问题了  </p>
+<pre><code><span class="input"><span class="prompt">&gt;&gt;</span> effective timeout指的是什么？  </span>
+<span class="input"><span class="prompt">&lt;&lt; 就是retransmits_timed_out计算得到的timeout值
+
+&gt;&gt;</span> <span class="number">924.6</span>s是怎么算出来的？</span>
+&lt;&lt; <span class="number">924.6</span>s = (( <span class="number">2</span> &lt;&lt; <span class="number">9</span>) -<span class="number">1</span>) * <span class="number">200</span>ms + (<span class="number">15</span> - <span class="number">9</span>) * <span class="number">120</span>s
+<span class="input"><span class="prompt">
+&gt;&gt;</span> 为什么<span class="number">924.6</span>s是lower bound？</span>
+&lt;&lt; 重传总间隔必须大于timeout值，即 (tcp_time_stamp - start_ts) &gt;= timeout
+</code></pre><p>所以综合上述，Linux并不是直接拿tcp_retries1和tcp_retries2来限制重传次数的，而是用计算得到<br>的一个timeout值来判断是否要放弃重传的。真正的重传次数与RTT相关。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>在<a href="http://perthcharles.github.io/2015/09/06/wiki-rtt-estimator/" target="_blank" rel="external">RTO的计算方法</a>中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。<br>但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？<br>当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。<br>在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。<br>]]>
+    
+    </summary>
+    
+      <category term="rto" scheme="http://perthcharles.github.com/tags/rto/"/>
+    
+      <category term="tcp" scheme="http://perthcharles.github.com/tags/tcp/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[RTO的计算方法(基于RFC6298和Linux 3.10)]]></title>
@@ -2206,83 +2361,6 @@ make life easier <span class="keyword">for</span> those around them.
     </summary>
     
       <category term="好文共享" scheme="http://perthcharles.github.com/categories/%E5%A5%BD%E6%96%87%E5%85%B1%E4%BA%AB/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[linux命令学习（十一）：lsof, vnstat, fuser, host, at, cron]]></title>
-    <link href="http://perthcharles.github.com/2015/02/06/linux-using-11/"/>
-    <id>http://perthcharles.github.com/2015/02/06/linux-using-11/</id>
-    <published>2015-02-06T07:07:07.000Z</published>
-    <updated>2015-05-10T05:02:14.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>这次介绍一些系统使用和状态方面的一些命令，继续学习Linux命令  </p>
-<a id="more"></a>  
-
-<h3 id="1-_lsof:_list_open_file">1. lsof: list open file</h3>
-<hr>
-<p>使用实例如下：  </p>
-<pre><code><span class="array"># lsof </span>-c &lt;process-name&gt;  <span class="comment">// 查看某个进程打开的文件  </span>
-<span class="array"># lsof </span>/var/log/message   <span class="comment">// 查看massage文件当前在被谁使用  </span>
-<span class="array"># lsof </span>-u ^root           <span class="comment">// 查看当前非root用户打开的文件信息  </span>
-<span class="array"># lsof </span>-p <span class="number">1</span>               <span class="comment">// 查看1号进程打开的文件  </span>
-<span class="array"># lsof </span>-p `pidof vim`     <span class="comment">// 查看vim进程打开的文件，效果如同第一条  </span>
-<span class="array"># lsof </span>-i                 <span class="comment">// 显示所有网络连接信息  </span>
-<span class="array"># lsof </span>-i tcp             <span class="comment">// 列出所有TCP网络连接信息  </span>
-<span class="array"># lsof </span>-i :<span class="number">22</span>             <span class="comment">// 查看22端口现在运行的情况  </span>
-</code></pre><h3 id="2-_vnstat:_a_console-based_network_traffic_monitor">2. vnstat: a console-based network traffic monitor</h3>
-<hr>
-<p>安装时候后才发现，vnstat并不能算一个实时的命令，更多的像是个制作历史报告的工具。<br>所以暂时就不学了，有需求再来看。<br>PS：如果想实时使用的话，可是使用—l选项。  </p>
-<h3 id="3-_fuser:_identify_processing_using_files_or_sockets">3. fuser: identify processing using files or sockets</h3>
-<hr>
-<p>基本上能用lsof替代，暂时忽略。  </p>
-<h3 id="4-_host:_DNS_lookup_utility">4. host: DNS lookup utility</h3>
-<hr>
-<p>使用实例如下：  </p>
-<pre><code><span class="array"># host www.baidu.com      </span><span class="comment">// 查看百度的IP地址  </span>
-<span class="array"># host </span>-a www.baidu.com   <span class="comment">// 显示详细的DNS查询消息  </span>
-</code></pre><h3 id="5-_dig:_DNS_lookup_utility">5. dig: DNS lookup utility</h3>
-<hr>
-<p>dig同样也是一个DNS查询的工具，和host互为补充吧。  </p>
-<pre><code># <span class="keyword">dig</span> www.baidu.<span class="keyword">com</span>         // 对百度网址进行DNS查询  
-# <span class="keyword">dig</span> +trace www.baidu.<span class="keyword">com</span>  // 从根域开始跟踪查询结果  
-# <span class="keyword">dig</span> +vc www.baidu.<span class="keyword">com</span>     // 使用TCP协议查询  
-</code></pre><p>说道DNS，就想吐槽，大家都懂的.有兴趣的话大家可以对比下面两个命令的输出差异，对G.F.W.有一个大致的了解。  </p>
-<pre><code># <span class="keyword">dig</span> +vc +trace www.baidu.<span class="keyword">com</span>  
-# <span class="keyword">dig</span> +vc +trace www.facebook.<span class="keyword">com</span>  
-</code></pre><h3 id="6-_ss:_another_utility_to_invertigate_sockets">6. ss: another utility to invertigate sockets</h3>
-<hr>
-<p>ss是socket statistics的缩写，相比于netstat能够显示过多关于socket细节的信息。<br>同时netstat略慢，而ss更快。  </p>
-<pre><code><span class="array"># ss </span>-a -t       <span class="comment">// a == all, t == tcp  </span>
-<span class="array"># ss </span>-s          <span class="comment">// s == summary, 显示socket信息摘要  </span>
-<span class="array"># ss </span>-l          <span class="comment">// l == listenning  </span>
-<span class="array"># ss </span>-p          <span class="comment">// p == processes, 显示哪些进程在用哪些socket  </span>
-<span class="array"># ss </span>-pl         <span class="comment">// 查看哪些进程在使用listening状态的socket  </span>
-</code></pre><h3 id="7-_关于环境变量LD_PRELOAD">7. 关于环境变量LD_PRELOAD</h3>
-<hr>
-<p>环境变量LD_PRELOAD指定程序运行时优先加载的动态链接库，且其中的符号优先级是最高的。所以在使用LD_PRELOAD环境变量后，可以替换掉标准C中的函数（默认放在libc.so.6文件中）。<br>比如想替换掉系统默认的malloc函数，则将LD_PRELOAD设置为新的malloc函数链接库。  </p>
-<pre><code><span class="comment"># LD_PRELOAD="/home/user/mymalloc.so"  </span>
-</code></pre><p>关于LD_PRELOAD环境变量，<a href="http://blog.csdn.net/haoel/article/details/1602108" target="_blank" rel="external">这篇文章</a>或许能让你脑洞大开。  </p>
-<h3 id="8-_at:_executes_commands_at_a_specified_time">8. at: executes commands at a specified time</h3>
-<hr>
-<p>与cron配置一个周期性的服务不同，at命令主要是用于一次性的任务需求中。  </p>
-<pre><code><span class="array"># at </span>-f myscript.sh -v <span class="number">10</span>:<span class="number">30</span>       <span class="comment">// 在10:30时刻，开始执行脚本  </span>
-<span class="array"># timer</span>=`date +%k:%M -d <span class="string">'5 min'</span>`   <span class="comment">// 得到距离当前时刻5min的时间  </span>
-<span class="array"># at </span>-f myscript.sh -v ${timer}    <span class="comment">// 在timer对应的时刻开始执行脚本  </span>
-<span class="array"># atq                              </span><span class="comment">// 查看还未执行的任务  </span>
-<span class="array"># atrm </span><span class="number">7</span>                           <span class="comment">// 使用任务编号进行删除  </span>
-<span class="array"># at </span>-c <span class="number">8</span>                          <span class="comment">// 查看某任务编号对应的具体内容  </span>
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>这次介绍一些系统使用和状态方面的一些命令，继续学习Linux命令  </p>
-]]>
-    
-    </summary>
-    
-      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
-    
-      <category term="Shell" scheme="http://perthcharles.github.com/categories/Shell/"/>
     
   </entry>
   

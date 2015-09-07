@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/</loc>
+    <lastmod>2015-09-07T15:16:36.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://perthcharles.github.com/2015/09/06/wiki-rtt-estimator/</loc>
     <lastmod>2015-09-06T10:03:58.000Z</lastmod>
   </url>

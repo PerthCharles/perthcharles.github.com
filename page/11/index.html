@@ -71,6 +71,53 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-linux-tex" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/09/14/linux-tex/" class="article-date">
+  <time datetime="2013-09-14T04:00:00.000Z" itemprop="datePublished">9月 14 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/09/14/linux-tex/">[latex]linux环境下的latex安装</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本来想着使用yum安装的，结果发现没有直接的rpm包<br>网上有许多的方法，特别是对于中文的问题的解决<br>但是都过于复杂，可能是懒人有懒福吧。总算找到一种最简单的安装办法<br>详见<a href="http://blog.chinaunix.net/uid-20940095-id-66105.html" target="_blank" rel="external">这篇博客:linux下texlive 2010 简单安装教程</a>，非常感谢这位大牛的指点。让我节省了不少时间。  </p>
+
+        
+          <p class="article-more-link">
+            <a href="/2013/09/14/linux-tex/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/09/14/linux-tex/" data-id="xbk3lksa6z02m1rf" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/09/14/linux-tex/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/latex/">latex</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-c-and-pointer" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2013/09/05/c-and-pointer/" class="article-date">
@@ -280,55 +327,6 @@
 
 
   
-    <article id="post-change-library-path" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2013/08/31/change-library-path/" class="article-date">
-  <time datetime="2013-08-31T04:23:22.000Z" itemprop="datePublished">8月 31 2013</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2013/08/31/change-library-path/">linux 安装软件问题：XXX share library can not found</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <!-- add for TOC @ by charles -->
-        
-        <h3 id="问题">问题</h3>
-<p>当跑某些软件的时候，可能会遇到下面的错误：<br>    “XXX share library” can not found<br>如果你可以确定这个库你已经安装好了，则可能是环境变量没有设置正确。主要环境变量就是LD_LIBRARY_PATH。  </p>
-<h3 id="解决方法">解决方法</h3>
-<pre><code><span class="variable">#whereis</span> XXX <span class="comment">//如果库的文件名是libXXX.so</span>
-<span class="variable">#export</span> LD_LIBRARY_PATH<span class="subst">=</span><span class="variable">$LD_LIBRARY_PATH</span>:/the<span class="attribute">-result</span><span class="attribute">-of</span><span class="attribute">-last</span><span class="attribute">-commond</span>/lib<span class="subst">/</span>
-</code></pre><p>如想免去开机重启后的重复设置，将上面的export语句写到.bashrc文件中即可。  </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/08/31/change-library-path/" data-id="58gbemq7p97jxbvf" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2013/08/31/change-library-path/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/page/10/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="page-number" href="/page/10/">10</a><span class="page-number current">11</span><a class="page-number" href="/page/12/">12</a><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/21/">21</a><a class="extend next" rel="next" href="/page/12/">Next &raquo;</a>
@@ -342,7 +340,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/好文共享/">好文共享</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -352,6 +350,10 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/09/07/wiki-tcp-retries/">聊一聊重传次数</a>
+          </li>
         
           <li>
             <a href="/2015/09/06/wiki-rtt-estimator/">RTO的计算方法(基于RFC6298和Linux 3.10)</a>
@@ -409,10 +411,6 @@
             <a href="/2015/06/15/server-load-test/">服务器负载压力测试相关工具</a>
           </li>
         
-          <li>
-            <a href="/2015/06/12/tc-tutorial/">TC 实践</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -444,7 +442,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BFS/" style="font-size: 11.43px;">BFS</a><a href="/tags/C-C/" style="font-size: 17.14px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.43px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.43px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.71px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.43px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 14.29px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.43px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.43px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 11.43px;">NAT</a><a href="/tags/NTP/" style="font-size: 11.43px;">NTP</a><a href="/tags/PAWS/" style="font-size: 11.43px;">PAWS</a><a href="/tags/PTP/" style="font-size: 11.43px;">PTP</a><a href="/tags/RTTM/" style="font-size: 11.43px;">RTTM</a><a href="/tags/TCP/" style="font-size: 18.57px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.86px;">Tools</a><a href="/tags/X11/" style="font-size: 12.86px;">X11</a><a href="/tags/YQL/" style="font-size: 11.43px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.43px;">YUI</a><a href="/tags/assembly/" style="font-size: 12.86px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.43px;">chrome</a><a href="/tags/excel/" style="font-size: 12.86px;">excel</a><a href="/tags/git/" style="font-size: 15.71px;">git</a><a href="/tags/google/" style="font-size: 11.43px;">google</a><a href="/tags/hexo/" style="font-size: 12.86px;">hexo</a><a href="/tags/http-load/" style="font-size: 11.43px;">http_load</a><a href="/tags/http-load-test/" style="font-size: 10.00px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.43px;">javascript</a><a href="/tags/latex/" style="font-size: 12.86px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.43px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.43px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.43px;">matlab</a><a href="/tags/mount/" style="font-size: 11.43px;">mount</a><a href="/tags/nginx/" style="font-size: 11.43px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.43px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.43px;">papers</a><a href="/tags/python/" style="font-size: 14.29px;">python</a><a href="/tags/rfc6298/" style="font-size: 11.43px;">rfc6298</a><a href="/tags/rto/" style="font-size: 11.43px;">rto</a>
+      <a href="/tags/BFS/" style="font-size: 11.43px;">BFS</a><a href="/tags/C-C/" style="font-size: 17.14px;">C/C++</a><a href="/tags/DFS/" style="font-size: 11.43px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 11.43px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.71px;">Git</a><a href="/tags/Jekyll/" style="font-size: 11.43px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 14.29px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 11.43px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 11.43px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 11.43px;">NAT</a><a href="/tags/NTP/" style="font-size: 11.43px;">NTP</a><a href="/tags/PAWS/" style="font-size: 11.43px;">PAWS</a><a href="/tags/PTP/" style="font-size: 11.43px;">PTP</a><a href="/tags/RTTM/" style="font-size: 11.43px;">RTTM</a><a href="/tags/TCP/" style="font-size: 18.57px;">TCP</a><a href="/tags/Tools/" style="font-size: 12.86px;">Tools</a><a href="/tags/X11/" style="font-size: 12.86px;">X11</a><a href="/tags/YQL/" style="font-size: 11.43px;">YQL</a><a href="/tags/YUI/" style="font-size: 11.43px;">YUI</a><a href="/tags/assembly/" style="font-size: 12.86px;">assembly</a><a href="/tags/chrome/" style="font-size: 11.43px;">chrome</a><a href="/tags/excel/" style="font-size: 12.86px;">excel</a><a href="/tags/git/" style="font-size: 15.71px;">git</a><a href="/tags/google/" style="font-size: 11.43px;">google</a><a href="/tags/hexo/" style="font-size: 12.86px;">hexo</a><a href="/tags/http-load/" style="font-size: 11.43px;">http_load</a><a href="/tags/http-load-test/" style="font-size: 10.00px;">http_load, test</a><a href="/tags/javascript/" style="font-size: 11.43px;">javascript</a><a href="/tags/latex/" style="font-size: 12.86px;">latex</a><a href="/tags/mapreduce/" style="font-size: 11.43px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 11.43px;">markdown</a><a href="/tags/matlab/" style="font-size: 11.43px;">matlab</a><a href="/tags/mount/" style="font-size: 11.43px;">mount</a><a href="/tags/nginx/" style="font-size: 11.43px;">nginx</a><a href="/tags/ntfs/" style="font-size: 11.43px;">ntfs</a><a href="/tags/papers/" style="font-size: 11.43px;">papers</a><a href="/tags/python/" style="font-size: 14.29px;">python</a><a href="/tags/rfc6298/" style="font-size: 11.43px;">rfc6298</a><a href="/tags/rto/" style="font-size: 12.86px;">rto</a>
     </div>
   </div>
 
@@ -453,7 +451,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-07T15:16:40.812Z</updated>
+  <updated>2015-09-07T15:25:58.008Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/"/>
     <id>http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/</id>
     <published>2015-09-07T13:40:02.000Z</published>
-    <updated>2015-09-07T15:16:36.000Z</updated>
+    <updated>2015-09-07T15:25:53.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>在<a href="http://perthcharles.github.io/2015/09/06/wiki-rtt-estimator/" target="_blank" rel="external">RTO的计算方法</a>中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。<br>但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？<br>当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。<br>在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。<br><a id="more"></a>  </p>
 <hr>
@@ -73,7 +73,8 @@ tcp_retransmit_timer()
     }
     <span class="keyword">...</span>
 }
-</code></pre><hr>
+</code></pre><p>从以上的代码可以看到，一旦重传超过阈值tcp_retries1，主要的动作就是更新路由缓存。<br>用以避免由于路由选路变化带来的问题。  </p>
+<hr>
 <h3 id="重传超过tcp_retries2会怎样">重传超过tcp_retries2会怎样</h3>
 <p>会直接放弃重传，关闭TCP流  </p>
 <pre><code>// 依然还是在tcp_write_timeout()中，retry_until一般是tcp_retries2
@@ -83,8 +84,7 @@ tcp_retransmit_timer()
     tcp_write_err(sk);      // 调用tcp_done关闭TCP流
     <span class="keyword">return</span> <span class="number">1</span>;
 }
-</code></pre><p>从以上的代码可以看到，一旦重传超过阈值tcp_retries1，主要的动作就是更新路由缓存。<br>用以避免由于路由选路变化带来的问题。  </p>
-<hr>
+</code></pre><hr>
 <h3 id="retries限制的重传次数吗">retries限制的重传次数吗</h3>
 <p>咋一看文档，很容易想到retries的数字就是限定的重传的次数，甚至源码中对于retries常量TCP_RETR1的注释中都写这如下这样一段  </p>
 <pre><code><span class="comment">#define TCP_RETR1       3   /*</span>
@@ -134,7 +134,7 @@ static bool retransmits_timed_out(struct sock *sk,
     <span class="keyword">return</span> (tcp_time_stamp - start_ts) &gt;= timeout;
 }
 </code></pre><p>从以上的代码分析可以看到，真正起到限制重传次数的并不是真正的重传次数。<br>而是以tcp_retries1或tcp_retries2为boundary，以rto_base(如TCP_RTO_MIN 200ms)为初始RTO，计算得到一个timeout值出来。如果重传间隔超过这个timeout，则认为超过了阈值。<br>上面这段话太绕了，下面举两个个例子来说明  </p>
-<pre><code>已判断是否放弃TCP流为例，如果<span class="variable">tcp_retries2=</span><span class="number">15</span>，那么计算得到的<span class="variable">timeout=</span><span class="number">924600</span>ms。
+<pre><code>以判断是否放弃TCP流为例，如果<span class="variable">tcp_retries2=</span><span class="number">15</span>，那么计算得到的<span class="variable">timeout=</span><span class="number">924600</span>ms。
 
 <span class="number">1</span>. 如果RTT比较小，那么RTO初始值就约等于下限<span class="number">200</span>ms
    由于timeout总时长是<span class="number">924600</span>ms，表现出来的现象刚好就是重传了<span class="number">15</span>次，超过了timeout值，从而放弃TCP流
@@ -153,7 +153,7 @@ static bool retransmits_timed_out(struct sock *sk,
 <span class="input"><span class="prompt">
 &gt;&gt;</span> 为什么<span class="number">924.6</span>s是lower bound？</span>
 &lt;&lt; 重传总间隔必须大于timeout值，即 (tcp_time_stamp - start_ts) &gt;= timeout
-</code></pre><p>所以综合上述，Linux并不是直接拿tcp_retries1和tcp_retries2来限制重传次数的，而是用计算得到<br>的一个timeout值来判断是否要放弃重传的。真正的重传次数与RTT相关。  </p>
+</code></pre><p>所以综合上述，Linux并不是直接拿tcp_retries1和tcp_retries2来限制重传次数的，而是用计算得到<br>的一个timeout值来判断是否要放弃重传的。真正的重传次数同时与RTT相关。  </p>
 ]]></content>
     <summary type="html">
     <![CDATA[<hr>

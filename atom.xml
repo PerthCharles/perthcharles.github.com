@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-07T15:25:58.008Z</updated>
+  <updated>2015-09-08T05:28:09.845Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/"/>
     <id>http://perthcharles.github.com/2015/09/07/wiki-tcp-retries/</id>
     <published>2015-09-07T13:40:02.000Z</published>
-    <updated>2015-09-07T15:25:53.000Z</updated>
+    <updated>2015-09-08T05:28:05.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>在<a href="http://perthcharles.github.io/2015/09/06/wiki-rtt-estimator/" target="_blank" rel="external">RTO的计算方法</a>中，介绍了RFC6298对于RTO的计算和RTO timer的管理算法。<br>但有一个重要的问题RFC没有提到，那就是如果出现了超时重传，那重传多少次可以放弃呢？<br>当然这是一个实现相关的细节，不同的操作系统可能有不同的实现策略。<br>在这篇wiki中，就来介绍一下Linux中是怎么限制超时重传次数的。<br><a id="more"></a>  </p>
 <hr>
@@ -86,12 +86,19 @@ tcp_retransmit_timer()
 }
 </code></pre><hr>
 <h3 id="retries限制的重传次数吗">retries限制的重传次数吗</h3>
-<p>咋一看文档，很容易想到retries的数字就是限定的重传的次数，甚至源码中对于retries常量TCP_RETR1的注释中都写这如下这样一段  </p>
+<p>咋一看文档，很容易想到retries的数字就是限定的重传的次数，甚至源码中对于retries常量注释中都写着”This is how many retries it does…”  </p>
 <pre><code><span class="comment">#define TCP_RETR1       3   /*</span>
                              * This is how many retries <span class="keyword">it</span> does <span class="keyword">before</span> <span class="keyword">it</span>
                              * tries <span class="built_in">to</span> figure out <span class="keyword">if</span> <span class="operator">the</span> gateway is
                              * down. Minimal RFC <span class="built_in">value</span> is <span class="number">3</span>; <span class="keyword">it</span> corresponds
                              * <span class="built_in">to</span> ~<span class="number">3</span><span class="built_in">sec</span>-<span class="number">8</span><span class="built_in">min</span> depending <span class="command"><span class="keyword">on</span> <span class="title">RTO</span>.</span>
+                             */
+
+<span class="comment">#define TCP_RETR2       15  /*</span>
+                             * This should take <span class="keyword">at</span> least
+                             * <span class="number">90</span> minutes <span class="built_in">to</span> <span class="built_in">time</span> out.
+                             * RFC1122 says that <span class="operator">the</span> limit is <span class="number">100</span> <span class="built_in">sec</span>.
+                             * <span class="number">15</span> is ~<span class="number">13</span>-<span class="number">30</span><span class="built_in">min</span> depending <span class="command"><span class="keyword">on</span> <span class="title">RTO</span>.</span>
                              */
 </code></pre><p>那就就来看看retransmits_timed_out的具体实现，看看到底是不是限制的重传次数  </p>
 <pre><code>/* This <span class="reserved">function</span> calculates a <span class="string">"timeout"</span> which <span class="keyword">is</span> equivalent to the timeout <span class="keyword">of</span> a
@@ -153,6 +160,17 @@ static bool retransmits_timed_out(struct sock *sk,
 <span class="input"><span class="prompt">
 &gt;&gt;</span> 为什么<span class="number">924.6</span>s是lower bound？</span>
 &lt;&lt; 重传总间隔必须大于timeout值，即 (tcp_time_stamp - start_ts) &gt;= timeout
+<span class="input"><span class="prompt">
+&gt;&gt;</span> 那<span class="constant">RTO</span>超时的间隔到底是不是源码注释的<span class="string">"15 is ~13-30min depending on RTO."</span>呢？  </span>
+&lt;&lt; 显然不是! 虽然<span class="number">924.6</span>s(<span class="number">15</span>min)是一个lower bound，但是它同时也是一个upper bound!
+   怎么理解？举例说明  
+        <span class="number">1</span>. 如果某个<span class="constant">RTO</span>值导致，在已经重传了<span class="number">14</span>次后，总重传间隔开销是<span class="number">924</span>s
+        那么它还需要重传第<span class="number">15</span>次，即使离<span class="number">924.6</span>s只差<span class="number">0</span>.<span class="number">6</span>s。这就是发挥了lower bound的作用
+        <span class="number">2</span>. 如果某个<span class="constant">RTO</span>值导致，在重传了<span class="number">10</span>次后，总重传间隔开销是<span class="number">924</span>s
+        重传第<span class="number">11</span>次后，第<span class="number">12</span>次超时触发时计算得到的总间隔变为<span class="number">1044</span>s，超过<span class="number">924.6</span>s
+        那么此时会放弃第<span class="number">12</span>次重传，这就是<span class="number">924.6</span>s发挥了upper bound的作用
+   总的来说，在<span class="constant">Linux3</span>.<span class="number">10</span>中，如果tcp_retres2设置为<span class="number">15</span>。总重传超时周期应该在如下范围内
+        [<span class="number">924.6</span>s, <span class="number">1044.6</span>s)
 </code></pre><p>所以综合上述，Linux并不是直接拿tcp_retries1和tcp_retries2来限制重传次数的，而是用计算得到<br>的一个timeout值来判断是否要放弃重传的。真正的重传次数同时与RTT相关。  </p>
 ]]></content>
     <summary type="html">

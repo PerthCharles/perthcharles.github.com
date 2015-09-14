@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-08T05:28:09.845Z</updated>
+  <updated>2015-09-14T13:25:24.403Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,55 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用ip命令修改初始拥塞窗口和接收窗口]]></title>
+    <link href="http://perthcharles.github.com/2015/09/14/ip-route-initcwnd/"/>
+    <id>http://perthcharles.github.com/2015/09/14/ip-route-initcwnd/</id>
+    <published>2015-09-14T10:14:04.000Z</published>
+    <updated>2015-09-14T13:25:18.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>在不修改内核的情况下，Linux提供了一种使用ip命令修改初始拥塞窗口和接收窗口的机制。<br>具体的例子可看<a href="http://www.cdnplanet.com/blog/tune-tcp-initcwnd-for-optimum-performance/" target="_blank" rel="external">这篇文章</a><br><a id="more"></a>  </p>
+<hr>
+<h3 id="修改初始拥塞窗口">修改初始拥塞窗口</h3>
+<p>使用如下命令可修改init cwnd  </p>
+<pre><code>sudo ip route change <span class="keyword">default</span> via <span class="number">192.168</span><span class="number">.1</span><span class="number">.1</span> dev eth0  proto <span class="keyword">static</span> initcwnd <span class="number">10</span>
+</code></pre><p>内核源码分析  </p>
+<pre><code><span class="comment">// 初始化cwnd的函数，会判断是否设置了route来指定initcwnd  </span>
+<span class="number">__u32</span> tcp_init_cwnd(<span class="keyword">const</span> <span class="keyword">struct</span> tcp_sock *tp, <span class="keyword">const</span> <span class="keyword">struct</span> dst_entry *dst)
+{
+    <span class="number">__u32</span> cwnd = (dst ? dst_metric(dst, RTAX_INITCWND) : <span class="number">0</span>);
+
+    <span class="keyword">if</span> (!cwnd)
+        cwnd = TCP_INIT_CWND;
+    <span class="keyword">return</span> min_t(<span class="number">__u32</span>, cwnd, tp-&gt;snd_cwnd_clamp);
+}
+
+<span class="comment">// 内核中一个典型的调用序列  </span>
+tcp_finish_connect()
+    =&gt; tcp_init_metrics()
+        =&gt; tp-&gt;snd_cwnd = tcp_init_cwnd(tp, dst);
+</code></pre><hr>
+<h3 id="修改初始接收窗口">修改初始接收窗口</h3>
+<p>使用如下命令可修改init rwnd  </p>
+<pre><code>sudo ip route change <span class="keyword">default</span> via <span class="number">192.168</span><span class="number">.1</span><span class="number">.1</span> dev eth0  proto <span class="keyword">static</span> initrwnd <span class="number">10</span>
+</code></pre><p>内核源码分析<br>    // 内核中一个典型的调用<br>    tcp_connect_init()<br>        =&gt; tcp_select_inital_window()<br>            =&gt; dst_metric(dst, RTAX_INITRWND)</p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.cdnplanet.com/blog/tune-tcp-initcwnd-for-optimum-performance/" target="_blank" rel="external">Tuning initcwnd for optimum performance</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>在不修改内核的情况下，Linux提供了一种使用ip命令修改初始拥塞窗口和接收窗口的机制。<br>具体的例子可看<a href="http://www.cdnplanet.com/blog/tune-tcp-initcwnd-for-optimum-performance/" target="_blank" rel="external">这篇文章</a><br>]]>
+    
+    </summary>
+    
+      <category term="ip" scheme="http://perthcharles.github.com/tags/ip/"/>
+    
+      <category term="tool" scheme="http://perthcharles.github.com/tags/tool/"/>
+    
+      <category term="Networking" scheme="http://perthcharles.github.com/categories/Networking/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[聊一聊重传次数]]></title>
@@ -2303,82 +2352,6 @@ expression used. <span class="keyword">For</span> instance:
     </summary>
     
       <category term="Tools" scheme="http://perthcharles.github.com/tags/Tools/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Full Stack developer是怎样的一种存在？]]></title>
-    <link href="http://perthcharles.github.com/2015/03/06/what-is-a-full-stack-developer/"/>
-    <id>http://perthcharles.github.com/2015/03/06/what-is-a-full-stack-developer/</id>
-    <published>2015-03-06T06:53:15.000Z</published>
-    <updated>2015-05-09T17:06:32.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>总体上讲：  </p>
-<pre><code>A Full Stack Developer is someone <span class="operator">with</span> familiarity <span class="operator">in</span> <span class="keyword">each</span> layer, 
-<span class="keyword">if</span> <span class="operator">not</span> mastery <span class="operator">in</span> many <span class="operator">and</span> <span class="operator">a</span> genuine interest <span class="operator">in</span> all software technology.  
-
-Good developers who are familiar <span class="operator">with</span> <span class="operator">the</span> entire stack know how <span class="built_in">to</span> 
-make life easier <span class="keyword">for</span> those around them.  
-</code></pre><a id="more"></a>  
-
-<p>上面提到的“each layer”大体分为以下几个方面：  </p>
-<pre><code><span class="bullet">1. </span>Server, Network, and Hosting Environment.  
-
-<span class="bullet">2. </span>Data Modeling  
-
-<span class="bullet">3. </span>Business Logic  
-
-<span class="bullet">4. </span>API layer / Action Layer / MVC  
-
-<span class="bullet">5. </span>User Interfaces  
-<span class="code">    implementing a good visual design is key  </span>
-
-<span class="bullet">6. </span>User Experience  
-
-<span class="bullet">7. </span>Understanding what the customer and the business need
-</code></pre><p>其他的内容还包括：  </p>
-<pre><code><span class="number">1.</span> Ability <span class="keyword">to</span> <span class="command">write</span> quality unit tests.  
-
-<span class="number">2.</span> Understanding <span class="keyword">of</span> repeatable automated processes <span class="keyword">for</span> building <span class="keyword">the</span> 
-<span class="type">application</span>, testing <span class="keyword">it</span>, documenting <span class="keyword">it</span>, <span class="keyword">and</span> deploying <span class="keyword">it</span> <span class="keyword">at</span> scale.  
-
-<span class="number">3.</span> An awareness <span class="keyword">of</span> security concerns <span class="keyword">is</span> important, <span class="keyword">as</span> each layer 
-presents <span class="keyword">its</span> own possible valnerabilities.  
-</code></pre><p>作者总结：  </p>
-<pre><code>I’m <span class="operator">not</span> sure you can call yourself <span class="operator">a</span> full stack developer <span class="keyword">until</span> you 
-have worked <span class="operator">in</span> multiple languages, platforms, <span class="operator">and</span> even industries 
-<span class="operator">in</span> your professional career.   
-
-Full stack goes beyond <span class="operator">a</span> <span class="string">'senior engineer'</span>, <span class="keyword">as</span> <span class="keyword">it</span> is along <span class="operator">the</span> same 
-<span class="keyword">lines</span> <span class="keyword">as</span> <span class="operator">a</span> polyglot programmer but <span class="operator">with</span> <span class="operator">a</span> higher view <span class="operator">of</span> all <span class="operator">the</span> 
-connecting pieces. Note that <span class="command"><span class="keyword">on</span> <span class="title">my</span> <span class="title">list</span>, <span class="title">only</span> <span class="title">items</span> <span class="title">3-5</span> <span class="title">involve</span> <span class="title">writing</span> <span class="title">code</span>.</span>
-</code></pre><p>我的理解：  </p>
-<pre><code><span class="bullet">1. </span>为了达到自己的某个目标，能够主动的分析问题，尽力设计出较实现方案。  
-
-<span class="bullet">2. </span>如果需要去学习新的技能和知识时，也能积极主动的去学习。
-这就需要有一定的甄别能力，哪个是真正需要的，哪个是更合适的。  
-
-<span class="bullet">3. </span>Full Stack并不意味着work alone，重点应该是get things done. 
-如果有更合适的更优秀的人，会愿意与他合作。  
-
-<span class="bullet">4. </span>Full stack不是为了工作本身，而是为了实现自己的Dream。  
-</code></pre><hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://www.laurencegellert.com/2012/08/what-is-a-full-stack-developer/" target="_blank" rel="external">原文：What is a Full Stack developer</a><br><a href="http://www.zhihu.com/question/22420900" target="_blank" rel="external">怎样成为全栈工程师（Full Stack Developer）？</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>总体上讲：  </p>
-<pre><code>A Full Stack Developer is someone <span class="operator">with</span> familiarity <span class="operator">in</span> <span class="keyword">each</span> layer, 
-<span class="keyword">if</span> <span class="operator">not</span> mastery <span class="operator">in</span> many <span class="operator">and</span> <span class="operator">a</span> genuine interest <span class="operator">in</span> all software technology.  
-
-Good developers who are familiar <span class="operator">with</span> <span class="operator">the</span> entire stack know how <span class="built_in">to</span> 
-make life easier <span class="keyword">for</span> those around them.  
-</code></pre>]]>
-    
-    </summary>
-    
-      <category term="好文共享" scheme="http://perthcharles.github.com/categories/%E5%A5%BD%E6%96%87%E5%85%B1%E4%BA%AB/"/>
     
   </entry>
   

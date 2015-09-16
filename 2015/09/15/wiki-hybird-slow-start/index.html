@@ -156,9 +156,9 @@
 <p>这篇文章给出了对于老古董技术Slow Start的诸多现有性能问题评测分析，<br>并最后提出一种叫Hybird Slow Start (Hystart)的技术来尝试解决分析的一些问题。<br>这篇文章是理解最新的slow start技术的关键文章。<br><a id="more"></a>  </p>
 <hr>
 <h3 id="现有Slow-Start的性能问题">现有Slow-Start的性能问题</h3>
-<p>长肥网络<a href="https://en.wikipedia.org/wiki/Bandwidth-delay_product" target="_blank" rel="external">1</a>中的TCP性能问题是现代TCP设计的一个重要领域。这不，连那么naive的slow start都在长肥网络中遇到的诸多性能问题。  </p>
+<p>长肥网络<a href="https://en.wikipedia.org/wiki/Bandwidth-delay_product" target="_blank" rel="external">[1]</a>中的TCP性能问题是现代TCP设计的一个重要领域。这不，连那么naive的slow start都在长肥网络中遇到的诸多性能问题。  </p>
 <p>a. 标准的Slow Start算法可能引起严重的网络丢包<br>在ssthreshold值设置的过高时，慢启动一段时间后，cwnd的指数增长会显得过快。<br>有可能在上一个RTT，cwnd刚好等于BDP；下一个RTT，cwnd就等于2BDP了。<br>这样就可能导致多出的一个BDP的数据包被丢弃。这类丢包属于burst packet losses  </p>
-<p>b. Slow start可能导致系统负载过高，尤其是在使用SACK机制时<br>关于SACK选项可能引起CPU utilization过高的问题已经有了普遍的认识<a href="http://www.ibm.com/developerworks/cn/linux/l-tcp-sack/index.html" target="_blank" rel="external">2</a><br>这篇论文给出的一个数据倒是令我比较感兴趣：  </p>
+<p>b. Slow start可能导致系统负载过高，尤其是在使用SACK机制时<br>关于SACK选项可能引起CPU utilization过高的问题已经有了普遍的认识<a href="http://www.ibm.com/developerworks/cn/linux/l-tcp-sack/index.html" target="_blank" rel="external">[2]</a><br>这篇论文给出的一个数据倒是令我比较感兴趣：  </p>
 <pre><code>The problems consistently occur <span class="operator">in</span> all <span class="constant">three</span> dominant operating systems,
 Linux, Windows XP <span class="operator">and</span> FreeBSD during more than <span class="number">40</span>% <span class="operator">of</span> slow start runs
 <span class="operator">in</span> large BDP networks.  

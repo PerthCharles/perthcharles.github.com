@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-14T13:32:29.143Z</updated>
+  <updated>2015-09-16T12:30:21.432Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,11 +15,99 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[Taming the Elephants -- New TCP Slow Start]]></title>
+    <link href="http://perthcharles.github.com/2015/09/15/wiki-hybird-slow-start/"/>
+    <id>http://perthcharles.github.com/2015/09/15/wiki-hybird-slow-start/</id>
+    <published>2015-09-15T15:13:26.000Z</published>
+    <updated>2015-09-16T12:29:51.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>这篇文章给出了对于老古董技术Slow Start的诸多现有性能问题评测分析，<br>并最后提出一种叫Hybird Slow Start (Hystart)的技术来尝试解决分析的一些问题。<br>这篇文章是理解最新的slow start技术的关键文章。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="现有Slow-Start的性能问题">现有Slow-Start的性能问题</h3>
+<p>长肥网络<a href="https://en.wikipedia.org/wiki/Bandwidth-delay_product" target="_blank" rel="external">1</a>中的TCP性能问题是现代TCP设计的一个重要领域。这不，连那么naive的slow start都在长肥网络中遇到的诸多性能问题。  </p>
+<p>a. 标准的Slow Start算法可能引起严重的网络丢包<br>在ssthreshold值设置的过高时，慢启动一段时间后，cwnd的指数增长会显得过快。<br>有可能在上一个RTT，cwnd刚好等于BDP；下一个RTT，cwnd就等于2BDP了。<br>这样就可能导致多出的一个BDP的数据包被丢弃。这类丢包属于burst packet losses  </p>
+<p>b. Slow start可能导致系统负载过高，尤其是在使用SACK机制时<br>关于SACK选项可能引起CPU utilization过高的问题已经有了普遍的认识<a href="http://www.ibm.com/developerworks/cn/linux/l-tcp-sack/index.html" target="_blank" rel="external">2</a><br>这篇论文给出的一个数据倒是令我比较感兴趣：  </p>
+<pre><code>The problems consistently occur <span class="operator">in</span> all <span class="constant">three</span> dominant operating systems,
+Linux, Windows XP <span class="operator">and</span> FreeBSD during more than <span class="number">40</span>% <span class="operator">of</span> slow start runs
+<span class="operator">in</span> large BDP networks.  
+</code></pre><p>解决Slow Start问题两个明显的思路：  </p>
+<pre><code>1. 继续优化SACK的处理机制，提高遍历重传队列的效率
+    -<span class="ruby">- 这也是目前较热的一个研究和工程趋势
+</span>2. 解决slow start可能带来的burst losses，进而也能缓解SACK性能问题 
+    -<span class="ruby">- 这是这篇论文所主要关心的思路</span>
+</code></pre><p>吐个小槽：这篇论文的数据来看，Window XP被黑的不轻啊，╮(╯▽╰)╭  </p>
+<hr>
+<h3 id="Hybird-Slow-Start">Hybird-Slow-Start</h3>
+<p>本文提出一种叫做Hybird Slow Start的算法来解决上述问题，论文中有不少精妙的<br>理论分析，这里就不再赘述。  </p>
+<p>主要想解释一下packet train是个什么样的概念。<br>举个栗子，下图是我理解的一个packet train的样子，[Packet1]这些是表示一个具体<br>的数据包，’-‘用于表示两个数据包之间的发送时间间隔。<br>那么这样一个packet train能用来干嘛呢？计算带宽利用率！<br>具体来说，图中四个数据包的数据总量可以求和得到，然后总的时间间隔也可以得到<br>(timestamp4 - timestamp1)。</p>
+<pre><code><span class="attr_selector">[Packet1]</span> <span class="tag">--</span> <span class="attr_selector">[Packet2]</span> <span class="tag">------</span> <span class="attr_selector">[Packet3]</span> <span class="tag">----</span> <span class="attr_selector">[Packet4]</span>
+</code></pre><p>那这篇论文就利用的类似的思路，通过ACK train信息判断一个Safe Exit Point<br>for Slow Start. 同时为了避免计算带宽，通过一个巧妙的转换(具体建议看论文)，只要判断时间差<br>是否超过Forward one-way delay(Dmin)来决定是否退出慢启动。</p>
+<p>总的来说，Hystart算法可以总结如下  </p>
+<pre><code>Hystart算法通过以下两个技术来判断是否应该退出慢启动
+<span class="bullet">1. </span>一个窗口内的数据包的总传输间隔是否超过Dmin
+<span class="bullet">2. </span>数据包的RTT sample是否出现较大幅度的增长
+</code></pre><p>论文给出的伪代码如下图所示<br><img src="/resources/hybird-slow-start.png" alt="">  </p>
+<hr>
+<h3 id="内核源码分析">内核源码分析</h3>
+<p>从上面的hystart算法伪代码可以看出，hystart算法主要包括两个方面：<br>a. 在每个RTT区间开始时，重置hystart算法相关变量<br>b. 对于每个收到的ACK，根据ack train算法和RTT波动来判断是否应该退出slow start  </p>
+<p>在Linux 3.10内核中，hybird slow start算法被集成在了默认的CUBIC算法中。<br>在tcp_cubic.c文件中有两个函数分别对应以上两个步骤，<br>分别是bictcp_hystart_reset()和hystart_update()。<br>这两个函数几乎是严格按照上述伪代码来实现的，所以也就没有接着展开解释的必要。<br>下面主要从整体的处理逻辑方面来分析源码  </p>
+<pre><code>// cubic算法的关键数据结构  
+static struct tcp_congestion_ops <span class="variable">cubictcp =</span> {
+    .<span class="variable">init           =</span> bictcp_init,              // 在TCP流建立之初调用
+    .<span class="variable">ssthresh       =</span> bictcp_recalc_ssthresh,
+    .<span class="variable">cong_avoid     =</span> bictcp_cong_avoid,
+    .<span class="variable">set_state      =</span> bictcp_state,
+    .<span class="variable">undo_cwnd      =</span> bictcp_undo_cwnd,
+    .<span class="variable">pkts_acked     =</span> bictcp_acked,             // 每次收到ACK数据包后调用
+    .<span class="variable">owner          =</span> THIS_MODULE,
+    .<span class="variable">name           =</span> <span class="string">"cubic"</span>,
+};
+</code></pre><p>上面是cubic算法的关键结构体的初始化部分，bictcp_init()负责TCP流建立时的初始化动作，<br>bictcp_acked()负责在每次收到ACK包后，更新相关信息。所有hystart算法上面的两个<br>函数也分别是在cubic的这两个函数中。下面依次看cubic中这两个函数的实现  </p>
+<pre><code><span class="keyword">static</span> void bictcp_init(<span class="keyword">struct</span> sock *sk)
+{
+    bictcp_reset(inet_csk_ca(sk));
+
+    <span class="keyword">if</span> (hystart)                    <span class="comment">// 如果开启(默认开启)，则进行hystart相关变量的初始化</span>
+        bictcp_hystart_reset(sk);
+
+    <span class="keyword">if</span> (!hystart &amp;&amp; initial_ssthresh)
+        tcp_sk(sk)-&gt;snd_ssthresh = initial_ssthresh;
+}
+
+<span class="keyword">static</span> void bictcp_acked(<span class="keyword">struct</span> sock *sk, <span class="keyword">u32</span> cnt, s32 rtt_us)
+{
+    ...
+    <span class="comment">/* first time call or link delay decreases */</span>
+    <span class="keyword">if</span> (ca-&gt;delay_min == <span class="number">0</span> || ca-&gt;delay_min &gt; delay)
+        ca-&gt;delay_min = delay;
+
+    <span class="comment">/* hystart triggers when cwnd is larger than some threshold */</span>
+    <span class="keyword">if</span> (hystart &amp;&amp; tp-&gt;snd_cwnd &lt;= tp-&gt;snd_ssthresh &amp;&amp; tp-&gt;snd_cwnd &gt;= hystart_low_window)
+        hystart_update(sk, delay);
+}
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>这篇文章给出了对于老古董技术Slow Start的诸多现有性能问题评测分析，<br>并最后提出一种叫Hybird Slow Start (Hystart)的技术来尝试解决分析的一些问题。<br>这篇文章是理解最新的slow start技术的关键文章。<br>]]>
+    
+    </summary>
+    
+      <category term="TCP" scheme="http://perthcharles.github.com/tags/TCP/"/>
+    
+      <category term="SACK" scheme="http://perthcharles.github.com/tags/SACK/"/>
+    
+      <category term="OProfile" scheme="http://perthcharles.github.com/tags/OProfile/"/>
+    
+      <category term="wiki-paper" scheme="http://perthcharles.github.com/categories/wiki-paper/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[使用ip命令修改初始拥塞窗口和接收窗口]]></title>
     <link href="http://perthcharles.github.com/2015/09/14/ip-route-initcwnd/"/>
     <id>http://perthcharles.github.com/2015/09/14/ip-route-initcwnd/</id>
     <published>2015-09-14T10:14:04.000Z</published>
-    <updated>2015-09-14T13:25:18.000Z</updated>
+    <updated>2015-09-14T14:16:31.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>在不修改内核的情况下，Linux提供了一种使用ip命令修改初始拥塞窗口和接收窗口的机制。<br>具体的例子可看<a href="http://www.cdnplanet.com/blog/tune-tcp-initcwnd-for-optimum-performance/" target="_blank" rel="external">这篇文章</a><br><a id="more"></a>  </p>
 <hr>
@@ -45,8 +133,12 @@ tcp_finish_connect()
 <h3 id="修改初始接收窗口">修改初始接收窗口</h3>
 <p>使用如下命令可修改init rwnd  </p>
 <pre><code>sudo ip route change <span class="keyword">default</span> via <span class="number">192.168</span><span class="number">.1</span><span class="number">.1</span> dev eth0  proto <span class="keyword">static</span> initrwnd <span class="number">10</span>
-</code></pre><p>内核源码分析<br>    // 内核中一个典型的调用<br>    tcp_connect_init()<br>        =&gt; tcp_select_inital_window()<br>            =&gt; dst_metric(dst, RTAX_INITRWND)</p>
-<h3 id="参考资料">参考资料</h3>
+</code></pre><p>内核源码分析  </p>
+<pre><code><span class="regexp">//</span> 一个典型的调用序列
+tcp_connect_init<span class="function"><span class="params">()</span>
+    =&gt;</span> tcp_select_inital_window<span class="function"><span class="params">()</span>
+        =&gt;</span> dst_metric(dst, RTAX_INITRWND)
+</code></pre><h3 id="参考资料">参考资料</h3>
 <p><a href="http://www.cdnplanet.com/blog/tune-tcp-initcwnd-for-optimum-performance/" target="_blank" rel="external">Tuning initcwnd for optimum performance</a>  </p>
 ]]></content>
     <summary type="html">
@@ -1683,426 +1775,6 @@ b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的thr
       <category term="tc" scheme="http://perthcharles.github.com/tags/tc/"/>
     
       <category term="Networking" scheme="http://perthcharles.github.com/categories/Networking/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[技艺培养(基于知道创宇技能表v2.2)]]></title>
-    <link href="http://perthcharles.github.com/2015/05/07/skill-list/"/>
-    <id>http://perthcharles.github.com/2015/05/07/skill-list/</id>
-    <published>2015-05-07T10:36:53.000Z</published>
-    <updated>2015-05-10T15:46:01.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<pre><code>说明：  
-<span class="bullet">1. </span>该checklist主要基于知道创宇的研发技能表v2.2制作，算是个人技能发展的一个roadmap吧。  
-
-<span class="bullet">2. </span>该清单需要逐步的结合自身的经历和经验，进行调整。毕竟这并不是通用列表。  
-
-<span class="bullet">3. </span>个人重点关注网络相关领域。    
-</code></pre><a id="more"></a>  
-
-<h3 id="通用技能">通用技能</h3>
-<h4 id="公司与个人">公司与个人</h4>
-<ul>
-<li>[X] 公司是盈利组织  </li>
-<li>[X] 个人与公司必须双赢  </li>
-<li>[X] 个人：在认同公司理念且能够为公司创造足够价值的基础上，<strong>为个人发展而工作</strong>    </li>
-</ul>
-<h4 id="沟通、反馈、责任">沟通、反馈、责任</h4>
-<ul>
-<li>[X] 一个无沟通能力的人，要么是天才，要么是不可爱的人  </li>
-<li>[X] 反馈要及时  <ul>
-<li>[X] 避免出问题不反馈，影响进度  </li>
-<li>[X] 方式  <ul>
-<li>[X] 正式的：邮件  </li>
-<li>[X] 临时的：QQ等即时通信  </li>
-<li>[X] 礼貌的：给个电话，短信  </li>
-</ul>
-</li>
-</ul>
-</li>
-<li>[X] 工作有大小，责任心无大小  </li>
-<li>[X] 周报的透明  <ul>
-<li>[X] 意义：大家互相了解工作与心得，有利于自己的判断与成长  </li>
-<li>[X] 不是单纯的给领导汇报工作  </li>
-</ul>
-</li>
-</ul>
-<h4 id="任务四象限，决定优先级">任务四象限，决定优先级</h4>
-<ul>
-<li>[X] 紧急重要  </li>
-<li>[X] 重要不紧急  </li>
-<li>[X] 紧急不重要  </li>
-<li>[X] 不紧急不重要  </li>
-</ul>
-<h4 id="新事物的敏感性">新事物的敏感性</h4>
-<ul>
-<li>[X] 保持好奇心  </li>
-<li>[X] 不要局限在自己的圈子，适当跨界吸收灵感  </li>
-<li>[X] 订阅国内外优秀博客/资源（详见附录一）  <ul>
-<li>[X] 鲜果RSS，Readkit，Pocket和Evernote等工具  </li>
-<li>[X] 英文很重要  </li>
-</ul>
-</li>
-<li>[X] 选择性的参与一些必要的回忆，听必要的主题，讨论必要的话题  </li>
-</ul>
-<h4 id="成长">成长</h4>
-<ul>
-<li>[X] 对知识的渴望程度决定了前进动力的大小  <ul>
-<li>[X] 对知识保持狂热和贪婪。为避免过度，因此也需要学会甄别和取舍。</li>
-</ul>
-</li>
-<li>[X] 不要矫情，不要浮夸  </li>
-<li>[X] 和比你厉害的人在一起，和一流的人工作  <ul>
-<li>[X] 指点往往是精华  </li>
-<li>[X] 杜绝笨蛋爆炸：二流的人招进来的人不太可能是一流的  </li>
-</ul>
-</li>
-<li>[X] 思考  <ul>
-<li>[X] 批判性思考  </li>
-<li>[X] 换位思考  </li>
-</ul>
-</li>
-<li>[X] 提问的智慧     <ul>
-<li>[X] 遇到问题先独立思考，尽最大努力后再提问  </li>
-</ul>
-</li>
-<li>[X] 小事心态  <ul>
-<li>[X] 越基础的事越关键，需要越细心  </li>
-<li>[X] 不要一味盲目追求”高级感”，而忽视”小事”/“简单事”/“基础事”</li>
-<li>[X] 基础不牢，地动山摇  </li>
-<li>[X] 小事做不好，别提大事  </li>
-</ul>
-</li>
-<li>[ ] 任务拆分  — 逐步领会<ul>
-<li>[X] 成长过程会经历：能力越大、责任越大、事情越多  </li>
-<li>[X] 思路  <ul>
-<li>[X] 拆分细化为多个点  </li>
-<li>[X] 排好优先级  — 参考”任务四象限”  </li>
-<li>[X] 加入时间维度：何时完成什么  — 参考”完成的定义”</li>
-<li>[X] 是否需要寻求帮助，谁能帮你，自己单干？ — 参考”沟通、反馈、责任”  </li>
-<li>[X] 任务是否可以切换/并发  </li>
-<li>[X] 自己缺陷什么，立马发现  </li>
-</ul>
-</li>
-</ul>
-</li>
-<li>[ ] 方法论  — 逐步领会<ul>
-<li>[X] 完成一件事有好几条途径，优秀的人能选出最短的一条  </li>
-<li>[X] 任务拆分很容易得出做事的方法论  </li>
-<li>[X] 好的”方法论”会让你具备更强的”创造力”  </li>
-</ul>
-</li>
-</ul>
-<h4 id="牛人姿态">牛人姿态</h4>
-<ul>
-<li>[X] 即使现在不是牛人，也得具备这样的姿态  </li>
-<li>[X] 这种感觉只能意会  </li>
-<li>[X] 没有一定扎实内功与远见的人，很少有这样的姿态  </li>
-</ul>
-<h4 id="完成的定义">完成的定义</h4>
-<ul>
-<li>[ ] 比如写个POC  </li>
-<li>搞懂了目标WEB应用漏洞的原理  </li>
-<li>熟练运用Python各相关模块和机制  </li>
-<li>熟练了解了HTTP协议：HTTP请求，HTTP相应  </li>
-<li>代码写的够规范，让人看起来就是爽  </li>
-<li>程序经过足够的测试：黑/白测试  </li>
-<li>及时反馈进度  <ul>
-<li>我遇到困难了</li>
-<li>我搞定了  </li>
-</ul>
-</li>
-<li>更新相关文档，沉淀  </li>
-</ul>
-<h4 id="熟练的定义">熟练的定义</h4>
-<ul>
-<li>[ ] 比如熟练SQL注入  <ul>
-<li>SQL语句这门”语言”能脱离文档顺手写出  </li>
-<li>主流数据库的SQL特有函数、存储过程、机制我都了如指掌  <ul>
-<li>MySQL/MSSQL/Oracal/Postgre/Access/SQLite/…  </li>
-</ul>
-</li>
-<li>牛逼的工具我不仅用的顺其自然，源码还读过几遍，我能修改  <ul>
-<li>sqlmap/…  </li>
-</ul>
-</li>
-<li>我具备创造性，而不仅仅是跟在大牛身后  <ul>
-<li>研究出了几个不错的技巧  </li>
-<li>发了几篇不错的paper  </li>
-<li>对外会议/沙龙等进行了几次分享  </li>
-<li>写出了自己的相关工具，爽  </li>
-</ul>
-</li>
-<li>我实战了N回，遇到了许多奇葩环境，我有足够的信心饶过  </li>
-<li>以上这些之后，这才叫熟练！其他同理  </li>
-</ul>
-</li>
-</ul>
-<h4 id="好书推荐">好书推荐</h4>
-<ul>
-<li>[X] 推荐理由  <ul>
-<li>[X] 打通任督二脉的书，怎能不看？  </li>
-<li>[X] 任何科学研究最终必须至少到哲学层面，触碰到上帝的脚  </li>
-<li>[X] 具体技术类书籍请见”专业技能”相关部分  </li>
-</ul>
-</li>
-<li>[ ] 鸡汤类  <ul>
-<li>[ ] 黑客与画家  </li>
-<li>[X] 浪潮之巅</li>
-<li>[X] MacTalk</li>
-</ul>
-</li>
-<li>[ ] 洁癖类  <ul>
-<li>[ ] 重构  </li>
-<li>[ ] 代码整洁之道  </li>
-<li>[ ] 代码大全2  </li>
-<li>[X] 数学之美</li>
-<li>[X] 编写可读代码的艺术  </li>
-</ul>
-</li>
-<li>[ ] 敏捷类  <ul>
-<li>[ ] Rework中文版：37signals团队的敏捷经验  </li>
-<li>[ ] 高效程序员的45个习惯  </li>
-</ul>
-</li>
-<li>[ ] 产品类  <ul>
-<li>[ ] 人人都是产品经理  </li>
-<li>[ ] 结网  </li>
-</ul>
-</li>
-<li>[ ] 神书  <ul>
-<li>[ ] 自私的基因  </li>
-<li>[ ] 失控  </li>
-<li>[ ] 万物由来  </li>
-</ul>
-</li>
-</ul>
-<hr>
-<h3 id="专业技能">专业技能</h3>
-<h4 id="原则">原则</h4>
-<ul>
-<li>[X] 至少完整看完与练习好一本书  </li>
-<li>[X] 至少过一遍官方文档  </li>
-</ul>
-<h4 id="基础必备">基础必备</h4>
-<p>HTTP抓包与调试  </p>
-<ul>
-<li>[ ] Fiddler: 浏览器代理神器  </li>
-<li>[X] wireshark + tshark(terminal wireshark， 脚本分析trace利器)  </li>
-<li>[X] tcpdump  </li>
-</ul>
-<p>编码规范  </p>
-<ul>
-<li>[X] C/C++  </li>
-<li>[ ] Python  </li>
-</ul>
-<p>office能力  </p>
-<ul>
-<li>[X] Word文档编写，看上去要专业，尤其对外的  </li>
-<li>[X] Excel里面大量的统计、图标功能，需要善于使用  </li>
-<li>[X] PPT演讲，培训等必备，如何做好PPT？Google一下。。。  </li>
-<li>[X] 进一步：Visio，FreeMind, Latex, Markdown  </li>
-</ul>
-<p>熟练VIM  </p>
-<p>算法  </p>
-<ul>
-<li>[X] 详见<a href="http://en.wikipedia.org/wiki/List_of_algorithms" target="_blank" rel="external">List of algorithms</a>  </li>
-<li>[X] 熟练掌握常见算法和数据结构  </li>
-<li>[X] 了解常见高级算法和数据结构，如红黑树，跳表，bloom filter等  </li>
-</ul>
-<p>正则表达式  </p>
-<ul>
-<li>[ ] 调试工具：Kodos，RegexBuddy</li>
-<li>[ ] 各种正则表达式入门资料，自行Google。。。  </li>
-</ul>
-<p>研发能力  </p>
-<ul>
-<li>[X] 瀑布模型：需求-&gt;需求分析-&gt;设计-&gt;开发-&gt;测试-&gt;上线-&gt;运维/运营  </li>
-<li>[X] 需求分析能力  <ul>
-<li>[X] 给你一个需求，如何给出一个优美的执行思路  — 方法论  </li>
-<li>[X] 这个能力非常非常的关键  </li>
-</ul>
-</li>
-<li>[X] 调试能力  <ul>
-<li>[X] 只要能定位，就没有解决不了的BUG  </li>
-<li>[X] 肉眼看到的都是假象  <ul>
-<li>[X] 一定要专业的工具与经验配合  </li>
-</ul>
-</li>
-<li>[X] BUG在哪出现，最终就在哪进行真实模拟调试  </li>
-<li>[X] 缩小范围  <ul>
-<li>[X] 构建自己的测试样例：排除网络复杂未知情况  </li>
-<li>[X] 关联模块一个个排除  </li>
-<li>[X] 单步调试</li>
-<li>[X] 粗暴调试：print  </li>
-</ul>
-</li>
-</ul>
-</li>
-<li>[X] 敏捷思想  <ul>
-<li>[X] 快速迭代  </li>
-<li>[X] 任务拆细  </li>
-<li>[X] V1原则：定义好V1的目标，快速完成V1为优先  </li>
-<li>[X] 习惯WIKI记录，利于沉淀和分享  — 个人选择：博客  </li>
-</ul>
-</li>
-</ul>
-<p>翻墙  </p>
-<ul>
-<li>[X] Goagent, VPN, VPS, SSH Tunnel, shadowsock…  </li>
-</ul>
-<h4 id="Web安全">Web安全</h4>
-<ul>
-<li>[ ] 书  <ul>
-<li>[ ] 黑客攻防技术宝典（WEB实战篇）  </li>
-<li>[ ] 白帽子讲WEB安全  </li>
-<li>[ ] WEB前端黑客技术揭秘  </li>
-<li>[ ] SQL注入攻击与防御  </li>
-</ul>
-</li>
-<li>[ ] Papers  <ul>
-<li>[ ] <a href="https://www.exploit-db.com/papers/" target="_blank" rel="external">Offensive security exploit database archive</a>  </li>
-</ul>
-</li>
-</ul>
-<h4 id="研发清单">研发清单</h4>
-<p>编码环境  </p>
-<ul>
-<li>[ ] pip  </li>
-<li>[ ] vagrant  </li>
-<li>[X] tmux/screen  </li>
-<li>[X] vim  </li>
-<li>[ ] zsh + oh-my-zsh  </li>
-<li>[X] python 2.7  </li>
-<li>[ ] &gt;Django 1.4  </li>
-<li>[ ] web.py  </li>
-<li>[ ] node.js  </li>
-<li>[X] ubuntu/gentoo/centos  </li>
-<li>[ ] ipython  </li>
-<li>[X] 版本控制：git/svn  </li>
-<li>[ ] nginx + uWSGI  </li>
-</ul>
-<p>Python: 官方手册  </p>
-<ul>
-<li>[X] 至少过一遍，这都没过一遍，视野会局限  </li>
-<li>[X] 行之说：”我没看过Python的书，却熟读官方手册”  </li>
-</ul>
-<p>Linux：熟练使用常见命令和shell脚本  </p>
-<ul>
-<li>[ ] 高级Bash脚本编程指南 Mendel Cooper  </li>
-<li>[ ] Linux设备驱动第三版  </li>
-</ul>
-<p>前端：JavaScript DOM编程艺术  </p>
-<p>爬虫进阶  </p>
-<ul>
-<li>[ ] 代理池：爬虫”稳定”需要  </li>
-<li>[ ] 网络请求  <ul>
-<li>[X] wget/curl  </li>
-<li>[ ] urllib2/httplib2/requests  </li>
-<li>[ ] scrapy  </li>
-</ul>
-</li>
-<li>[ ] 验证码破解：pytesser  </li>
-</ul>
-<p>调度  </p>
-<ul>
-<li>[X] crontab是最原生的定时调度  </li>
-<li>[ ] 基于redis实现的分布式调度  </li>
-<li>[ ] 就rpyc实现的分布式调度  </li>
-<li>[ ] celery/gearman等调度框架  </li>
-</ul>
-<p>并发  </p>
-<ul>
-<li>[X] 线程池：进程内优美的并发方案  </li>
-<li>[ ] 协程：进程内另一种优美的并发方案  </li>
-<li>[X] 多线程：os.fork, multiprocessing  </li>
-</ul>
-<p>数据结构  </p>
-<ul>
-<li>[X] JSON</li>
-<li>[ ] cPickle  </li>
-<li>[ ] protobuf  </li>
-</ul>
-<p>数据库  </p>
-<ul>
-<li>[ ] MySQL  </li>
-<li>[ ] MongoDB  </li>
-<li>[ ] Cassandra  </li>
-<li>[ ] Hadoop体系  </li>
-<li>[ ] Redis  </li>
-<li>[ ] Sqlite  </li>
-</ul>
-<p>调试  </p>
-<ul>
-<li>[ ] gdb, pdb  </li>
-<li>[X] logging  </li>
-<li>[ ] Sentry  </li>
-<li>[ ] strace/ltrace  </li>
-<li>[X] lsof  </li>
-<li>[X] 性能  <ul>
-<li>[ ] Python性能分析指南  </li>
-<li>[X] top/htop/free/iostat/vmstat/ifconfig…  </li>
-</ul>
-</li>
-</ul>
-<p>持续集成  </p>
-<ul>
-<li>[ ] 自测试：nose  </li>
-<li>[ ] Jenkins  </li>
-</ul>
-<p>协作：Trello, WeiXin  </p>
-<h4 id="设计思想">设计思想</h4>
-<ul>
-<li>[ ] 人人都是架构师：具备架构思想是一件多酷的事  </li>
-<li>[X] 实战出真知  — 100%认同啊，且适用于任何技术领域  </li>
-<li>[ ] 如何设计  <ul>
-<li>[ ] 松耦合，紧内聚  </li>
-<li>[ ] 单元与单元属性  </li>
-<li>[X] 生产者与消费者  </li>
-<li>[X] 结构：队列/LRU  </li>
-<li>[ ] 分布式：存储、计算</li>
-<li>[X] 资源考虑：CPU, 内存，带宽  </li>
-</ul>
-</li>
-</ul>
-<h4 id="牛人1，2，3">牛人1，2，3</h4>
-<ul>
-<li>[X] 1研究：研究东西，有足够的洞察力，研究水准不错  </li>
-<li>[X] 2研发：hack idea自己有魄力实现，不懂研发的黑客如同不会游泳的海盗  </li>
-<li>[X] 3工程：研发出来的需要实战、需要工程化，否则只是玩具，而不能成为真正的武器  </li>
-</ul>
-<hr>
-<hr>
-<h3 id="附录一：国内外优秀博客/资源">附录一：国内外优秀博客/资源</h3>
-<hr>
-<p>说道这个点，首先必须吐槽一下Google reader的关闭，其次吐槽一下现在快消费讯息的泛滥！  </p>
-<ul>
-<li>阮一峰的网络日志  </li>
-<li>Vimer的程序世界  </li>
-<li>阳志平的网志  </li>
-<li>[推荐]弯曲评论  </li>
-<li>酷壳CoolShell.cn  </li>
-<li>[推荐]伯乐在线-博客  </li>
-<li>月光博客  </li>
-<li>IT技术博客大学习  </li>
-<li>WooYun知识库  </li>
-<li>PingWest  </li>
-</ul>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<pre><code>说明：  
-<span class="bullet">1. </span>该checklist主要基于知道创宇的研发技能表v2.2制作，算是个人技能发展的一个roadmap吧。  
-
-<span class="bullet">2. </span>该清单需要逐步的结合自身的经历和经验，进行调整。毕竟这并不是通用列表。  
-
-<span class="bullet">3. </span>个人重点关注网络相关领域。    
-</code></pre>]]>
-    
-    </summary>
-    
-      <category term="wiki-编程技艺" scheme="http://perthcharles.github.com/categories/wiki-%E7%BC%96%E7%A8%8B%E6%8A%80%E8%89%BA/"/>
     
   </entry>
   

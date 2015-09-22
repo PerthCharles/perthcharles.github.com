@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-16T12:58:05.563Z</updated>
+  <updated>2015-09-22T14:00:20.683Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,11 +15,105 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[使用ssh forward跨局域网访问]]></title>
+    <link href="http://perthcharles.github.com/2015/09/22/ssh-forward/"/>
+    <id>http://perthcharles.github.com/2015/09/22/ssh-forward/</id>
+    <published>2015-09-22T13:02:36.000Z</published>
+    <updated>2015-09-22T14:00:09.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>在平时需要夸局域网访问某台设备时，都是选择先ssh登录跳板机，然后通过跳板机<br>再去访问目的设备。但在某些时候可能比较麻烦，比如涉及到图形化界面时。<br>这篇文章就来介绍一下如何使用ssh forward功能，达到在跨局域网访问时，<br>像访问同一局域网设备一样方便。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="网络拓扑">网络拓扑</h3>
+<p>假设存在一下网络拓扑，这是一个非常常见的办公网络环境拓扑  </p>
+<pre><code><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>                 <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">|</span>    <span class="comment">设备A</span>    <span class="comment">|</span>                 <span class="comment">|</span>    <span class="comment">设备B</span>     <span class="comment">|</span>
+<span class="comment">|</span> <span class="comment">192</span><span class="string">.</span><span class="comment">168</span><span class="string">.</span><span class="comment">1</span><span class="string">.</span><span class="comment">11|</span>   &lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>&gt;   <span class="comment">|</span> <span class="comment">192</span><span class="string">.</span><span class="comment">168</span><span class="string">.</span><span class="comment">1</span><span class="string">.</span><span class="comment">22</span> <span class="comment">|</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>                 <span class="comment">|</span>              <span class="comment">|</span>
+                                <span class="comment">|</span>              <span class="comment">|</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>                 <span class="comment">|</span>              <span class="comment">|</span>
+<span class="comment">|</span>    <span class="comment">设备C</span>    <span class="comment">|</span>                 <span class="comment">|</span>              <span class="comment">|</span>
+<span class="comment">|</span> <span class="comment">192</span><span class="string">.</span><span class="comment">168</span><span class="string">.</span><span class="comment">2</span><span class="string">.</span><span class="comment">11|</span>   &lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>&gt;   <span class="comment">|</span> <span class="comment">192</span><span class="string">.</span><span class="comment">168</span><span class="string">.</span><span class="comment">2</span><span class="string">.</span><span class="comment">22</span> <span class="comment">|</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>                 <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</code></pre><p>平时如果设备A想要访问设备C，可以首先登陆设备B，然后再登陆设备C，即</p>
+<pre><code><span class="variable">@A</span> <span class="comment"># ssh usr@192.168.1.22</span>
+<span class="variable">@B</span> <span class="comment"># ssh usr@192.168.2.11</span>
+</code></pre><p>此时设备B发挥的作用一般就称为跳板机。<br>但假设这样一种情景，设备C提供了视频web服务，想直接使用设备A上面的浏览器<br>播放，此时会有两种办法。  </p>
+<h5 id="配置正确的路由和网关信息">配置正确的路由和网关信息</h5>
+<p>比如  </p>
+<pre><code><span class="variable">@A</span> <span class="comment"># route add -net 192.168.2.0 netmask 255.255.255.0 gw 192.168.1.22 dev eth1</span>
+<span class="variable">@C</span> <span class="comment"># route add -net 192.168.1.0 netmask 255.255.255.0 gw 192.168.2.22 dev eth1</span>
+<span class="variable">@B</span> <span class="comment"># echo 1 &gt; /proc/sys/net/ipv4/ip_forward    // 开启ip forward</span>
+</code></pre><p>可以看到，这种方法需要在三台机器上进行route相关的配置，比较麻烦。<br>并且很多时候，设备A的用户是没有修改设备C和设备B的系统配置的权限的。  </p>
+<h5 id="配置ssh_forward">配置ssh forward</h5>
+<p>这种方法使用方便，目的性强（也就意味着适用性差）。具体操作如下  </p>
+<pre><code><span class="variable">@A</span> <span class="comment"># ssh -L 8000:192.168.2.11:80  usr@192.168.1.22</span>
+</code></pre><p>man ssh里面的解释最准确简介，直接贴上来  </p>
+<pre><code>-L [bind_address:]port:host:hostport
+    Specifies that <span class="operator">the</span> given port <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">local</span> (<span class="title">client</span>) <span class="title">host</span> <span class="title">is</span> <span class="title">to</span> <span class="title">be</span></span>
+    forwarded <span class="built_in">to</span> <span class="operator">the</span> given host <span class="operator">and</span> port <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">remote</span> <span class="title">side</span>.  <span class="title">This</span></span>
+    works <span class="keyword">by</span> allocating <span class="operator">a</span> <span class="built_in">socket</span> <span class="built_in">to</span> listen <span class="built_in">to</span> port <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">local</span> <span class="title">side</span>,</span>
+    optionally bound <span class="built_in">to</span> <span class="operator">the</span> specified bind_address.  Whenever <span class="operator">a</span> con-
+    nection is made <span class="built_in">to</span> this port, <span class="operator">the</span> connection is forwarded over
+    <span class="operator">the</span> secure channel, <span class="operator">and</span> <span class="operator">a</span> connection is made <span class="built_in">to</span> host port
+    hostport <span class="built_in">from</span> <span class="operator">the</span> remote machine.  Port forwardings can also be
+    specified <span class="operator">in</span> <span class="operator">the</span> configuration <span class="built_in">file</span>.  IPv6 addresses can be spec-
+    ified <span class="keyword">by</span> enclosing <span class="operator">the</span> address <span class="operator">in</span> square brackets.  Only <span class="operator">the</span>
+    superuser can forward privileged ports.  By default, <span class="operator">the</span> <span class="built_in">local</span>
+    port is bound <span class="operator">in</span> accordance <span class="operator">with</span> <span class="operator">the</span> GatewayPorts setting.  How-
+    ever, <span class="operator">an</span> explicit bind_address may be used <span class="built_in">to</span> bind <span class="operator">the</span> connection
+    <span class="built_in">to</span> <span class="operator">a</span> specific address.  The bind_address <span class="operator">of</span> <span class="string">''</span>localhost<span class="string">''</span> indi-
+    cates that <span class="operator">the</span> listening port be bound <span class="keyword">for</span> <span class="built_in">local</span> use only, <span class="keyword">while</span>
+    <span class="operator">an</span> <span class="constant">empty</span> address <span class="operator">or</span> <span class="string">'*'</span> indicates that <span class="operator">the</span> port should be avail-
+    able <span class="built_in">from</span> all interfaces. 
+</code></pre><p>执行上面命令后，会将访问本地的8000端口的数据转到192.168.2.11:80，反向也一样。<br>此时即可直接在设备A上打开浏览器，输入localhost:8000地址，即可访问设备C提供的web服务</p>
+<hr>
+<h3 id="更进一步">更进一步</h3>
+<p>如果存在以下拓扑，设备A想要访问设备D的web服务，如果使用配置route方式，则会更加麻烦。<br>而使用ssh forward方式，只需要简单的两条命令就能搞定  </p>
+<pre><code>---------------                 ----------------
+<span class="string">|    设备A    |                 |    设备B     |</span>
+<span class="string">| 192.168.1.11|   &lt;---------&gt;   | 192.168.1.22 |</span>
+---------------                 <span class="string">|              |</span>
+                                <span class="string">|              |</span>
+---------------                 <span class="string">|              |</span>
+<span class="string">|    设备C    |                 | 192.168.2.22 |</span>
+<span class="string">| 192.168.2.11|   &lt;---------&gt;   ----------------</span>
+<span class="string">|             |                 </span>
+<span class="string">|             |                 </span>
+<span class="string">|             |                 ----------------</span>
+<span class="string">| 192.168.3.11|   &lt;---------&gt;   |    设备D     |</span>
+---------------                 <span class="string">| 192.168.3.22 |</span>
+                                ----------------
+
+@A <span class="preprocessor"># ssh -gL 8000:设备B:8000 usr@设备B</span>
+@B <span class="preprocessor"># ssh -L  8000:设备D:80   usr@设备C</span>
+</code></pre><p>其中-g的含义如下  </p>
+<pre><code>-g  Allows remote hosts <span class="built_in">to</span> connect <span class="built_in">to</span> <span class="built_in">local</span> forwarded ports
+</code></pre><p>由上面的例子可知，可以很方便的配置多个ssh forward，用以实现跨多个局域网的网络访问。<br>想要了解更多理论和具体的解释，强烈推荐看看参考资料。   </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.ibm.com/developerworks/cn/linux/l-cn-sshforward/" target="_blank" rel="external">实战SSH端口转发</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>在平时需要夸局域网访问某台设备时，都是选择先ssh登录跳板机，然后通过跳板机<br>再去访问目的设备。但在某些时候可能比较麻烦，比如涉及到图形化界面时。<br>这篇文章就来介绍一下如何使用ssh forward功能，达到在跨局域网访问时，<br>像访问同一局域网设备一样方便。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="Linux" scheme="http://perthcharles.github.com/tags/Linux/"/>
+    
+      <category term="ssh" scheme="http://perthcharles.github.com/tags/ssh/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[Taming the Elephants -- New TCP Slow Start]]></title>
     <link href="http://perthcharles.github.com/2015/09/15/wiki-hybird-slow-start/"/>
     <id>http://perthcharles.github.com/2015/09/15/wiki-hybird-slow-start/</id>
     <published>2015-09-15T15:13:26.000Z</published>
-    <updated>2015-09-16T12:57:51.000Z</updated>
+    <updated>2015-09-17T01:05:13.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>这篇文章给出了对于老古董技术Slow Start的诸多现有性能问题评测分析，<br>并最后提出一种叫Hybird Slow Start (Hystart)的技术来尝试解决分析的一些问题。<br>这篇文章是理解最新的slow start技术的关键文章。<br><a id="more"></a>  </p>
 <hr>
@@ -85,7 +179,10 @@ static struct tcp_congestion_ops <span class="variable">cubictcp =</span> {
     <span class="keyword">if</span> (hystart &amp;&amp; tp-&gt;snd_cwnd &lt;= tp-&gt;snd_ssthresh &amp;&amp; tp-&gt;snd_cwnd &gt;= hystart_low_window)
         hystart_update(sk, delay);
 }
-</code></pre>]]></content>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://netsrv.csc.ncsu.edu/export/hystart_techreport_2008.pdf" target="_blank" rel="external">Taming the Elephant: New TCP Slow Start</a><br><a href="http://www.ibm.com/developerworks/cn/linux/l-oprof/index.html" target="_blank" rel="external">用OProfile彻底了解性能</a>  </p>
+]]></content>
     <summary type="html">
     <![CDATA[<hr>
 <p>这篇文章给出了对于老古董技术Slow Start的诸多现有性能问题评测分析，<br>并最后提出一种叫Hybird Slow Start (Hystart)的技术来尝试解决分析的一些问题。<br>这篇文章是理解最新的slow start技术的关键文章。<br>]]>
@@ -1976,54 +2073,6 @@ expression used. <span class="keyword">For</span> instance:
     </summary>
     
       <category term="wiki-编程技艺" scheme="http://perthcharles.github.com/categories/wiki-%E7%BC%96%E7%A8%8B%E6%8A%80%E8%89%BA/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Alfred 使用记录]]></title>
-    <link href="http://perthcharles.github.com/2015/03/27/alfred/"/>
-    <id>http://perthcharles.github.com/2015/03/27/alfred/</id>
-    <published>2015-03-27T07:34:58.000Z</published>
-    <updated>2015-05-10T04:57:03.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>最早是在MacTalk 中了解到的Alfred，但一直仅仅是把它当做一个启动软件的快捷方式来用。<br>趁着在网上看到了几个比较精彩的帖子，发现之前真实太浪费Alfred了。<br>本文就记录一下我从中学到的一些使用Alfred的技巧。<br>Alfred官网：<a href="http://www.alfredapp.com/" target="_blank" rel="external">http://www.alfredapp.com/</a><br><a id="more"></a>  </p>
-<hr>
-<h3 id="1-_搜索">1. 搜索</h3>
-<hr>
-<p>Alfred的核心功能之一就是搜索，所以先简单介绍一下。<br>默认的热键组合是：option + space。<br>比如你想打开chrome浏览器，就可以直接在Alfred中输入chrome了。<br>相比于Spotlight它的显示结果更简单，更易于操作（特别是你想要的结果不是第一个结果时）。  </p>
-<p>下面查找文件的方法来自<a href="http://macshuo.com/?p=625" target="_blank" rel="external">http://macshuo.com/?p=625</a>, 其实就是先输个空格，囧。  </p>
-<pre><code>简单查找文件：用快捷键呼出Alfred，键入空格，输入你要查找文件名，
-即可定位文件，回车打开，<span class="command"><span class="keyword">command</span>+回车打开文件所在文件夹。</span>
-</code></pre><h3 id="2-_自定义搜索">2. 自定义搜索</h3>
-<hr>
-<p>上面只是搜索本地的资源，如果你想在某个特定网站进行搜索呢？<br>Alfred同样提供的custom search的功能，具体的方法可参考<a href="http://zhuanlan.zhihu.com/pinapps/19985861" target="_blank" rel="external">如何使用Alfred提升操作效率</a><br>我自己的案例就是用这个功能实现了在github中进行搜索。具体步骤如下：  </p>
-<pre><code><span class="number">1</span>. 进入github页面，在输入框中随便输入一个关键字  
-<span class="number">2</span>. 在得到的页面链接中，将你的关键字替换为{query}  
-   如：https:<span class="comment">//github.com/search?utf8=%E2%9C%93&amp;q={query}  </span>
-<span class="number">3</span>. 依次进入：Alfred的配置-&gt;Features -&gt;Web Search -&gt; Add custom search  
-<span class="number">4</span>. 将search URL填写为第二步中得到的链接，其他表项也比较直观。  
-   如：我的keyword设为了git, 这样我以后只要在Alfred中输入<span class="string">"git keyword"</span>
-       就能直接在默认浏览器中打开github上面的搜索结果。  
-</code></pre><h3 id="3-_我还是太年轻了">3. 我还是太年轻了</h3>
-<hr>
-<p>Alfred真是过于强大了，而且有不少作者总结的很好。这篇文章就写到这里吧，把参考资料都大概瞄一瞄，跟着学一遍基本差不多了。  </p>
-<h3 id="4-_我的需求">4. 我的需求</h3>
-<hr>
-<p>算是TODO list吧，等学完了再回来填坑。  </p>
-<pre><code><span class="number">0</span>. 学会用Python写workflow
-<span class="number">1</span>. workflo<span class="variable">w:</span> <span class="keyword">open</span>/<span class="keyword">close</span> VPN
-<span class="number">2</span>. workflo<span class="variable">w:</span> <span class="keyword">open</span>/<span class="keyword">close</span> wifi AP
-</code></pre><h3 id="参考资料">参考资料</h3>
-<hr>
-<p><a href="http://zhuanlan.zhihu.com/pinapps/19985861" target="_blank" rel="external">如何使用Alfred提升操作效率</a><br><a href="http://zhuanlan.zhihu.com/pinapps/19986749" target="_blank" rel="external">用Alfred大幅提升操作效率 - workflow</a><br><a href="https://github.com/hzlzh/AlfredWorkflow.com" target="_blank" rel="external">Alfred workflow collection</a><br><a href="http://wellsnake.com/jekyll/update/2014/06/15/001/" target="_blank" rel="external">丢掉鼠标－Mac神软Alfred使用手册1</a><br><a href="http://www.alfredworkflow.com/" target="_blank" rel="external">Alfred workflow list</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>最早是在MacTalk 中了解到的Alfred，但一直仅仅是把它当做一个启动软件的快捷方式来用。<br>趁着在网上看到了几个比较精彩的帖子，发现之前真实太浪费Alfred了。<br>本文就记录一下我从中学到的一些使用Alfred的技巧。<br>Alfred官网：<a href="http://www.alfredapp.com/" target="_blank" rel="external">http://www.alfredapp.com/</a><br>]]>
-    
-    </summary>
-    
-      <category term="Tools" scheme="http://perthcharles.github.com/tags/Tools/"/>
     
   </entry>
   

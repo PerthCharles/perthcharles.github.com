@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-09-22T14:00:20.683Z</updated>
+  <updated>2015-10-10T11:00:14.670Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -15,11 +15,63 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[剖析free命令]]></title>
+    <link href="http://perthcharles.github.com/2015/09/28/wiki-tool-free/"/>
+    <id>http://perthcharles.github.com/2015/09/28/wiki-tool-free/</id>
+    <published>2015-09-28T03:07:21.000Z</published>
+    <updated>2015-09-28T05:42:14.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>Linux中有许多的查看系统状态的命令，但是如果没有一些相关的背景知识就很容易<br>造成误解。free命令就是一个明显的例子。本系列wiki就结合一些好的资料并<br>结合自身理解来尝试剖析一些常用又常被误解的Linux命令。  </p>
+<p><a id="more"></a><br>本文最要参考<a href="http://www.linuxnix.com/2013/05/find-ram-size-in-linuxunix.html" target="_blank" rel="external">这篇好文</a>,英文无压力的建议再读读原文。  </p>
+<hr>
+<h3 id="从一则free使用实例说开">从一则free使用实例说开</h3>
+<pre><code><span class="preprocessor"># free</span>
+             total       used       free     shared    buffers     cached
+<span class="label">Mem:</span>      <span class="number">16426628</span>   <span class="number">16372464</span>      <span class="number">54164</span>          <span class="number">0</span>      <span class="number">35408</span>   <span class="number">10861984</span>
+-/+ buffers/cache:    <span class="number">5475072</span>   <span class="number">10951556</span>
+<span class="label">Swap:</span>     <span class="number">32764556</span>    <span class="number">7985476</span>   <span class="number">24779080</span>
+</code></pre><p>第一行和第三行字面意思都好立即，第二行往往很多人不理解。主要是看不懂”-/+ buffers/cache”<br>到底是什么鬼。<br>也正是很多人不理解第二行，往往看到类似上面的free结果后，就认为系统已经没有空闲内存给新进程使用了。<br>下面给出一个计算公式，基本一看就能懂了。  </p>
+<pre><code><span class="attribute">line1[used] - (line1[buffers] + line1[cached]) </span>=<span class="string"> line2[used]
+line1[total] - line2[used] = line2[free]</span>
+</code></pre><p>根据实例验证一下  </p>
+<pre><code><span class="attribute">16372464 - (35408 + 10861984) </span>=<span class="string"> 5475072
+16426628 - 5475072 = 10951556</span>
+</code></pre><p>那么当有人问起，看到这样一个free结果时，系统还有多少可用的空闲内存呢(free RAM available) ?<br>我们的回答应该是line2[free]而不是line1[free]。下面会详细解释。  </p>
+<hr>
+<h3 id="buffers和cached到底是什么">buffers和cached到底是什么</h3>
+<p>buffers是被一个特定进程使用的用于<em>临时</em>存放数据的内存空间，这些内容不会被其他进程访问。<br><a href="http://www.linuxnix.com/2013/05/find-ram-size-in-linuxunix.html" target="_blank" rel="external">这篇文章</a>用了带宽的概念来<br>类比，非常贴切。<br>当你试图通过网络发送大量的突发数据时，如果网卡的带宽(capacity)仅支持发送一部分时，<br>它会将剩下的数据存在buffers中，用于后续发送。</p>
+<p>而cached用于存放频繁访问的一些数据，目的是做到更快的数据访问。<br>比如多个进程需要读同一个文件，此时内存可能就分配一片cached区域，用于作为CPU到磁盘<br>之间的cache。  </p>
+<p>buffers和cached的区别：<br>a. buffers是供单个进程使用的，而cached可供多个进程使用<br>b. buffers是一次性的，而cached是可以反复使用的<br>buffers和cached的共同之处就在于它们都是临时性的存储，如果后续有进程需要使用<br>这些内存空间，Linux会释放(free)这些临时性占用的内存。</p>
+<hr>
+<h3 id="swap分区">swap分区</h3>
+<p>swap分区的目的是将一些不被频繁访问的内存数据放到磁盘，但是当需要时又能尽快的恢复到内存中去  </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://www.linuxnix.com/2013/05/find-ram-size-in-linuxunix.html" target="_blank" rel="external">Understanding free command in Linux/Unix</a><br><a href="http://www.linuxatemyram.com/" target="_blank" rel="external">Linux ate my ram! Don’t Panic! Your ram is fine!</a><br><a href="http://www.linuxatemyram.com/play.html" target="_blank" rel="external">Experiments and fun with the Linux disk cache</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>Linux中有许多的查看系统状态的命令，但是如果没有一些相关的背景知识就很容易<br>造成误解。free命令就是一个明显的例子。本系列wiki就结合一些好的资料并<br>结合自身理解来尝试剖析一些常用又常被误解的Linux命令。  </p>
+<p>]]>
+    
+    </summary>
+    
+      <category term="free" scheme="http://perthcharles.github.com/tags/free/"/>
+    
+      <category term="linux" scheme="http://perthcharles.github.com/tags/linux/"/>
+    
+      <category term="shell" scheme="http://perthcharles.github.com/tags/shell/"/>
+    
+      <category term="wiki-tools" scheme="http://perthcharles.github.com/categories/wiki-tools/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[使用ssh forward跨局域网访问]]></title>
     <link href="http://perthcharles.github.com/2015/09/22/ssh-forward/"/>
     <id>http://perthcharles.github.com/2015/09/22/ssh-forward/</id>
     <published>2015-09-22T13:02:36.000Z</published>
-    <updated>2015-09-22T14:00:09.000Z</updated>
+    <updated>2015-09-22T14:17:40.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <p>在平时需要夸局域网访问某台设备时，都是选择先ssh登录跳板机，然后通过跳板机<br>再去访问目的设备。但在某些时候可能比较麻烦，比如涉及到图形化界面时。<br>这篇文章就来介绍一下如何使用ssh forward功能，达到在跨局域网访问时，<br>像访问同一局域网设备一样方便。  </p>
 <a id="more"></a>  
@@ -1872,207 +1924,6 @@ b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的thr
       <category term="tc" scheme="http://perthcharles.github.com/tags/tc/"/>
     
       <category term="Networking" scheme="http://perthcharles.github.com/categories/Networking/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Linux内核编码风格]]></title>
-    <link href="http://perthcharles.github.com/2015/05/06/coding-style/"/>
-    <id>http://perthcharles.github.com/2015/05/06/coding-style/</id>
-    <published>2015-05-06T09:49:38.000Z</published>
-    <updated>2015-05-10T04:59:31.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<pre><code>Coding style <span class="keyword">is</span> <span class="keyword">all</span> about readability <span class="built_in">and</span> maintainability using commonly available tools.  
-</code></pre><p><a id="more"></a>  </p>
-<h3 id="缩进">缩进</h3>
-<hr>
-<p>所有的缩进均应是8字符格式。</p>
-<pre><code><span class="keyword">If</span> you need more than <span class="number">3</span> levels indentation, you<span class="attribute">'re</span> screwed anyway, <span class="keyword">and</span> should 
-fix your program.
-</code></pre><p>注：关于这点保留意见，目前我(也)比较习惯用4字符格式的TAB。  </p>
-<pre><code>Don't <span class="keyword">put</span> multiple assignments <span class="function_start"><span class="keyword">on</span></span> a single line.
-
-Get a decent editor <span class="keyword">and</span> don't leave whitespace <span class="keyword">at</span> <span class="keyword">the</span> <span class="keyword">end</span> <span class="keyword">of</span> lines.
-</code></pre><h3 id="换行">换行</h3>
-<hr>
-<p>每行的长度限制在80各字符</p>
-<pre><code>However， never <span class="keyword">break</span> user-visible strings such <span class="keyword">as</span> printk <span class="keyword">messages</span>, because 
-that breaks the ability <span class="keyword">to</span> <span class="keyword">grep</span> <span class="keyword">for</span> them.  
-</code></pre><h3 id="括号和空格">括号和空格</h3>
-<hr>
-<pre><code>As shown <span class="built_in">to</span> us <span class="keyword">by</span> <span class="operator">the</span> prophets Kernighan <span class="operator">and</span> Ritchie, <span class="operator">the</span> preferred way is <span class="built_in">to</span> 
-<span class="built_in">put</span> <span class="operator">the</span> opening brace <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">line</span>, <span class="title">and</span> <span class="title">push</span> <span class="title">the</span> <span class="title">closing</span> <span class="title">brace</span> <span class="title">first</span>, <span class="title">thusly</span>:</span>
-<span class="keyword">if</span> (x is <span class="constant">true</span>) {
-        we <span class="built_in">do</span> y
-}
-</code></pre><p>上面的规则适用于所有的代码块，除了函数。  </p>
-<pre><code><span class="keyword">Do</span> <span class="keyword">not</span> unnecessarily use braces <span class="keyword">where</span> a <span class="built_in">single</span> statement will <span class="keyword">do</span>.
-
-        <span class="keyword">if</span> (condition)
-                action();
-
-<span class="keyword">and</span>
-        <span class="keyword">if</span> (condition)
-                do_this();
-        <span class="keyword">else</span>
-                do_that();
-
-This does <span class="keyword">not</span> apply <span class="keyword">if</span> only one branch <span class="keyword">of</span> a conditional statement <span class="keyword">is</span> a <span class="built_in">single</span> 
-statement; <span class="keyword">in</span> the latter <span class="keyword">case</span> use braces <span class="keyword">in</span> both braches.
-</code></pre><p>注：这个规则我保留意见。由于任何under-developing的代码片段都没办法保证在“现在和将来”都仅包含一条语句。因此我的选择是：在任何代码片段/分支处，均使用括号。  </p>
-<p>在Linux kernel的编程风格中，空格的使用主要依赖于function-versus-keyword的使用。</p>
-<pre><code><span class="operator"><span class="keyword">Use</span> a <span class="keyword">space</span> <span class="keyword">after</span> (most) keywords.
-The notable exceptions <span class="keyword">are</span> sizeof, typeof, alignof, <span class="keyword">and</span> __attribute__,
-which look somewhat <span class="keyword">like</span> functions.
-
-<span class="keyword">Do</span> <span class="keyword">not</span> <span class="keyword">add</span> spaces around (inside) parenthesized expressions.
-
-<span class="keyword">When</span> declaring pointer <span class="keyword">data</span> <span class="keyword">or</span> a <span class="keyword">function</span> that <span class="keyword">returns</span> a pointer type, the 
-preferred usd <span class="keyword">of</span> <span class="string">'*'</span> <span class="keyword">is</span> adjacent <span class="keyword">to</span> the <span class="keyword">data</span> name <span class="keyword">or</span> <span class="keyword">function</span> name <span class="keyword">and</span> <span class="keyword">not</span> 
-adjacent <span class="keyword">to</span> the type name. Examples:
-    <span class="built_in">char</span> *line_banner;</span>
-    char *match__strdup(substring_t *s);
-
-<span class="operator"><span class="keyword">Use</span> one <span class="keyword">space</span> around (<span class="keyword">on</span> <span class="keyword">each</span> side <span class="keyword">of</span>) most <span class="built_in">binary</span> <span class="keyword">and</span> ternary operators, 
-but <span class="keyword">no</span> <span class="keyword">space</span> <span class="keyword">after</span> unary operators.</span>
-</code></pre><h3 id="命名">命名</h3>
-<hr>
-<pre><code>GLOBAL variables need to have descriptive names, as <span class="operator"><span class="keyword">do</span> <span class="keyword">global</span> functions.
-
-Encoding the types <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">into</span> the name (so-called Hungarian notaion) 
-<span class="keyword">is</span> brain damaged - the compiler knows the types anyway <span class="keyword">and</span> can <span class="keyword">check</span> those, <span class="keyword">and</span> 
-it <span class="keyword">only</span> confuses the programmer. <span class="keyword">No</span> wonder MicroSoft makes buggy programs.
-=.= 黑的漂亮  
-
-<span class="keyword">LOCAL</span> variable <span class="keyword">names</span> should be short, <span class="keyword">and</span> <span class="keyword">to</span> the point.</span>
-</code></pre><h3 id="自定义类型">自定义类型</h3>
-<hr>
-<p>typedefs应尽量少用。仅在满足一下条件之一时，typedefs才算是能适当提高可读性的选择。</p>
-<ul>
-<li>totally opaque objects (where the typedef is actively used to _hide_ what the<br>object is).  </li>
-<li>clear integer types, where the abstaction _helps_ avoid confusion whether it<br>is ‘int’ or ‘long’. 例如 u8/u16/u32就是很好的抽象  </li>
-<li>when you use sparse to literally create a _new_ type for type-checking.<br>— 暂时不太理解:-(  </li>
-<li>New types which are identical to standard C99 types, in certain exceptional<br>circumstances.  </li>
-<li>Types safe for use in userspace. — 暂时不太理解:-(  </li>
-</ul>
-<h3 id="函数">函数</h3>
-<hr>
-<pre><code>Functions should be short and sweet, and <span class="operator"><span class="keyword">do</span> just one thing. 
-They should fit <span class="keyword">on</span> one <span class="keyword">or</span> two screenfuls <span class="keyword">of</span> <span class="built_in">text</span>.
-
-The maximum length <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">is</span> inversely proportional <span class="keyword">to</span> the complexity 
-<span class="keyword">and</span> indentation <span class="keyword">level</span> <span class="keyword">of</span> that <span class="keyword">function</span>.
-<span class="comment">-- 当函数逻辑简单时，稍微长一点没有关系；</span>
-<span class="comment">-- 当函数逻辑复杂时，可以通过helper函数缩短函数的长度。同时如果需要考虑性能，inline是个不错的选择。</span>
-
-Another measure <span class="keyword">of</span> the <span class="keyword">function</span> <span class="keyword">is</span> the <span class="built_in">number</span> <span class="keyword">of</span> <span class="keyword">local</span> <span class="keyword">variables</span>. 
-They shouldn<span class="string">'t exceed 5-10, or you'</span>re doing something wrong.
-依据：A human brain can generally easily keep track about <span class="number">7</span> different things.
-
-<span class="keyword">In</span> source file, seperate functions <span class="keyword">with</span> one blank line.
-
-<span class="keyword">If</span> the <span class="keyword">function</span> <span class="keyword">is</span> exported, the EXPORT macro <span class="keyword">for</span> it should follow immediately 
-<span class="keyword">after</span> the closing <span class="keyword">function</span> brace line.
-
-<span class="keyword">In</span> <span class="keyword">function</span> prototype, include parameter <span class="keyword">names</span> <span class="keyword">with</span> their <span class="keyword">data</span> types.</span>
-</code></pre><h3 id="集中管理函数的退出条件">集中管理函数的退出条件</h3>
-<hr>
-<p>这部分主要是讨论goto的实用技巧(goto反对党请绕道)。  </p>
-<pre><code>The <span class="keyword">goto</span> statement comes <span class="keyword">in</span> handy <span class="keyword">when</span> a <span class="keyword">function</span> exits <span class="keyword">from</span> multiple locations 
-<span class="keyword">and</span> some common works such <span class="keyword">as</span> cleanup has <span class="keyword">to</span> be done.
-
-Choose label names which say what the <span class="keyword">goto</span> does <span class="keyword">or</span> why the <span class="keyword">goto</span> exits.
-</code></pre><p>goto语句在以下情况下，可以合理的使用：  </p>
-<ul>
-<li>unconditional statements are easier to understand and follow  </li>
-<li>nesting is reduced  </li>
-<li>errors by not updating individual exit points when making modifications are prevented — 暂时不理解:-(  </li>
-<li>save the compiler work to optimize redundant code away  </li>
-</ul>
-<h3 id="注释">注释</h3>
-<hr>
-<p>这部分主要是一些避免over-commenting的原则。  </p>
-<pre><code>NEVER <span class="keyword">try</span> <span class="keyword">to</span> explain HOW your code works <span class="keyword">in</span> a commment:
-<span class="keyword">it</span>'s much better <span class="keyword">to</span> <span class="command">write</span> <span class="keyword">the</span> code so <span class="keyword">the</span> \_working\_ <span class="keyword">is</span> obvious, <span class="keyword">and</span> <span class="keyword">it</span>'s a 
-waste <span class="keyword">of</span> <span class="property">time</span> <span class="keyword">to</span> explain badly written code.
-
-Generally, you want your comments <span class="keyword">to</span> <span class="keyword">tell</span> WHAT your code <span class="keyword">does</span>, <span class="keyword">not</span> HOW. <span class="comment">--发人深省啊！</span>
-
-Try <span class="keyword">to</span> avoid putting comments inside a function body.
-Instead, <span class="keyword">put</span> <span class="keyword">the</span> comments <span class="keyword">at</span> <span class="keyword">the</span> head <span class="keyword">of</span> <span class="keyword">the</span> function, telling people what <span class="keyword">it</span> <span class="keyword">does</span>,
-<span class="keyword">and</span> possibly WHY <span class="keyword">it</span> <span class="keyword">does</span> <span class="keyword">it</span>.  
-
-Linux style <span class="keyword">for</span> comments <span class="keyword">is</span> <span class="keyword">the</span> C89 <span class="string">"/* ... */"</span> style.
-Don't use C99-style <span class="string">"// ..."</span> comments.
-
-The preferred style <span class="keyword">for</span> long (multi-line) comments <span class="keyword">is</span>:
-/*
- * This <span class="keyword">is</span> <span class="keyword">the</span> preferred style <span class="keyword">for</span> multi-line
- * comments <span class="keyword">in</span> <span class="keyword">the</span> Linux kernel source code.
- * Please use <span class="keyword">it</span> consistently.
- */
-</code></pre><h3 id="宏，枚举">宏，枚举</h3>
-<hr>
-<pre><code>Names <span class="operator">of</span> macros defining constants <span class="operator">and</span> labels <span class="operator">in</span> enums are capitalized.
-
-Enums are preferred when defining serveral related constants.
-
-CAPITALIZED macro names are appreciated but macros resembling functions may be  
-named <span class="operator">in</span> <span class="built_in">lower</span> <span class="keyword">case</span>.
-
-Generally, inline functions are preferable <span class="built_in">to</span> macros resembling functions. <span class="comment">-- 个人更认同这一原则。</span>
-
-Macros <span class="operator">with</span> multiple statements should be eclosed <span class="operator">in</span> <span class="operator">a</span> <span class="built_in">do</span>-which block.
-</code></pre><h3 id="打印内核消息">打印内核消息</h3>
-<pre><code>Make the messages concise, clear, <span class="keyword">and</span> unambiguous.
-
-<span class="keyword">For</span> messages that aren<span class="comment">'t associated with a particular device, <span class="xmlDocTag">&lt;linux/printk.h&gt;</span> </span>
-defines pr_notice(), pr_info(), pr_warn(), pr_err(), etc.
-</code></pre><h3 id="inline的使用">inline的使用</h3>
-<hr>
-<pre><code>Abundant use <span class="operator">of</span> <span class="operator">the</span> inline keyword leads <span class="built_in">to</span> <span class="operator">a</span> much bigger kernel, which <span class="operator">in</span> turn 
-slows <span class="operator">the</span> <span class="keyword">system</span> <span class="keyword">as</span> <span class="operator">a</span> <span class="keyword">whole</span> down, due <span class="built_in">to</span> <span class="operator">a</span> bigger icache footprint <span class="keyword">for</span> <span class="operator">the</span> CPU 
-<span class="operator">and</span> simply because there is less memory available <span class="keyword">for</span> <span class="operator">the</span> pagecache.
-
-A reasonable rule <span class="operator">of</span> thumb is <span class="built_in">to</span> <span class="operator">not</span> <span class="built_in">put</span> inline <span class="keyword">at</span> functions that have more 
-than <span class="number">3</span> <span class="keyword">lines</span> <span class="operator">of</span> code <span class="operator">in</span> them.  <span class="comment">--即，inline应限制用于小函数 </span>
-</code></pre><h3 id="函数返回值">函数返回值</h3>
-<hr>
-<pre><code><span class="keyword">If</span> the name <span class="keyword">of</span> a <span class="keyword">function</span> <span class="keyword">is</span> an action <span class="keyword">or</span> an imperative command, the <span class="keyword">function</span> 
-should <span class="keyword">return</span> an <span class="keyword">error</span>-code <span class="built_in">integer</span>.
-<span class="keyword">If</span> the name <span class="keyword">is</span> a predicate, the <span class="keyword">function</span> should <span class="keyword">return</span> a <span class="string">"succeeded"</span> <span class="built_in">boolean</span>.
-</code></pre><h3 id="不要重复发明内核宏定义">不要重复发明内核宏定义</h3>
-<pre><code>The header <span class="built_in">file</span> <span class="built_in">include</span>/linux/kernel.h <span class="operator">contains</span> <span class="operator">a</span> <span class="built_in">number</span> <span class="operator">of</span> macros that you 
-should use, rather than explicitly coding some variant <span class="operator">of</span> them yourself.
-</code></pre><h3 id="条件编译">条件编译</h3>
-<hr>
-<pre><code>Wherever possible, don't <span class="operator"><span class="keyword">use</span> preprocessor conditional (#<span class="keyword">if</span>, #ifdef) <span class="keyword">in</span> .c files, 
-doing so makes code harder <span class="keyword">to</span> <span class="keyword">read</span> <span class="keyword">and</span> logic harder <span class="keyword">to</span> follow.
-
-Prefer <span class="keyword">to</span> compile out entire functions, rather than portions <span class="keyword">of</span> functions <span class="keyword">or</span> 
-portions <span class="keyword">of</span> expressions.
-
-Within code, <span class="keyword">where</span> possible, <span class="keyword">use</span> the IS_ENABLED macro <span class="keyword">to</span> <span class="keyword">convert</span> a Kconfig 
-symbol <span class="keyword">into</span> a C <span class="built_in">boolean</span> expression, <span class="keyword">and</span> <span class="keyword">use</span> it <span class="keyword">in</span> a normal C conditional.
-
-<span class="keyword">At</span> the <span class="keyword">end</span> <span class="keyword">of</span> <span class="keyword">any</span> non-trivial #<span class="keyword">if</span> <span class="keyword">or</span> #ifdef block (more than a few <span class="keyword">lines</span>), 
-place a comment <span class="keyword">after</span> the #endif <span class="keyword">on</span> the same line, noting the conditional 
-expression used. <span class="keyword">For</span> instance:
-    #ifdef CONFIG_SOMETHING
-    ...
-    #endif <span class="comment">/* CONFIG_SOMETHING */</span></span>
-</code></pre><h3 id="参考资料">参考资料</h3>
-<hr>
-<p><a href="https://www.kernel.org/doc/Documentation/CodingStyle" target="_blank" rel="external">Linux kernel coding style</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<pre><code>Coding style <span class="keyword">is</span> <span class="keyword">all</span> about readability <span class="built_in">and</span> maintainability using commonly available tools.  
-</code></pre><p>]]>
-    
-    </summary>
-    
-      <category term="wiki-编程技艺" scheme="http://perthcharles.github.com/categories/wiki-%E7%BC%96%E7%A8%8B%E6%8A%80%E8%89%BA/"/>
     
   </entry>
   

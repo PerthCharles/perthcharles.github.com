@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>2015 Q2 Akamai互联网状态报告 | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这篇博客分享一下Akamai发布的互联网状态报告，推荐每一个网络从业人员读一读。不一定要细看，多看看图，了解了解趋势。若能触发一些自己的思考便是极好的。甚至以后做报告，做PTT时想要一些网络相关的图表，多看看看这个系列的报告也是收益良多的。  
+另外也推荐阅读后续将发布的安全报告,尤其是被DDoS坑过的小伙伴们。T_T…着急的可以先看看这个summary  
+最后也推荐有兴趣的小伙伴订阅一下st">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2015 Q2 Akamai互联网状态报告">
+<meta property="og:url" content="http://perthcharles.github.com/2015/10/15/wiki-report-internet-state-2015Q2/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="这篇博客分享一下Akamai发布的互联网状态报告，推荐每一个网络从业人员读一读。不一定要细看，多看看图，了解了解趋势。若能触发一些自己的思考便是极好的。甚至以后做报告，做PTT时想要一些网络相关的图表，多看看看这个系列的报告也是收益良多的。  
+另外也推荐阅读后续将发布的安全报告,尤其是被DDoS坑过的小伙伴们。T_T…着急的可以先看看这个summary  
+最后也推荐有兴趣的小伙伴订阅一下st">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_1.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_2.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_3.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_4.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_5.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_7.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_10.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_24.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_34.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_35.jpg">
+<meta property="og:image" content="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/_appendix.jpg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="2015 Q2 Akamai互联网状态报告">
+<meta name="twitter:description" content="这篇博客分享一下Akamai发布的互联网状态报告，推荐每一个网络从业人员读一读。不一定要细看，多看看图，了解了解趋势。若能触发一些自己的思考便是极好的。甚至以后做报告，做PTT时想要一些网络相关的图表，多看看看这个系列的报告也是收益良多的。  
+另外也推荐阅读后续将发布的安全报告,尤其是被DDoS坑过的小伙伴们。T_T…着急的可以先看看这个summary  
+最后也推荐有兴趣的小伙伴订阅一下st">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-wiki-report-internet-state-2015Q2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/10/15/wiki-report-internet-state-2015Q2/" class="article-date">
+  <time datetime="2015-10-15T01:39:33.000Z" itemprop="datePublished">10月 15 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-好文共享/">wiki-好文共享</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      2015 Q2 Akamai互联网状态报告
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#What_you_need_to_know"><span class="toc-text">What you need to know</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Spotlight:_Internet_and_Broadband_Adoption"><span class="toc-text">Spotlight: Internet and Broadband Adoption</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#报告正文摘要"><span class="toc-text">报告正文摘要</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Section_1:_internet_penetration"><span class="toc-text">Section 1: internet penetration</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Section_2-6:_geography_global/usa/americas/apac/emea"><span class="toc-text">Section 2-6: geography global/usa/americas/apac/emea</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Section_7:_mobile_connectivity"><span class="toc-text">Section 7: mobile connectivity</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Section_8:_Situational_Performance"><span class="toc-text">Section 8: Situational Performance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Section_9:_Internet_disruptions_+_events"><span class="toc-text">Section 9: Internet disruptions + events</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<p>这篇博客分享一下Akamai发布的互联网状态报告，推荐每一个网络从业人员读一读。<br>不一定要细看，多看看图，了解了解趋势。若能触发一些自己的思考便是极好的。<br>甚至以后做报告，做PTT时想要一些网络相关的图表，多看看看这个系列的报告也是收益良多的。  </p>
+<p>另外也推荐阅读后续将发布的<a href="https://www.stateoftheinternet.com/resources-web-security-2015-q2-internet-security-report.html" target="_blank" rel="external">安全报告</a>,<br>尤其是被DDoS坑过的小伙伴们。T_T…<br>着急的可以先看看这个<a href="https://www.stateoftheinternet.com/downloads/pdfs/Q2-2015-SOTI-Connectivity-Executive-Summary.pdf" target="_blank" rel="external">summary</a>  </p>
+<p>最后也推荐有兴趣的小伙伴订阅一下stateoftheinternet网站的RSS，保持跟进。  </p>
+<hr>
+<h3 id="What_you_need_to_know">What you need to know</h3>
+<pre><code>&gt;&gt; Global average connection speed increased <span class="number">17</span>% <span class="property">year</span>-<span class="keyword">over</span>-<span class="property">year</span>; South Korea leads <span class="keyword">at</span> <span class="number">23.1</span> Mbps.
+&lt;&lt; 全球平均网速(connection speed)每年增加<span class="number">17</span>%; 韩国领跑全球，达到<span class="number">23.1</span>Mbps.
+
+&gt;&gt; Global average peak connection speed reached <span class="number">32.5</span> Mbps; up <span class="number">26</span>% <span class="property">year</span>-<span class="keyword">over</span>-<span class="property">year</span>.
+&lt;&lt; 全球平均峰值网速达到<span class="number">32.5</span>Mbps，每年增长<span class="number">26</span>%。 
+
+&gt;&gt; Gabon, Cameroon, Nepal <span class="keyword">and</span> Iraq experienced significant Internet disruptions.
+&lt;&lt; 加蓬、喀麦隆、尼泊尔和伊拉克存在严重的网络干扰。（呵呵一笑）  
+
+&gt;&gt; Mobile data traffic grew <span class="keyword">around</span> <span class="number">15</span>% <span class="keyword">between</span> <span class="keyword">the</span> Q1 <span class="keyword">and</span> Q2, <span class="keyword">and</span> increased <span class="number">55</span>% <span class="property">year</span> <span class="keyword">over</span> <span class="property">year</span> <span class="keyword">between</span> <span class="keyword">the</span> Q2 <span class="number">2014</span> <span class="keyword">and</span> Q2 <span class="number">2015</span>, based <span class="function_start"><span class="keyword">on</span></span> traffic data collected <span class="keyword">by</span> Ericsson.
+&lt;&lt; 基于Ericsson的统计数据，移动数据流量Q2季度增长了<span class="number">15</span>%左右，每年的增长量在<span class="number">55</span>%左右。 （移动流量真是疯涨啊）  
+</code></pre><p><a id="more"></a>  </p>
+<hr>
+<h3 id="Spotlight:_Internet_and_Broadband_Adoption">Spotlight: Internet and Broadband Adoption</h3>
+<pre><code>The State <span class="operator">of</span> <span class="operator">the</span> Internet reports <span class="command"><span class="keyword">on</span> <span class="title">25</span> <span class="title">Mbps</span> <span class="title">broadband</span> <span class="title">connectivity</span>, <span class="title">reflecting</span> <span class="title">the</span> <span class="title">U</span>.<span class="title">S</span>. <span class="title">Federal</span> <span class="title">Communications</span> <span class="title">Commission</span>’<span class="title">s</span> (<span class="title">FCC</span>) <span class="title">adoption</span> <span class="title">of</span> <span class="title">25</span> <span class="title">Mbps</span> <span class="title">as</span> <span class="title">the</span> <span class="title">new</span> <span class="title">benchmark</span> <span class="title">broadband</span> <span class="title">speed</span>.</span>
+
+&gt;&gt; Globally, <span class="number">4.9</span>% <span class="operator">of</span> unique IP addresses connected <span class="built_in">to</span> Akamai <span class="keyword">at</span> <span class="built_in">average</span> speeds <span class="operator">of</span> <span class="keyword">at</span> least <span class="number">25</span> Mbps, <span class="operator">a</span> <span class="number">7.5</span>% increase over <span class="operator">the</span> previous quarter.
+&lt;&lt; 全球范围内，连接至Akamai的<span class="number">4.9</span>%的IP的平均速率超过<span class="number">25</span>Mbps, 这一比例相比于上一季度增长了<span class="number">7.5</span>%.  
+
+&gt;&gt; In <span class="operator">the</span> United States, <span class="constant">five</span> states had <span class="number">10</span>% <span class="operator">or</span> more <span class="operator">of</span> unique IP addresses connect <span class="built_in">to</span> Akamai <span class="keyword">at</span> <span class="built_in">average</span> speeds <span class="operator">of</span> <span class="keyword">at</span> least <span class="number">25</span> Mbps.
+&lt;&lt; 在美国，五个州存在超过<span class="number">10</span>%的连接至Akamai的IP的平均速率超过<span class="number">25</span>Mbps。
+
+&gt;&gt; Japan (<span class="number">16.4</span> Mbps) saw <span class="operator">the</span> largest quarterly gain <span class="operator">in</span> <span class="built_in">average</span> speed <span class="keyword">at</span> <span class="number">7.8</span>%.The <span class="built_in">global</span> <span class="built_in">average</span> connection speed increased <span class="number">3.5</span>% <span class="built_in">to</span> <span class="number">5.1</span> Mbps
+&lt;&lt; 日本(<span class="number">16.4</span>Mbps)在上一个季度的平均网速增长最快，增长了<span class="number">7.8</span>%。全球平均网络增长了<span class="number">3.5</span>%，达到了<span class="number">5.1</span>Mbps.
+
+&gt;&gt; Global <span class="built_in">average</span> peak connection speeds increased <span class="number">12</span>% <span class="built_in">to</span> <span class="number">32.5</span> Mbps. Average peak connection speeds increased <span class="number">100</span>% <span class="operator">in</span> Egypt (<span class="number">23.4</span> Mbps).
+&lt;&lt; 全球的平均峰值网速增长了<span class="number">12</span>%，达到了<span class="number">32.5</span>Mbps。埃及的增速达到<span class="number">100</span>%，增至<span class="number">23.4</span>%。  
+
+&gt;&gt; <span class="number">27</span>% <span class="operator">of</span> unique IP addresses globally connected <span class="built_in">to</span> Akamai <span class="keyword">at</span> <span class="built_in">average</span> speeds above <span class="number">10</span> Mbps, <span class="operator">an</span> increase <span class="operator">of</span> <span class="number">2.1</span>%.
+&lt;&lt; 全球<span class="number">27</span>%连接至Akamai的IP的平均网速超过<span class="number">10</span>Mbps，增长了<span class="number">2.1</span>%.  
+
+&gt;&gt; Among <span class="operator">the</span> top <span class="number">10</span> countries, Singapore rose <span class="operator">the</span> most (<span class="number">8.4</span>%) <span class="built_in">to</span> achieve <span class="number">50</span>% adoption <span class="operator">of</span> <span class="number">10</span> Mbps <span class="operator">or</span> higher.
+&lt;&lt; 在网速做好的前<span class="number">10</span>个国家中，新加坡超过<span class="number">10</span>Mbps的比例增长最多(<span class="number">8.4</span>%)，达到了<span class="number">50</span>%的覆盖率。  
+
+&gt;&gt; Among all countries, Kazakhstan rose <span class="operator">the</span> most (<span class="number">118</span>%) <span class="built_in">to</span> reach <span class="number">16</span>% adoption <span class="operator">of</span> <span class="number">10</span> Mbps <span class="operator">or</span> higher.
+&lt;&lt; 所有国家中，哈萨克斯坦超过<span class="number">10</span>Mbps的比例增长最多(<span class="number">118</span>%)，达到了<span class="number">16</span>%的覆盖率。  
+
+&gt;&gt; Reversing <span class="operator">the</span> trend seen <span class="operator">in</span> <span class="operator">the</span> <span class="keyword">first</span> quarter, <span class="operator">the</span> <span class="built_in">number</span> <span class="operator">of</span> unique IPv4 addresses worldwide connecting <span class="built_in">to</span> Akamai dropped <span class="keyword">by</span> about <span class="number">8.6</span> million <span class="operator">in</span> Q2.
+&lt;&lt; 与第一季度的趋势相反，全球连接至Akamai的IPv4地址减少了<span class="number">8.7</span>million。
+
+&gt;&gt; Six <span class="operator">of</span> <span class="operator">the</span> top <span class="number">10</span> countries saw <span class="operator">a</span> quarterly decline <span class="operator">in</span> unique IPv4 address.
+&lt;&lt; 前<span class="number">10</span>的国家中，有六个国家检测到了IPv4地址的季度性下滑
+
+&gt;&gt; Roughly half <span class="operator">of</span> <span class="operator">the</span> countries <span class="operator">and</span> regions had <span class="operator">an</span> increase <span class="operator">in</span> unique IPv4 address counts, <span class="operator">with</span> <span class="number">34</span> growing <span class="number">10</span>% <span class="operator">or</span> more.
+&lt;&lt; 接近一半的国家和地区IPv4地址数量在增加，其中有<span class="number">34</span>个的增长率超过<span class="number">10</span>%。
+
+&gt;&gt; European countries continued <span class="built_in">to</span> dominate <span class="operator">the</span> <span class="number">10</span> countries <span class="operator">and</span> regions <span class="operator">with</span> <span class="operator">the</span> largest percentage <span class="operator">of</span> content requests made <span class="built_in">to</span> Akamai over IPv6.
+&lt;&lt; 在通过IPv6连接至Akamai的内容请求中，欧洲国家依然占据着前<span class="number">10</span>名中的大多数。
+
+&gt;&gt; The only <span class="constant">two</span> non-European counties <span class="operator">among</span> <span class="operator">the</span> top <span class="number">10</span> were <span class="operator">the</span> U.S. <span class="operator">and</span> Peru. Both <span class="operator">of</span> which had significant double-digit quarterly improvements <span class="built_in">to</span> adoption rates <span class="operator">of</span> <span class="number">19</span>% <span class="operator">and</span> <span class="number">17</span>%, respectively.
+&lt;&lt; 两个非欧洲国家分别是美国和秘鲁。两者该季度都有两位数的覆盖率的增长，分别达到了<span class="number">19</span>%和<span class="number">17</span>%。
+</code></pre><hr>
+<h2 id="报告正文摘要">报告正文摘要</h2>
+<h3 id="Section_1:_internet_penetration">Section 1: internet penetration</h3>
+<p>Akamai在该季度发现了804 million个IPv4地址连接到了Akamai的服务，连接请求分别来自242个国家和地区。(注：IPv4的理论总数约4.2 billion，可见Akamai的实力啊。Orz…)</p>
+<p>尽管只发现了804 million个IPv4地址，但Akamai推测这背后至少有1 billion个网名用户。因为有许多用户是通过代理，NAT等技术来访问网络的。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_1.jpg" alt=""><br>如果出现图片打不开的情况，可以自行前往下载: <a href="https://www.stateoftheinternet.com/downloads/pdfs/2015-q2-state-of-the-internet-report-figures-charts-graphs.zip" target="_blank" rel="external">Figures</a><br>从上图中可以看到，美国和中国是IPv4地址的大户(很显然嘛)，英国、日本和韩国的IPv4使用量每年还在以超过10%的速度在增长。<br>但就Q1和Q2季度而言，前十中有六个国家的IPv4地址数量在下降。Akamai的解释是认为新技术和IPv6地址的普及造成了这一现象。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_2.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_3.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_4.jpg" alt=""><br>这三张图，反应的是Reginal Internet Registries(RIRs)该季度的IPv4地址存货量和分配量。<br>ARIN(American Registry for Internet Numbers)这个机构也是够拼的，几乎卖光了。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_5.jpg" alt=""><br>比利时和瑞士的IPv6流量都超过20%了啊，欧洲真是走在网络基础设置更新的前列啊。  </p>
+<hr>
+<h3 id="Section_2-6:_geography_global/usa/americas/apac/emea">Section 2-6: geography global/usa/americas/apac/emea</h3>
+<p>这几章主要是各个国家和地区的网速对比，看着略伤心。列几个图吧。<br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_7.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_10.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_24.jpg" alt=""><br>第三张图显示的数据也是让人心碎，Global Rank排名92(总计242个国家地区)，而且统计的平均网速还在下降！！！太可怜了。。。  </p>
+<hr>
+<h3 id="Section_7:_mobile_connectivity">Section 7: mobile connectivity</h3>
+<p>这次关于mobile的内容由于Akamai的统计技术在做调整，因此只有下面这一张图的数据。<br>不过还是能反映整体mobile这边的趋势的。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_34.jpg" alt="">  </p>
+<hr>
+<h3 id="Section_8:_Situational_Performance">Section 8: Situational Performance</h3>
+<p>这章是Akamai通过它的Real User Monitoring(RUM)技术获取的真实数据，还挺有意思的。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_35.jpg" alt=""><br>可以看到尽管表中很多国家在平均网络在前面的数据上看起来落后领先国家较多，但真实的页面平均加载时间上却并没有落后太多。<br>比如Hong Kong在平均网络方面要远好于Indonesia，但是从平均页面加载时间来看，Indonesia在Broadband方面也就慢500ms左右，<br>而且在Mobile方面甚至远好于Hong Kong.  </p>
+<p>Akamai对此的解释有如下几点：<br>a. 数据采集不全，这受限于RUM技术<br>b. 这种相应时间受多方面因素影响，而不仅仅是网速。比如页面的总大小，页面的组成以及页面是否针对移动网络优化(这点可能是导致有不少地区mobile时间还小于broadboard时间的原因)都对平均加载时间有影响。<br>关于第二点，我表示十分认同。因为就我自身的上网经验而言，由于直接使用手机3G网络访问网络性能实在不能忍，所以基本都是在有WiFi时才去访问。<br>另外如果我在一个3G或4G网络本身就很快的地区，我可能就会任性的直接使用手机网络。甚至使用手机3G网络做比如看视频，下载文件这类耗流量的事情，<br>也就更有可能访问page weight大的网页，造成统计平均页面加载时间相对教程的现象。</p>
+<hr>
+<h3 id="Section_9:_Internet_disruptions_+_events">Section 9: Internet disruptions + events</h3>
+<p>这章到底在讲什么？下面是Akamai对于disruption的解释。  </p>
+<pre><code>These disruptions may be accidental (backhoes <span class="keyword">or</span> ship anchors severing buried fiber), 
+<span class="typename">natural</span> (hurricanes <span class="keyword">or</span> earthquakes), <span class="keyword">or</span> political (governments shutting off Internet <span class="keyword">access</span> <span class="keyword">in</span> response <span class="keyword">to</span> unrest). 
+</code></pre><p>好了，理解了disruption的发生理由，大家随便看看这章就好。躺枪的国家有：Gabon, Cameroon, Nepal, Iraq。</p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/_appendix.jpg" alt=""><br>最后是整体网络相关指标的的表格，方便对比查看。  </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://www.stateoftheinternet.com/resources-connectivity-2015-q2-state-of-the-internet-report.html" target="_blank" rel="external">AKAMAI’S STATE OF THE INTERNET: Q2 2015 REPORT</a><br><a href="https://www.stateoftheinternet.com/downloads/pdfs/Q2-2015-SOTI-Connectivity-Executive-Summary.pdf" target="_blank" rel="external">Q2 2015 STATE OF THE INTERNET SUMMARY</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/10/15/wiki-report-internet-state-2015Q2/" data-id="7oa0aoikf72lj6e3" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/10/15/wiki-report-internet-state-2015Q2/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/09/28/wiki-tool-free/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">剖析free命令</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/10/15/wiki-report-internet-state-2015Q2/">2015 Q2 Akamai互联网状态报告</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/28/wiki-tool-free/">剖析free命令</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/22/ssh-forward/">使用ssh forward跨局域网访问</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/15/wiki-hybird-slow-start/">Taming the Elephants -- New TCP Slow Start</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/14/ip-route-initcwnd/">使用ip命令修改初始拥塞窗口和接收窗口</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/07/wiki-tcp-retries/">聊一聊重传次数</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/06/wiki-rtt-estimator/">RTO的计算方法(基于RFC6298和Linux 3.10)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-NAT/">一个NAT问题引起的思考</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-faq/">GIT系列五：小知识点及FAQ</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/clean-commit-log-before-push/">GIT系列四：在push之前对本地commit进行整理</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/25/git-commit-log-format/">GIT系列三：commit消息规范</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/commit-a-simple-manually/">GIT系列二：手动提交一个commit</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/24/setup-gitolite-service-git-1/">GIT系列一：使用gitolite搭建git仓库管理服务</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/14/manage-project-code-like-linux-kernel/">像linux kernel一样管理你的项目</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a><a href="/tags/ip/" style="font-size: 10.00px;">ip</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/linux/" style="font-size: 10.00px;">linux</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a><a href="/tags/markdown/" style="font-size: 10.00px;">markdown</a><a href="/tags/matlab/" style="font-size: 10.00px;">matlab</a><a href="/tags/mount/" style="font-size: 10.00px;">mount</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/10/15/wiki-report-internet-state-2015Q2/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

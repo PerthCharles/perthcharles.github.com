@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-10-10T11:00:14.670Z</updated>
+  <updated>2015-10-17T08:28:06.318Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,126 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[2015 Q2 Akamai互联网状态报告]]></title>
+    <link href="http://perthcharles.github.com/2015/10/15/wiki-report-internet-state-2015Q2/"/>
+    <id>http://perthcharles.github.com/2015/10/15/wiki-report-internet-state-2015Q2/</id>
+    <published>2015-10-15T01:39:33.000Z</published>
+    <updated>2015-10-17T08:27:49.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>这篇博客分享一下Akamai发布的互联网状态报告，推荐每一个网络从业人员读一读。<br>不一定要细看，多看看图，了解了解趋势。若能触发一些自己的思考便是极好的。<br>甚至以后做报告，做PTT时想要一些网络相关的图表，多看看看这个系列的报告也是收益良多的。  </p>
+<p>另外也推荐阅读后续将发布的<a href="https://www.stateoftheinternet.com/resources-web-security-2015-q2-internet-security-report.html" target="_blank" rel="external">安全报告</a>,<br>尤其是被DDoS坑过的小伙伴们。T_T…<br>着急的可以先看看这个<a href="https://www.stateoftheinternet.com/downloads/pdfs/Q2-2015-SOTI-Connectivity-Executive-Summary.pdf" target="_blank" rel="external">summary</a>  </p>
+<p>最后也推荐有兴趣的小伙伴订阅一下stateoftheinternet网站的RSS，保持跟进。  </p>
+<hr>
+<h3 id="What_you_need_to_know">What you need to know</h3>
+<pre><code>&gt;&gt; Global average connection speed increased <span class="number">17</span>% <span class="property">year</span>-<span class="keyword">over</span>-<span class="property">year</span>; South Korea leads <span class="keyword">at</span> <span class="number">23.1</span> Mbps.
+&lt;&lt; 全球平均网速(connection speed)每年增加<span class="number">17</span>%; 韩国领跑全球，达到<span class="number">23.1</span>Mbps.
+
+&gt;&gt; Global average peak connection speed reached <span class="number">32.5</span> Mbps; up <span class="number">26</span>% <span class="property">year</span>-<span class="keyword">over</span>-<span class="property">year</span>.
+&lt;&lt; 全球平均峰值网速达到<span class="number">32.5</span>Mbps，每年增长<span class="number">26</span>%。 
+
+&gt;&gt; Gabon, Cameroon, Nepal <span class="keyword">and</span> Iraq experienced significant Internet disruptions.
+&lt;&lt; 加蓬、喀麦隆、尼泊尔和伊拉克存在严重的网络干扰。（呵呵一笑）  
+
+&gt;&gt; Mobile data traffic grew <span class="keyword">around</span> <span class="number">15</span>% <span class="keyword">between</span> <span class="keyword">the</span> Q1 <span class="keyword">and</span> Q2, <span class="keyword">and</span> increased <span class="number">55</span>% <span class="property">year</span> <span class="keyword">over</span> <span class="property">year</span> <span class="keyword">between</span> <span class="keyword">the</span> Q2 <span class="number">2014</span> <span class="keyword">and</span> Q2 <span class="number">2015</span>, based <span class="function_start"><span class="keyword">on</span></span> traffic data collected <span class="keyword">by</span> Ericsson.
+&lt;&lt; 基于Ericsson的统计数据，移动数据流量Q2季度增长了<span class="number">15</span>%左右，每年的增长量在<span class="number">55</span>%左右。 （移动流量真是疯涨啊）  
+</code></pre><p><a id="more"></a>  </p>
+<hr>
+<h3 id="Spotlight:_Internet_and_Broadband_Adoption">Spotlight: Internet and Broadband Adoption</h3>
+<pre><code>The State <span class="operator">of</span> <span class="operator">the</span> Internet reports <span class="command"><span class="keyword">on</span> <span class="title">25</span> <span class="title">Mbps</span> <span class="title">broadband</span> <span class="title">connectivity</span>, <span class="title">reflecting</span> <span class="title">the</span> <span class="title">U</span>.<span class="title">S</span>. <span class="title">Federal</span> <span class="title">Communications</span> <span class="title">Commission</span>’<span class="title">s</span> (<span class="title">FCC</span>) <span class="title">adoption</span> <span class="title">of</span> <span class="title">25</span> <span class="title">Mbps</span> <span class="title">as</span> <span class="title">the</span> <span class="title">new</span> <span class="title">benchmark</span> <span class="title">broadband</span> <span class="title">speed</span>.</span>
+
+&gt;&gt; Globally, <span class="number">4.9</span>% <span class="operator">of</span> unique IP addresses connected <span class="built_in">to</span> Akamai <span class="keyword">at</span> <span class="built_in">average</span> speeds <span class="operator">of</span> <span class="keyword">at</span> least <span class="number">25</span> Mbps, <span class="operator">a</span> <span class="number">7.5</span>% increase over <span class="operator">the</span> previous quarter.
+&lt;&lt; 全球范围内，连接至Akamai的<span class="number">4.9</span>%的IP的平均速率超过<span class="number">25</span>Mbps, 这一比例相比于上一季度增长了<span class="number">7.5</span>%.  
+
+&gt;&gt; In <span class="operator">the</span> United States, <span class="constant">five</span> states had <span class="number">10</span>% <span class="operator">or</span> more <span class="operator">of</span> unique IP addresses connect <span class="built_in">to</span> Akamai <span class="keyword">at</span> <span class="built_in">average</span> speeds <span class="operator">of</span> <span class="keyword">at</span> least <span class="number">25</span> Mbps.
+&lt;&lt; 在美国，五个州存在超过<span class="number">10</span>%的连接至Akamai的IP的平均速率超过<span class="number">25</span>Mbps。
+
+&gt;&gt; Japan (<span class="number">16.4</span> Mbps) saw <span class="operator">the</span> largest quarterly gain <span class="operator">in</span> <span class="built_in">average</span> speed <span class="keyword">at</span> <span class="number">7.8</span>%.The <span class="built_in">global</span> <span class="built_in">average</span> connection speed increased <span class="number">3.5</span>% <span class="built_in">to</span> <span class="number">5.1</span> Mbps
+&lt;&lt; 日本(<span class="number">16.4</span>Mbps)在上一个季度的平均网速增长最快，增长了<span class="number">7.8</span>%。全球平均网络增长了<span class="number">3.5</span>%，达到了<span class="number">5.1</span>Mbps.
+
+&gt;&gt; Global <span class="built_in">average</span> peak connection speeds increased <span class="number">12</span>% <span class="built_in">to</span> <span class="number">32.5</span> Mbps. Average peak connection speeds increased <span class="number">100</span>% <span class="operator">in</span> Egypt (<span class="number">23.4</span> Mbps).
+&lt;&lt; 全球的平均峰值网速增长了<span class="number">12</span>%，达到了<span class="number">32.5</span>Mbps。埃及的增速达到<span class="number">100</span>%，增至<span class="number">23.4</span>%。  
+
+&gt;&gt; <span class="number">27</span>% <span class="operator">of</span> unique IP addresses globally connected <span class="built_in">to</span> Akamai <span class="keyword">at</span> <span class="built_in">average</span> speeds above <span class="number">10</span> Mbps, <span class="operator">an</span> increase <span class="operator">of</span> <span class="number">2.1</span>%.
+&lt;&lt; 全球<span class="number">27</span>%连接至Akamai的IP的平均网速超过<span class="number">10</span>Mbps，增长了<span class="number">2.1</span>%.  
+
+&gt;&gt; Among <span class="operator">the</span> top <span class="number">10</span> countries, Singapore rose <span class="operator">the</span> most (<span class="number">8.4</span>%) <span class="built_in">to</span> achieve <span class="number">50</span>% adoption <span class="operator">of</span> <span class="number">10</span> Mbps <span class="operator">or</span> higher.
+&lt;&lt; 在网速做好的前<span class="number">10</span>个国家中，新加坡超过<span class="number">10</span>Mbps的比例增长最多(<span class="number">8.4</span>%)，达到了<span class="number">50</span>%的覆盖率。  
+
+&gt;&gt; Among all countries, Kazakhstan rose <span class="operator">the</span> most (<span class="number">118</span>%) <span class="built_in">to</span> reach <span class="number">16</span>% adoption <span class="operator">of</span> <span class="number">10</span> Mbps <span class="operator">or</span> higher.
+&lt;&lt; 所有国家中，哈萨克斯坦超过<span class="number">10</span>Mbps的比例增长最多(<span class="number">118</span>%)，达到了<span class="number">16</span>%的覆盖率。  
+
+&gt;&gt; Reversing <span class="operator">the</span> trend seen <span class="operator">in</span> <span class="operator">the</span> <span class="keyword">first</span> quarter, <span class="operator">the</span> <span class="built_in">number</span> <span class="operator">of</span> unique IPv4 addresses worldwide connecting <span class="built_in">to</span> Akamai dropped <span class="keyword">by</span> about <span class="number">8.6</span> million <span class="operator">in</span> Q2.
+&lt;&lt; 与第一季度的趋势相反，全球连接至Akamai的IPv4地址减少了<span class="number">8.7</span>million。
+
+&gt;&gt; Six <span class="operator">of</span> <span class="operator">the</span> top <span class="number">10</span> countries saw <span class="operator">a</span> quarterly decline <span class="operator">in</span> unique IPv4 address.
+&lt;&lt; 前<span class="number">10</span>的国家中，有六个国家检测到了IPv4地址的季度性下滑
+
+&gt;&gt; Roughly half <span class="operator">of</span> <span class="operator">the</span> countries <span class="operator">and</span> regions had <span class="operator">an</span> increase <span class="operator">in</span> unique IPv4 address counts, <span class="operator">with</span> <span class="number">34</span> growing <span class="number">10</span>% <span class="operator">or</span> more.
+&lt;&lt; 接近一半的国家和地区IPv4地址数量在增加，其中有<span class="number">34</span>个的增长率超过<span class="number">10</span>%。
+
+&gt;&gt; European countries continued <span class="built_in">to</span> dominate <span class="operator">the</span> <span class="number">10</span> countries <span class="operator">and</span> regions <span class="operator">with</span> <span class="operator">the</span> largest percentage <span class="operator">of</span> content requests made <span class="built_in">to</span> Akamai over IPv6.
+&lt;&lt; 在通过IPv6连接至Akamai的内容请求中，欧洲国家依然占据着前<span class="number">10</span>名中的大多数。
+
+&gt;&gt; The only <span class="constant">two</span> non-European counties <span class="operator">among</span> <span class="operator">the</span> top <span class="number">10</span> were <span class="operator">the</span> U.S. <span class="operator">and</span> Peru. Both <span class="operator">of</span> which had significant double-digit quarterly improvements <span class="built_in">to</span> adoption rates <span class="operator">of</span> <span class="number">19</span>% <span class="operator">and</span> <span class="number">17</span>%, respectively.
+&lt;&lt; 两个非欧洲国家分别是美国和秘鲁。两者该季度都有两位数的覆盖率的增长，分别达到了<span class="number">19</span>%和<span class="number">17</span>%。
+</code></pre><hr>
+<h2 id="报告正文摘要">报告正文摘要</h2>
+<h3 id="Section_1:_internet_penetration">Section 1: internet penetration</h3>
+<p>Akamai在该季度发现了804 million个IPv4地址连接到了Akamai的服务，连接请求分别来自242个国家和地区。(注：IPv4的理论总数约4.2 billion，可见Akamai的实力啊。Orz…)</p>
+<p>尽管只发现了804 million个IPv4地址，但Akamai推测这背后至少有1 billion个网名用户。因为有许多用户是通过代理，NAT等技术来访问网络的。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_1.jpg" alt=""><br>如果出现图片打不开的情况，可以自行前往下载: <a href="https://www.stateoftheinternet.com/downloads/pdfs/2015-q2-state-of-the-internet-report-figures-charts-graphs.zip" target="_blank" rel="external">Figures</a><br>从上图中可以看到，美国和中国是IPv4地址的大户(很显然嘛)，英国、日本和韩国的IPv4使用量每年还在以超过10%的速度在增长。<br>但就Q1和Q2季度而言，前十中有六个国家的IPv4地址数量在下降。Akamai的解释是认为新技术和IPv6地址的普及造成了这一现象。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_2.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_3.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_4.jpg" alt=""><br>这三张图，反应的是Reginal Internet Registries(RIRs)该季度的IPv4地址存货量和分配量。<br>ARIN(American Registry for Internet Numbers)这个机构也是够拼的，几乎卖光了。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_5.jpg" alt=""><br>比利时和瑞士的IPv6流量都超过20%了啊，欧洲真是走在网络基础设置更新的前列啊。  </p>
+<hr>
+<h3 id="Section_2-6:_geography_global/usa/americas/apac/emea">Section 2-6: geography global/usa/americas/apac/emea</h3>
+<p>这几章主要是各个国家和地区的网速对比，看着略伤心。列几个图吧。<br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_7.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_10.jpg" alt=""><br><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_24.jpg" alt=""><br>第三张图显示的数据也是让人心碎，Global Rank排名92(总计242个国家地区)，而且统计的平均网速还在下降！！！太可怜了。。。  </p>
+<hr>
+<h3 id="Section_7:_mobile_connectivity">Section 7: mobile connectivity</h3>
+<p>这次关于mobile的内容由于Akamai的统计技术在做调整，因此只有下面这一张图的数据。<br>不过还是能反映整体mobile这边的趋势的。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_34.jpg" alt="">  </p>
+<hr>
+<h3 id="Section_8:_Situational_Performance">Section 8: Situational Performance</h3>
+<p>这章是Akamai通过它的Real User Monitoring(RUM)技术获取的真实数据，还挺有意思的。  </p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/figure_35.jpg" alt=""><br>可以看到尽管表中很多国家在平均网络在前面的数据上看起来落后领先国家较多，但真实的页面平均加载时间上却并没有落后太多。<br>比如Hong Kong在平均网络方面要远好于Indonesia，但是从平均页面加载时间来看，Indonesia在Broadband方面也就慢500ms左右，<br>而且在Mobile方面甚至远好于Hong Kong.  </p>
+<p>Akamai对此的解释有如下几点：<br>a. 数据采集不全，这受限于RUM技术<br>b. 这种相应时间受多方面因素影响，而不仅仅是网速。比如页面的总大小，页面的组成以及页面是否针对移动网络优化(这点可能是导致有不少地区mobile时间还小于broadboard时间的原因)都对平均加载时间有影响。<br>关于第二点，我表示十分认同。因为就我自身的上网经验而言，由于直接使用手机3G网络访问网络性能实在不能忍，所以基本都是在有WiFi时才去访问。<br>另外如果我在一个3G或4G网络本身就很快的地区，我可能就会任性的直接使用手机网络。甚至使用手机3G网络做比如看视频，下载文件这类耗流量的事情，<br>也就更有可能访问page weight大的网页，造成统计平均页面加载时间相对教程的现象。</p>
+<hr>
+<h3 id="Section_9:_Internet_disruptions_+_events">Section 9: Internet disruptions + events</h3>
+<p>这章到底在讲什么？下面是Akamai对于disruption的解释。  </p>
+<pre><code>These disruptions may be accidental (backhoes <span class="keyword">or</span> ship anchors severing buried fiber), 
+<span class="typename">natural</span> (hurricanes <span class="keyword">or</span> earthquakes), <span class="keyword">or</span> political (governments shutting off Internet <span class="keyword">access</span> <span class="keyword">in</span> response <span class="keyword">to</span> unrest). 
+</code></pre><p>好了，理解了disruption的发生理由，大家随便看看这章就好。躺枪的国家有：Gabon, Cameroon, Nepal, Iraq。</p>
+<p><img src="/resources/2015-q2-state-of-the-internet-report-figures-charts-graphs/_appendix.jpg" alt=""><br>最后是整体网络相关指标的的表格，方便对比查看。  </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://www.stateoftheinternet.com/resources-connectivity-2015-q2-state-of-the-internet-report.html" target="_blank" rel="external">AKAMAI’S STATE OF THE INTERNET: Q2 2015 REPORT</a><br><a href="https://www.stateoftheinternet.com/downloads/pdfs/Q2-2015-SOTI-Connectivity-Executive-Summary.pdf" target="_blank" rel="external">Q2 2015 STATE OF THE INTERNET SUMMARY</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>这篇博客分享一下Akamai发布的互联网状态报告，推荐每一个网络从业人员读一读。<br>不一定要细看，多看看图，了解了解趋势。若能触发一些自己的思考便是极好的。<br>甚至以后做报告，做PTT时想要一些网络相关的图表，多看看看这个系列的报告也是收益良多的。  </p>
+<p>另外也推荐阅读后续将发布的<a href="https://www.stateoftheinternet.com/resources-web-security-2015-q2-internet-security-report.html" target="_blank" rel="external">安全报告</a>,<br>尤其是被DDoS坑过的小伙伴们。T_T…<br>着急的可以先看看这个<a href="https://www.stateoftheinternet.com/downloads/pdfs/Q2-2015-SOTI-Connectivity-Executive-Summary.pdf" target="_blank" rel="external">summary</a>  </p>
+<p>最后也推荐有兴趣的小伙伴订阅一下stateoftheinternet网站的RSS，保持跟进。  </p>
+<hr>
+<h3 id="What_you_need_to_know">What you need to know</h3>
+<pre><code>&gt;&gt; Global average connection speed increased <span class="number">17</span>% <span class="property">year</span>-<span class="keyword">over</span>-<span class="property">year</span>; South Korea leads <span class="keyword">at</span> <span class="number">23.1</span> Mbps.
+&lt;&lt; 全球平均网速(connection speed)每年增加<span class="number">17</span>%; 韩国领跑全球，达到<span class="number">23.1</span>Mbps.
+
+&gt;&gt; Global average peak connection speed reached <span class="number">32.5</span> Mbps; up <span class="number">26</span>% <span class="property">year</span>-<span class="keyword">over</span>-<span class="property">year</span>.
+&lt;&lt; 全球平均峰值网速达到<span class="number">32.5</span>Mbps，每年增长<span class="number">26</span>%。 
+
+&gt;&gt; Gabon, Cameroon, Nepal <span class="keyword">and</span> Iraq experienced significant Internet disruptions.
+&lt;&lt; 加蓬、喀麦隆、尼泊尔和伊拉克存在严重的网络干扰。（呵呵一笑）  
+
+&gt;&gt; Mobile data traffic grew <span class="keyword">around</span> <span class="number">15</span>% <span class="keyword">between</span> <span class="keyword">the</span> Q1 <span class="keyword">and</span> Q2, <span class="keyword">and</span> increased <span class="number">55</span>% <span class="property">year</span> <span class="keyword">over</span> <span class="property">year</span> <span class="keyword">between</span> <span class="keyword">the</span> Q2 <span class="number">2014</span> <span class="keyword">and</span> Q2 <span class="number">2015</span>, based <span class="function_start"><span class="keyword">on</span></span> traffic data collected <span class="keyword">by</span> Ericsson.
+&lt;&lt; 基于Ericsson的统计数据，移动数据流量Q2季度增长了<span class="number">15</span>%左右，每年的增长量在<span class="number">55</span>%左右。 （移动流量真是疯涨啊）  
+</code></pre><p>]]>
+    
+    </summary>
+    
+      <category term="wiki-好文共享" scheme="http://perthcharles.github.com/categories/wiki-%E5%A5%BD%E6%96%87%E5%85%B1%E4%BA%AB/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[剖析free命令]]></title>
@@ -1824,106 +1944,6 @@ b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的thr
       <category term="http_load" scheme="http://perthcharles.github.com/tags/http-load/"/>
     
       <category term="test" scheme="http://perthcharles.github.com/tags/test/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TC 实践]]></title>
-    <link href="http://perthcharles.github.com/2015/06/12/tc-tutorial/"/>
-    <id>http://perthcharles.github.com/2015/06/12/tc-tutorial/</id>
-    <published>2015-06-12T01:32:51.000Z</published>
-    <updated>2015-06-15T02:30:38.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<h2 id="TC简介">TC简介</h2>
-<hr>
-<p>TC全称为Traffic Control，是Linux进行流量控制的工具。<br>更多的内容可阅读参考资料中的第一篇文章。<br><a id="more"></a>  </p>
-<h2 id="队列类型">队列类型</h2>
-<hr>
-<p>Linux内核中支持的常见队列有：  </p>
-<ol>
-<li>pfifo_fast: 先进先出队列<br><img src="/resources/tc-fifo-qdisc.png" alt=""><br><img src="/resources/tc-pfifo_fast-qdisc.png" alt="">  </li>
-<li>TBF(Token Bucket Filter): 令牌桶过滤器<br><img src="/resources/tc-tbf-qdisc.png" alt="">  </li>
-<li>SFQ(Stochastic Fairness Queueing): 随机公平队列<br><img src="/resources/tc-sfq-qdisc.png" alt="">  </li>
-<li>HTB(Hierarchy Token Bucket): 分层令牌桶<br><img src="/resources/tc-htb-borrow.png" alt="">  </li>
-</ol>
-<h2 id="TC应用场景">TC应用场景</h2>
-<hr>
-<p>本节摘抄自<a href="http://tldp.org/HOWTO/Traffic-Control-HOWTO/overview.html" target="_blank" rel="external">Traffic Control HOWTO</a>.  </p>
-<pre><code>Common traffic control solutions  
-  <span class="number">1.</span> Limit total bandwidth <span class="built_in">to</span> <span class="operator">a</span> known rate; TBF, HTB <span class="operator">with</span> child class(es).
-  <span class="number">2.</span> Limit <span class="operator">the</span> bandwidth <span class="operator">of</span> <span class="operator">a</span> particular user, service <span class="operator">or</span> client; HTB classes <span class="operator">and</span> classifying <span class="operator">with</span> <span class="operator">a</span> <span class="built_in">filter</span>. traffic.
-  <span class="number">3.</span> Maximize TCP throughput <span class="command"><span class="keyword">on</span> <span class="title">an</span> <span class="title">asymmetric</span> <span class="title">link</span>; <span class="title">prioritize</span> <span class="title">transmission</span> <span class="title">of</span> <span class="title">ACK</span> <span class="title">packets</span>, <span class="title">wondershaper</span>.</span>
-  <span class="number">4.</span> Reserve bandwidth <span class="keyword">for</span> <span class="operator">a</span> particular application <span class="operator">or</span> user; HTB <span class="operator">with</span> children classes <span class="operator">and</span> classifying.
-  <span class="number">5.</span> Prefer latency sensitive traffic; PRIO inside <span class="operator">an</span> HTB class.
-  <span class="number">6.</span> Managed oversubscribed bandwidth; HTB <span class="operator">with</span> borrowing.
-  <span class="number">7.</span> Allow equitable distribution <span class="operator">of</span> unreserved bandwidth; HTB <span class="operator">with</span> borrowing.
-  <span class="number">8.</span> Ensure that <span class="operator">a</span> particular type <span class="operator">of</span> traffic is dropped; policer attached <span class="built_in">to</span> <span class="operator">a</span> <span class="built_in">filter</span> <span class="operator">with</span> <span class="operator">a</span> drop action.
-</code></pre><h2 id="实践案例">实践案例</h2>
-<hr>
-<h3 id="pfifo_fast">pfifo_fast</h3>
-<p>pfifo_fast是系统默认的队列类型，只起到调度的作用，不对数据流量进行控制。<br>其中pfifo中的p是packet的缩写，表示queue的大小计量单位为packet。<br>可以通过ip命令查看当前网络队列设置  </p>
-<pre><code><span class="preprocessor"># ip link list</span>
-</code></pre><h3 id="TBF">TBF</h3>
-<p>TBF队列通过设置令牌的产生速度来限制数据包的发送。  </p>
-<pre><code><span class="comment">// 在eth0上设置一个tbf队列，网络带宽为200kbit，延迟50ms，缓冲区为1540个字节</span>
-<span class="comment">// rate表示令牌的产生速率</span>
-<span class="comment">// latency表示数据包在队列中的最长等待时间</span>
-<span class="comment">// 对burst参数解释一下：</span>
-<span class="comment">//   burst means the maximum amount of bytes that tokens can be available for instantaneously.</span>
-<span class="comment">//   如果数据包的到达速率与令牌的产生速率一致，即200kbit，则数据不会排队，令牌也不会剩余</span>
-<span class="comment">//   如果数据包的到达速率小于令牌的产生速率，则令牌会有一定的剩余。</span>
-<span class="comment">//   如果后续某一会数据包的到达速率超过了令牌的产生速率，则可以一次性的消耗一定量的令牌。</span>
-<span class="comment">//   burst就是用于限制这“一次性”消耗的令牌的数量的，以字节数为单位。</span>
-<span class="preprocessor"># tc qdisc add dev eth0 root tbf rate 200kbit latency 50ms burst 1540  </span>
-
-<span class="preprocessor"># tc qdisc ls dev eth0 // 查看eth0上的队列规则  </span>
-</code></pre><h3 id="SFQ">SFQ</h3>
-<p>SFQ队列通过一个hash函数将不同会话(如TCP流)分到不同的FIFO队列中，从而保证<br>数据流的公平性。  </p>
-<pre><code><span class="comment">// perturb表示每10秒更新一次hash函数  </span>
-<span class="preprocessor"># tc qdisc add dev eth0 root sfq perturb 10  </span>
-</code></pre><h3 id="HTB">HTB</h3>
-<pre><code><span class="comment">// handle是一组用户指定的标示符，格式为major:minor。  </span>
-<span class="comment">// 如果是一条queueing discipline，minor需要一直为0。  </span>
-<span class="preprocessor"># tc qdisc add dev eth0 root handle 1:0 htb  </span>
-
-<span class="comment">// parent指明该新增的class添加到那一个父handle上去  </span>
-<span class="comment">// classid指明该class handle的唯一ID，minor需要是非零值  </span>
-<span class="comment">// ceil定义rate的上界  </span>
-<span class="preprocessor"># tc class add dev eth0 parent 1:1 classid 1:6 htb rate 256kbit ceil 512kbit</span>
-
-<span class="comment">// 新建一个带宽为100kbps的root class, 其classid为1:1</span>
-<span class="preprocessor"># tc class add dev eth0 parent 1: classid 1:1 htb rate 100kbps ceil 100kbps</span>
-<span class="comment">// 接着建立两个子class，指定其parent为1:1，ceil用来限制子类最大的带宽</span>
-<span class="preprocessor"># tc class add dev eth0 parent 1:1 classid 1:10 htb rate 40kbps ceil 100kbps</span>
-<span class="preprocessor"># tc class add dev eth0 parent 1:1 classid 1:11 htb rate 60kbps ceil 100kbps</span>
-<span class="comment">// 随后建立filter指定哪些类型的packet进入那个class</span>
-<span class="preprocessor"># tc filter add dev eth0 protocol ip parent 1:0 prio 1 u32 match ip src 1.2.3.4 match ip dport 80 0xffff flowid 1:10</span>
-<span class="preprocessor"># tc filter add dev eth0 protocol ip parent 1:0 prio 1 u32 match ip src 1.2.3.4 flow 1:11</span>
-<span class="comment">// 最后为这些class添加queuing disciplines</span>
-<span class="preprocessor"># tc qdisc add dev eth0 parent 1:10 handle 20: pfifo limit 5</span>
-<span class="preprocessor"># tc qdisc add dev eth0 parent 1:11 handle 30: sfq perturb 10</span>
-</code></pre><h3 id="其他">其他</h3>
-<pre><code><span class="comment">// 同时模拟20Mbps带宽，50msRTT和0.1%丢包率  </span>
-<span class="preprocessor"># tc qdisc add dev eth5 root handle 1:0 tbf rate 20mbit burst 10kb limit 300000  </span>
-<span class="preprocessor"># tc qdisc add dev eth5 parent 1:0 handle 10:0 netem delay 50ms loss 0.1 limit 300000  </span>
-</code></pre><h2 id="Rules,_Guidelines_and_Approaches">Rules, Guidelines and Approaches</h2>
-<hr>
-<p>‘’’<br>A device can only shape traffic in transmits<br>HTB is an ideal qdisc to use on a link with a know bandwidth<br>In theory, the PRIO scheduler is an ideal match for links with variable bandwidth<br>Sharing/splitting bandwidth based on flows or IP<br>‘’’</p>
-<h2 id="参考资料">参考资料</h2>
-<hr>
-<p><a href="http://www.turbolinux.com.cn/turbo/wiki/doku.php?id=traffic-control:tc%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%E7%AE%80%E4%BB%8B" target="_blank" rel="external">traffic-control:tc流量管理简介</a><br><a href="http://tldp.org/HOWTO/Traffic-Control-HOWTO/index.html" target="_blank" rel="external">Traffic Control HOWTO</a><br><a href="http://luxik.cdi.cz/~devik/qos/htb/manual/userg.htm" target="_blank" rel="external">HTB Linux queuing discipline manual - user guide</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<h2 id="TC简介">TC简介</h2>
-<hr>
-<p>TC全称为Traffic Control，是Linux进行流量控制的工具。<br>更多的内容可阅读参考资料中的第一篇文章。<br>]]>
-    
-    </summary>
-    
-      <category term="tc" scheme="http://perthcharles.github.com/tags/tc/"/>
-    
-      <category term="Networking" scheme="http://perthcharles.github.com/categories/Networking/"/>
     
   </entry>
   

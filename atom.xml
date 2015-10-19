@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-10-17T08:28:06.318Z</updated>
+  <updated>2015-10-19T01:55:58.569Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,104 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[阅读周记(第一期)]]></title>
+    <link href="http://perthcharles.github.com/2015/10/15/wiki-weekly-readlist-20151015/"/>
+    <id>http://perthcharles.github.com/2015/10/15/wiki-weekly-readlist-20151015/</id>
+    <published>2015-10-15T05:15:52.000Z</published>
+    <updated>2015-10-19T01:55:45.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h2 id="Save_Some_Bandwidth_By_Turning_Off_TCP_Timestamps"><a href="http://highscalability.com/blog/2015/10/14/save-some-bandwidth-by-turning-off-tcp-timestamps.html" target="_blank" rel="external">Save Some Bandwidth By Turning Off TCP Timestamps</a></h2>
+<pre><code>想法: tcp timestamp选项会引入额外的<span class="number">12</span>字节的包头开销，因此关闭tcp timestamp选项理论上能够少量的提高有效数据的吞吐率
+评测: 使用qperf benchmark评测关闭tcp timestamp后，能提升大约<span class="number">1</span>%的吞吐率
+      对于<span class="number">10</span>GE NIC，关闭timestamp能将下载速度从<span class="number">9370</span>Mbits/s提升至<span class="number">9460</span>Mbits/s
+点评: 关闭timestamp正常情况下确实能提高有效数据的吞吐率，但在某些情况下可能就不那么理想了。
+      比如timestamp提出的初衷之一就是解决RTT测量不准，导致spurious retransmission的情况。如果关闭timestamp导致了更多的RTO，则肯定是划不来的。  
+      正如文中建议的：
+        Results show <span class="keyword">that</span> <span class="keyword">it</span> <span class="keyword">is</span> reasonable <span class="keyword">to</span> turn off timestamps <span class="function_start"><span class="keyword">on</span></span> <span class="number">10</span>GE interfaces, 
+        <span class="keyword">but</span> keep <span class="keyword">in</span> mind <span class="keyword">that</span> <span class="keyword">it</span> should be performed only <span class="keyword">in</span> low latency networks.
+      使用<span class="number">10</span>GE网卡是为了<span class="number">1</span>%的提升效果更明显，强调低延迟是因为RTO有系统最小值<span class="number">200</span>ms限制。低延迟下更难出现spurious retransmission
+</code></pre><p>相关阅读：<br><a href="http://serverfault.com/questions/566889/is-it-fine-to-turn-off-tcp-window-scaling-and-tcp-timestamps-on-server" target="_blank" rel="external">Is it fine to turn off tcp window scaling and tcp timestamps on server?</a><br><a href="http://stackoverflow.com/questions/7880383/what-benefit-is-conferred-by-tcp-timestamp" target="_blank" rel="external">What benefit is conferred by TCP timestamp?</a>  </p>
+<a id="more"></a>  
+
+<hr>
+<h2 id="优秀管理者需要具备的气质"><a href="http://www.zhihu.com/question/35959303" target="_blank" rel="external">优秀管理者需要具备的气质</a></h2>
+<pre><code>摘要：
+    1. 管理者需要懂得妥协，越是困难的事，管理者就越要协调更多资源参与。管理者需要做的就是在冲突域妥协中找到平衡点。  
+    2. 基层是操作层，中层是执行层，高层是创造层和领导层，这是分工标准。  
+    3. 提到工作本身，管理者的条件（处理问题的能力）一定要胜过下属，才是第一保障。  
+点评：
+    了解公司管理者需要具备的素质与气质，在职业生涯初期能有助于辨别出（不）好的领导。
+    正所谓良禽择木而栖，跟对一个优秀的领导对于职业发展是有重大帮助的。  
+</code></pre><hr>
+<h2 id="The_Best_DevOps_Tools_on_OSX"><a href="https://dzone.com/articles/the-best-devops-tools-on-osx" target="_blank" rel="external">The Best DevOps Tools on OSX</a></h2>
+<pre><code>点评：一个推荐工具的blog，质量确实不错。另外为什么要关注DevOps的工具呢？毕竟想通往<span class="keyword">Full</span>-<span class="keyword">Stack</span>啊^_^  
+</code></pre><hr>
+<h2 id="How_to_make_your_code_self-documenting"><a href="http://codeutopia.net/blog/2014/12/01/how-to-make-your-code-self-documenting/" target="_blank" rel="external">How to make your code self-documenting</a></h2>
+<pre><code>摘要：
+    <span class="number">1</span>. There are three basic methods <span class="keyword">for</span> <span class="keyword">self</span>-documenting code:
+        Nameing things: Use names <span class="keyword">to</span> explain the purpose <span class="keyword">of</span> variables, functions, ect.
+        Extracting <span class="function"><span class="keyword">function</span>:</span> Move code <span class="keyword">into</span> functions <span class="keyword">to</span> clarify purpose
+        Introduce a variable: Move expressions <span class="keyword">into</span> dedicated variables <span class="keyword">to</span> clarify them
+    <span class="number">2</span>. addition methods:
+        <span class="keyword">Class</span> <span class="keyword">and</span> <span class="keyword">module</span> interfaces: What functions your classes <span class="keyword">and</span> modules expose effect the clarity <span class="keyword">of</span> the code
+        Code grouping: You can indicate relatinships between different pieces <span class="keyword">of</span> code <span class="keyword">with</span> grouping
+点评：
+    <span class="number">1</span>. 这篇文章提出了一些增强代码<span class="keyword">self</span>-documentating的技巧，那为什么需要代码<span class="keyword">self</span>-documenting呢？
+    尽管可以通过添加注释来解释代码，但实践中往往还是可读性更好的代码更易维护，更易理解。
+    那么可读性好是什么？我的定义：一个相同领域的工程师，在不需要额外的文档、注释的情况下，
+    就是很快的理解代码的逻辑和功能。
+    <span class="number">2</span>. 关于Extracing <span class="function"><span class="keyword">function</span>之前我的理解还只是一个函数负责单一的一个逻辑。
+    没有意识到，这样做还能帮助减少<span class="title">duplicate</span> <span class="title">code</span>，甚至能优化设计<span class="params">(improve your architecture)</span>。
+    更没意识到的是，下例所展示出的一个作用:</span>
+
+        优化前: 
+            <span class="keyword">var</span> width = (value - <span class="number">0.5</span>) *<span class="number">16</span>;
+        优化后: 
+            <span class="keyword">var</span> width = emToPixel(value);
+
+            <span class="function"><span class="keyword">function</span> <span class="title">emToPixels</span><span class="params">(ems)</span> <span class="comment">{
+                return (ems - 0.5) * 16;
+            }</span>
+
+    优化前，如果不额外添加注释，时间长了很难记着这一行到底在干嘛。
+    优化后，尽管没有注释，不管过了多久，一看代码就会知道完成的作用就是单位转换。
+    同理文章还有一个将复杂的判断逻辑放到一个函数中去的例子，出发点是相同的。这里就不罗列了。  
+    在这一点上，还需要在以后的实践中多多注意和体会。  </span>
+</code></pre><p>相关阅读：<br><a href="http://perthcharles.github.io/2014/04/20/the-art-of-readable-code/" target="_blank" rel="external">强烈推荐之前读过的:The Art of Readable Code</a>  </p>
+<hr>
+<h2 id="KCon_2015_黑客安全大会"><a href="http://www.ichunqiu.com/course/775" target="_blank" rel="external">KCon 2015 黑客安全大会</a></h2>
+<p>看看视频，了解了解KCon.  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h2 id="Save_Some_Bandwidth_By_Turning_Off_TCP_Timestamps"><a href="http://highscalability.com/blog/2015/10/14/save-some-bandwidth-by-turning-off-tcp-timestamps.html" target="_blank" rel="external">Save Some Bandwidth By Turning Off TCP Timestamps</a></h2>
+<pre><code>想法: tcp timestamp选项会引入额外的<span class="number">12</span>字节的包头开销，因此关闭tcp timestamp选项理论上能够少量的提高有效数据的吞吐率
+评测: 使用qperf benchmark评测关闭tcp timestamp后，能提升大约<span class="number">1</span>%的吞吐率
+      对于<span class="number">10</span>GE NIC，关闭timestamp能将下载速度从<span class="number">9370</span>Mbits/s提升至<span class="number">9460</span>Mbits/s
+点评: 关闭timestamp正常情况下确实能提高有效数据的吞吐率，但在某些情况下可能就不那么理想了。
+      比如timestamp提出的初衷之一就是解决RTT测量不准，导致spurious retransmission的情况。如果关闭timestamp导致了更多的RTO，则肯定是划不来的。  
+      正如文中建议的：
+        Results show <span class="keyword">that</span> <span class="keyword">it</span> <span class="keyword">is</span> reasonable <span class="keyword">to</span> turn off timestamps <span class="function_start"><span class="keyword">on</span></span> <span class="number">10</span>GE interfaces, 
+        <span class="keyword">but</span> keep <span class="keyword">in</span> mind <span class="keyword">that</span> <span class="keyword">it</span> should be performed only <span class="keyword">in</span> low latency networks.
+      使用<span class="number">10</span>GE网卡是为了<span class="number">1</span>%的提升效果更明显，强调低延迟是因为RTO有系统最小值<span class="number">200</span>ms限制。低延迟下更难出现spurious retransmission
+</code></pre><p>相关阅读：<br><a href="http://serverfault.com/questions/566889/is-it-fine-to-turn-off-tcp-window-scaling-and-tcp-timestamps-on-server" target="_blank" rel="external">Is it fine to turn off tcp window scaling and tcp timestamps on server?</a><br><a href="http://stackoverflow.com/questions/7880383/what-benefit-is-conferred-by-tcp-timestamp" target="_blank" rel="external">What benefit is conferred by TCP timestamp?</a>  </p>
+]]>
+    
+    </summary>
+    
+      <category term="tcp" scheme="http://perthcharles.github.com/tags/tcp/"/>
+    
+      <category term="管理" scheme="http://perthcharles.github.com/tags/%E7%AE%A1%E7%90%86/"/>
+    
+      <category term="devops" scheme="http://perthcharles.github.com/tags/devops/"/>
+    
+      <category term="KCon" scheme="http://perthcharles.github.com/tags/KCon/"/>
+    
+      <category term="wiki-阅读周记" scheme="http://perthcharles.github.com/categories/wiki-%E9%98%85%E8%AF%BB%E5%91%A8%E8%AE%B0/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[2015 Q2 Akamai互联网状态报告]]></title>
@@ -1912,38 +2010,6 @@ b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的thr
     </summary>
     
       <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[服务器负载压力测试相关工具]]></title>
-    <link href="http://perthcharles.github.com/2015/06/15/server-load-test/"/>
-    <id>http://perthcharles.github.com/2015/06/15/server-load-test/</id>
-    <published>2015-06-15T02:30:56.000Z</published>
-    <updated>2015-07-07T03:33:01.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<h2 id="工具列表">工具列表</h2>
-<hr>
-<p>下面这些工具都比较小巧，用法也比较简单。<br>基本看看—help就知道怎么用了。  </p>
-<pre><code><span class="attribute">HTTP_LOAD</span>: <span class="string">multiprocessing http test client  </span>
-<span class="attribute">SIEGE</span>: <span class="string">http load testing and benchmarking utility</span>
-<span class="attribute">webbench</span>: <span class="string">据文档描述，可以monitor3万个并发连接去测试网站的负载能力  </span>
-<span class="attribute">ab</span>: <span class="string">apache benchmark，Apache自带的测试工具  </span>
-</code></pre><h2 id="参考资料">参考资料</h2>
-<hr>
-<p><a href="http://acme.com/software/http_load/" target="_blank" rel="external">HTTP_LOAD homepage</a><br><a href="https://www.joedog.org/siege-home/" target="_blank" rel="external">SIEGE homepage</a><br><a href="http://home.tiscali.cz/~cz210552/webbench.html" target="_blank" rel="external">Web Bench 1.5</a><br><a href="http://httpd.apache.org/docs/2.2/programs/ab.html" target="_blank" rel="external">ab - Apache HTTP server benchmarking tool</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<h2 id="工具列表">工具列表</h2>
-<hr>
-<p>下面这些工具都比较小巧，用法也比较简单。<br>基本看看—help就知道怎么用了。  </p>
-<pre><code><span class="attribute">HTTP_LOAD</span>: <s]]>
-    </summary>
-    
-      <category term="http_load" scheme="http://perthcharles.github.com/tags/http-load/"/>
-    
-      <category term="test" scheme="http://perthcharles.github.com/tags/test/"/>
     
   </entry>
   

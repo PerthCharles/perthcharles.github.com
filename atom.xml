@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-10-26T01:28:21.699Z</updated>
+  <updated>2015-10-26T01:31:10.545Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -19,7 +19,7 @@
     <link href="http://perthcharles.github.com/2015/10/19/wiki-weekly-readlist-20151019/"/>
     <id>http://perthcharles.github.com/2015/10/19/wiki-weekly-readlist-20151019/</id>
     <published>2015-10-19T02:57:45.000Z</published>
-    <updated>2015-10-26T01:28:13.000Z</updated>
+    <updated>2015-10-26T01:31:07.000Z</updated>
     <content type="html"><![CDATA[<hr>
 <h2 id="从学渣到学霸_-_我的100天阅读简史"><a href="http://mp.weixin.qq.com/s?__biz=MjM5OTA3MjUwMA==&amp;mid=400032224&amp;idx=1&amp;sn=335f870597a6f888d219daf687357fdd&amp;scene=2&amp;srcid=1018D0eWR4z8X0yo9xV2Gg0s&amp;from=timeline&amp;isappinstalled=0#rd" target="_blank" rel="external">从学渣到学霸 - 我的100天阅读简史</a></h2>
 <pre><code>点评：
@@ -28,7 +28,9 @@
     3. 对于不同的性质的书，要采用不同的方式阅读  
     4. 自己能够成为一个行动派？真正成为一个爱读书的人？纸上得来终觉浅，绝知此事要躬行。  
     5. 每读完一段书，写一个短评(如125字)去总结，是一个便于梳理知识的好方法。  
-</code></pre><hr>
+</code></pre><a id="more"></a>  
+
+<hr>
 <h2 id="一个可以显示Linux命令运行进度的伟大工具"><a href="https://linux.cn/article-4741-weibo.html" target="_blank" rel="external">一个可以显示Linux命令运行进度的伟大工具</a></h2>
 <pre><code>摘要：
     <span class="number">1</span>. Coreutils Viewer（cv）是一个简单的程序，它可以用于显示任何核心组件命令
@@ -137,10 +139,22 @@
 </code></pre>]]></content>
     <summary type="html">
     <![CDATA[<hr>
-<h2 id="从学渣到学霸_-_我的100天阅读简史"><a href="http://mp.weixin.qq.com/s?__biz=MjM5OTA3MjUwMA==&amp;mid=400032224&amp;idx=1&amp;sn=335f870597a6f]]>
+<h2 id="从学渣到学霸_-_我的100天阅读简史"><a href="http://mp.weixin.qq.com/s?__biz=MjM5OTA3MjUwMA==&amp;mid=400032224&amp;idx=1&amp;sn=335f870597a6f888d219daf687357fdd&amp;scene=2&amp;srcid=1018D0eWR4z8X0yo9xV2Gg0s&amp;from=timeline&amp;isappinstalled=0#rd" target="_blank" rel="external">从学渣到学霸 - 我的100天阅读简史</a></h2>
+<pre><code>点评：
+    1. 行动力是第一的，有想法就要去实际动手。作者就是一个行动派，敬佩！  
+    2. 每天早上起床后的时间，也是可以利用的。对我个人而言，早睡一会，早起一个小时。然后利用这一个小时，花几个番茄钟去读书！
+    3. 对于不同的性质的书，要采用不同的方式阅读  
+    4. 自己能够成为一个行动派？真正成为一个爱读书的人？纸上得来终觉浅，绝知此事要躬行。  
+    5. 每读完一段书，写一个短评(如125字)去总结，是一个便于梳理知识的好方法。  
+</code></pre>]]>
+    
     </summary>
     
       <category term="读书" scheme="http://perthcharles.github.com/tags/%E8%AF%BB%E4%B9%A6/"/>
+    
+      <category term="CPU" scheme="http://perthcharles.github.com/tags/CPU/"/>
+    
+      <category term="strace" scheme="http://perthcharles.github.com/tags/strace/"/>
     
       <category term="wiki-阅读周记" scheme="http://perthcharles.github.com/categories/wiki-%E9%98%85%E8%AF%BB%E5%91%A8%E8%AE%B0/"/>
     

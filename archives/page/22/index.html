@@ -71,12 +71,16 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-linux-tools" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-linux-using" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/03/01/linux-tools/" class="article-date">
-  <time datetime="2013-03-01T04:00:00.000Z" itemprop="datePublished">3月 1 2013</time>
+    <a href="/2013/03/01/linux-using/" class="article-date">
+  <time datetime="2013-03-01T05:00:00.000Z" itemprop="datePublished">3月 1 2013</time>
 </a>
     
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Shell/">Shell</a>
+  </div>
+
   </div>
   <div class="article-inner">
     
@@ -85,7 +89,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/03/01/linux-tools/">linux常用工具列表</a>
+      <a class="article-title" href="/2013/03/01/linux-using/">linux命令学习（一）:du xargs </a>
     </h1>
   
 
@@ -93,25 +97,25 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="常用工具列表">常用工具列表</h3>
-<h4 id="git">git</h4>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#git add *</span></div><div class="line"><span class="preprocessor">#git commmit -a -m "commit-name"</span></div><div class="line"><span class="preprocessor">#git push origin master</span></div><div class="line"><span class="preprocessor">#git clone XXX</span></div></pre></td></tr></table></figure>
-
-
+        <h2 id="查找软件安装位置方法">查找软件安装位置方法</h2>
+<pre><code><span class="preprocessor">#whereis name-of-software  </span>
+</code></pre><h2 id="查看通过yum已安装的程序">查看通过yum已安装的程序</h2>
+<pre><code>#rpm -<span class="keyword">qa</span> |<span class="keyword">grep</span> 程序名  
+</code></pre>
         
           <p class="article-more-link">
-            <a href="/2013/03/01/linux-tools/#more">Read More</a>
+            <a href="/2013/03/01/linux-using/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/03/01/linux-tools/" data-id="bag35h61rxd72yxc" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/03/01/linux-using/" data-id="sy2ael6b1l88fply" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/03/01/linux-tools/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/03/01/linux-using/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Tools/">Tools</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
 
     </footer>
   </div>
@@ -175,10 +179,10 @@
 
 
   
-    <article id="post-git-start" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-linux-tools" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2013/02/25/git-start/" class="article-date">
-  <time datetime="2013-02-25T04:00:00.000Z" itemprop="datePublished">2月 25 2013</time>
+    <a href="/2013/03/01/linux-tools/" class="article-date">
+  <time datetime="2013-03-01T04:00:00.000Z" itemprop="datePublished">3月 1 2013</time>
 </a>
     
   </div>
@@ -189,7 +193,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2013/02/25/git-start/">初识Git</a>
+      <a class="article-title" href="/2013/03/01/linux-tools/">linux常用工具列表</a>
     </h1>
   
 
@@ -197,28 +201,25 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <hr>
-<h2 id="安装git后，配置基本信息">安装git后，配置基本信息</h2>
-<pre><code>git config --<span class="keyword">global</span> user.name <span class="string">'PerthCharles'</span>  
-git config --<span class="keyword">global</span> user.email <span class="string">'zhongbincharles@gmail.com'</span>  
-git config --<span class="keyword">global</span> -l <span class="comment">//查看全局配置信息</span>
-</code></pre><h2 id="从github上将远端仓库clone至本地">从github上将远端仓库clone至本地</h2>
-<pre><code>git clone http<span class="variable">s:</span>//github.<span class="keyword">com</span>/PerthCharles/perthcharles.github.<span class="keyword">com</span>.git  
-</code></pre>
+        <h3 id="常用工具列表">常用工具列表</h3>
+<h4 id="git">git</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#git add *</span></div><div class="line"><span class="preprocessor">#git commmit -a -m "commit-name"</span></div><div class="line"><span class="preprocessor">#git push origin master</span></div><div class="line"><span class="preprocessor">#git clone XXX</span></div></pre></td></tr></table></figure>
+
+
         
           <p class="article-more-link">
-            <a href="/2013/02/25/git-start/#more">Read More</a>
+            <a href="/2013/03/01/linux-tools/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2013/02/25/git-start/" data-id="77j3bdux2zift3w4" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2013/03/01/linux-tools/" data-id="bag35h61rxd72yxc" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2013/02/25/git-start/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2013/03/01/linux-tools/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Git/">Git</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Tools/">Tools</a></li></ul>
 
     </footer>
   </div>
@@ -279,6 +280,59 @@ git config --<span class="keyword">global</span> -l <span class="comment">//查�
 
 
   
+    <article id="post-git-start" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2013/02/25/git-start/" class="article-date">
+  <time datetime="2013-02-25T04:00:00.000Z" itemprop="datePublished">2月 25 2013</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/02/25/git-start/">初识Git</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<h2 id="安装git后，配置基本信息">安装git后，配置基本信息</h2>
+<pre><code>git config --<span class="keyword">global</span> user.name <span class="string">'PerthCharles'</span>  
+git config --<span class="keyword">global</span> user.email <span class="string">'zhongbincharles@gmail.com'</span>  
+git config --<span class="keyword">global</span> -l <span class="comment">//查看全局配置信息</span>
+</code></pre><h2 id="从github上将远端仓库clone至本地">从github上将远端仓库clone至本地</h2>
+<pre><code>git clone http<span class="variable">s:</span>//github.<span class="keyword">com</span>/PerthCharles/perthcharles.github.<span class="keyword">com</span>.git  
+</code></pre>
+        
+          <p class="article-more-link">
+            <a href="/2013/02/25/git-start/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2013/02/25/git-start/" data-id="77j3bdux2zift3w4" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2013/02/25/git-start/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Git/">Git</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/archives/page/21/">&laquo; Prev</a><a class="page-number" href="/archives/">1</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/20/">20</a><a class="page-number" href="/archives/page/21/">21</a><span class="page-number current">22</span>
@@ -293,7 +347,7 @@ git config --<span class="keyword">global</span> -l <span class="comment">//查�
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">6</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -303,6 +357,10 @@ git config --<span class="keyword">global</span> -l <span class="comment">//查�
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/10/19/wiki-weekly-readlist-20151019/">阅读周记(第二期)</a>
+          </li>
         
           <li>
             <a href="/2015/10/15/wiki-weekly-readlist-20151015/">阅读周记(第一期)</a>
@@ -360,10 +418,6 @@ git config --<span class="keyword">global</span> -l <span class="comment">//查�
             <a href="/2015/08/24/commit-a-simple-manually/">GIT系列二：手动提交一个commit</a>
           </li>
         
-          <li>
-            <a href="/2015/08/24/setup-gitolite-service-git-1/">GIT系列一：使用gitolite搭建git仓库管理服务</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -404,7 +458,7 @@ git config --<span class="keyword">global</span> -l <span class="comment">//查�
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>TCP Tail Loss Probe(TLP) | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP Tail Loss Probe(TLP)">
+<meta property="og:url" content="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TCP Tail Loss Probe(TLP)">
+<meta name="twitter:description" content="Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-wiki-network-tcp-tlp" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/10/31/wiki-network-tcp-tlp/" class="article-date">
+  <time datetime="2015-10-31T11:01:45.000Z" itemprop="datePublished">10月 31 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      TCP Tail Loss Probe(TLP)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#RFC解读"><span class="toc-text">RFC解读</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#TLP基本策略"><span class="toc-text">TLP基本策略</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#触发超时机制的常见场景"><span class="toc-text">触发超时机制的常见场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#RTO与RTT的比值分布"><span class="toc-text">RTO与RTT的比值分布</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TLP算法"><span class="toc-text">TLP算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#基于FACK机制的FR触发算法"><span class="toc-text">基于FACK机制的FR触发算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#如果丢失的包就是TLP重传的数据包会怎样"><span class="toc-text">如果丢失的包就是TLP重传的数据包会怎样</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TLP丢包检测算法"><span class="toc-text">TLP丢包检测算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#统一了丢包恢复机制"><span class="toc-text">统一了丢包恢复机制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#恢复任意程度的尾丢包"><span class="toc-text">恢复任意程度的尾丢包</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#源码分析"><span class="toc-text">源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#函数调用逻辑"><span class="toc-text">函数调用逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#安装PTO超时计时器"><span class="toc-text">安装PTO超时计时器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#何时结束一个episode"><span class="toc-text">何时结束一个episode</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TLP与ER的关系"><span class="toc-text">TLP与ER的关系</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TLP性能评测数据"><span class="toc-text">TLP性能评测数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<p>Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。<br>但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。<br>为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而提高TCP性能。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="RFC解读">RFC解读</h3>
+<hr>
+<h4 id="TLP基本策略">TLP基本策略</h4>
+<p>TLP算法会在TCP还是Open状态的时候，设置一个Probe TimeOut (PTO)。<br>当链路中有未被确认的数据包，同时在PTO时间内未收到任何ACK，则会触发PTO<br>超时处理机制。<br>TLP会选择传输序号最大的一个数据包作为tail loss probe包，这个序号最大的包可能是<br>一个可以发送的新的数据包，也可能是一个重传包。<br>TLP通过这样一个tail loss probe包，如果能够收到相应的ACK，则会触发FR机制，而不是RTO机制。  </p>
+<hr>
+<h4 id="触发超时机制的常见场景">触发超时机制的常见场景</h4>
+<p>这些case还是用大神们的原文描述比较准确:)</p>
+<pre><code>a. <span class="operator"><span class="keyword">Drop</span> tail <span class="keyword">at</span> the <span class="keyword">end</span> <span class="keyword">of</span> transactions.
+b. <span class="keyword">Mid</span>-<span class="keyword">transaction</span> loss <span class="keyword">of</span> an entire window <span class="keyword">of</span> <span class="keyword">data</span> <span class="keyword">or</span> ACKs.
+c. Insufficient <span class="built_in">number</span> <span class="keyword">of</span> duplicate ACKs <span class="keyword">to</span> <span class="keyword">trigger</span> <span class="keyword">fast</span> recovery <span class="keyword">at</span> sender.
+    <span class="comment">-- 基本被Eearly Retransmit机制解决了</span>
+d. An unexpectedly long <span class="keyword">round</span>-trip <span class="keyword">time</span>(RTT), such that the ACKs arrive <span class="keyword">after</span>
+   the RTO timer expires.
+    <span class="comment">-- F-RTO机制通过检测spurious retransmission，能够尽量的undo RTO造成的影响</span></span>
+</code></pre><p>Early Retransmit技术可参考<a href="http://perthcharles.github.io/2015/10/31/wiki-network-tcp-early-retrans/" target="_blank" rel="external">这篇wiki</a><br>F-RTO技术可参考<a href="http://perthcharles.github.io/2015/06/16/wiki-network-tcp-frto/" target="_blank" rel="external">这篇wiki</a>  </p>
+<p>Google Web servers上面，将近70%的重传是RTO超时重传，只有30%是Fast Recovery重传。<br>同时还有数据表明，96%的RTO超时重传是在没有收到任何dupack的情况下发生的。<br>没有到任何dupack就意味着FR和ER机制都是无法生效的。  </p>
+<hr>
+<h4 id="RTO与RTT的比值分布">RTO与RTT的比值分布</h4>
+<p>Googler们还收集RTO/RTT的分布，来了解RTO值到底比RTT值大多少。下面是统计结果  </p>
+<pre><code><span class="variable">Percentile</span>      <span class="variable">RTO</span>/<span class="variable">RTT</span>
+<span class="number">50</span><span class="comment">%             4.3</span>
+<span class="number">75</span><span class="comment">%             11.3</span>
+<span class="number">90</span><span class="comment">%             28.9</span>
+<span class="number">95</span><span class="comment">%             53.9</span>
+<span class="number">99</span><span class="comment">%             214</span>
+</code></pre><p>根据这个数据，显然这是一个CDF的统计。也就是说，50%的流，RTO/RTT小于4.3，75%的流，RTO/RTT小于11.3<br>不过反过来看，有50%的流RTO/RTT超过4.3，25%的流RTO/RTT超过11.3。<br>不过这个数据Googler并没有进一步的解释，有很多疑问在里面。<br>RTO的min值默认是200ms，这数据里面的是多少？这个数据里面是否同时包含了internet-face流和local-face流。<br>比如说，local-face流的rtt一般很小，常见值就是1.875ms，而min RTO值200ms的话，显然RTO/RTT很容易超过100<br>不过话说回来，数据来看，local-face的流应该没有包括，但是min RTO就不清楚了。  </p>
+<p>Googler认为”Such large RTOs make a huge contribution to the long tail on the<br>latency statistics of short flows.”<br>这点如果结合TLP考虑的情景，推断确实合理。  </p>
+<p>那将RTO的计算值设置的较小一点如何？可能会造成两个问题：<br>a. spurious retransmission<br>b. 更多的RTO =&gt; cwnd=1</p>
+<p>TLP试图解决的方式是将”尾丢包+RTO”这种case转换为”尾丢包+尾探测+FR”。</p>
+<hr>
+<h4 id="TLP算法">TLP算法</h4>
+<p>名词解释  </p>
+<pre><code>FlightSize: <span class="keyword">the</span> amount <span class="keyword">of</span> data <span class="keyword">that</span> has been sent <span class="keyword">but</span> <span class="keyword">not</span> yet *cumulatively* acknowledged.
+    <span class="comment">-- 这个与内核中的packet_in_flight计数器要区分开，这里要强调累计确认</span>
+
+PTO: Probe <span class="keyword">timeout</span> <span class="keyword">is</span> a timer event indicating <span class="keyword">that</span> an ACK <span class="keyword">is</span> overdue.
+
+Open state: <span class="keyword">the</span> sender has so far received <span class="keyword">in</span>-sequence ACKs <span class="keyword">with</span> no SACK
+            blocks, <span class="keyword">and</span> no other indications (such <span class="keyword">as</span> retransmission <span class="keyword">timeout</span>) <span class="keyword">that</span>
+            a loss may have occurred.
+    <span class="comment">-- 换成中文：TCP的正常状态，哈哈</span>
+
+Consecutive PTOs: <span class="keyword">back</span>-<span class="keyword">to</span>-<span class="keyword">back</span> PTOs all scheduled <span class="keyword">for</span> <span class="keyword">the</span> same tail packets <span class="keyword">in</span> a flight.
+</code></pre><p>算法逻辑  </p>
+<pre><code><span class="number">1.</span> 在Open state发送新数据后，设置一个PTO计时器  
+    <span class="keyword">if</span> (FlightSize &gt; <span class="number">1</span>)     PTO = <span class="built_in">max</span>(<span class="number">2</span>*SRTT, <span class="number">10</span>ms)
+    <span class="keyword">if</span> (FlightSize == <span class="number">0</span>)    PTO = <span class="built_in">max</span>(<span class="number">2</span>*SRTT, <span class="number">1.5</span>*SRTT + WCDelAckT)
+    <span class="keyword">if</span> (RTO is earlier)     PTO = <span class="built_in">min</span>(RTO, PTO)
+        其中WCDelAckT表示worst <span class="keyword">case</span> delayed ACK timer，默认值是<span class="number">200</span>ms
+
+<span class="number">2.</span> 启用PTO timer的条件：
+    <span class="operator">a</span>. connection is <span class="operator">in</span> <span class="built_in">open</span> state
+        <span class="comment">-- 如果不在open state，说明有其他信息帮助判断丢包。而无需启用TLP</span>
+    b. connection is either cwnd limited <span class="operator">or</span> application limited
+        <span class="comment">-- TLP必须满足tail这个条件</span>
+    c. <span class="built_in">number</span> <span class="operator">of</span> consecutive PTOs &lt;= <span class="number">2</span>
+        <span class="comment">-- TLP 不要尝试太多次</span>
+    d. connection is SACK enable
+        <span class="comment">-- TLP依赖于SACK选项来提供是否触发FR的决策</span>
+
+<span class="number">3.</span> 当PTO超时后：
+    <span class="keyword">if</span> (能发新数据)         发送一个新数据包，FlightSize += SMSS, cwnd不改变
+    <span class="keyword">if</span> (没有新数据可发)     发送一个序号最大的数据包
+    增加loss probe的计数器
+    如果步骤<span class="number">2</span>中的条件满足，则再次设置PTO；否则设置RTO超时计时器<span class="string">'now+RTO'</span>
+
+<span class="number">4.</span> 在处理收到的ACK包时
+    取消PTO timer
+    如果步骤<span class="number">2</span>条件满足，则设置PTO timer
+</code></pre><hr>
+<h4 id="基于FACK机制的FR触发算法">基于FACK机制的FR触发算法</h4>
+<p>理解FACK机制最终的一点就是意识到SACK信息能够反应较准确的接收端接收情况。<br>FACK机制的算法如下，非常好理解：  </p>
+<pre><code><span class="keyword">if</span> (SND.FACK - SND.UNA) &gt; dupack threshold:
+    -&gt; Invoke Fast Retransmit <span class="operator">and</span> Fast Recovery.
+SND.FACK relects <span class="operator">the</span> forward-most data held <span class="keyword">by</span> <span class="operator">the</span> received plus <span class="constant">one</span>.
+</code></pre><hr>
+<h4 id="如果丢失的包就是TLP重传的数据包会怎样">如果丢失的包就是TLP重传的数据包会怎样</h4>
+<p>如果丢失的包刚好是最后一个数据包，那么TLP的重传可能会恰巧修复了这个丢包。<br>这样对于congestion control机制来说，就无法发现这个丢包。这与TCP的拥塞控制<br>机制相违背。<br>因此TLP需要设计一个检测丢包是否被TLP探测包修复的逻辑。  </p>
+<p>检测的核心思想就是：  </p>
+<pre><code>如果发送了<span class="keyword">N</span>次TLP探测包，判断是否收到了<span class="keyword">N</span>个<span class="string">"TLP dupacks"</span>。
+如果没有，则意味着第一个TLP探测报可能就刚好修复了一个丢失包。  
+</code></pre><hr>
+<h4 id="TLP丢包检测算法">TLP丢包检测算法</h4>
+<p>名词解释  </p>
+<pre><code>TLPRtxOout: <span class="operator">the</span> <span class="built_in">number</span> <span class="operator">of</span> unacknowledged TLP retransmissions <span class="operator">in</span> current TCP episode.
+
+TLPHighRxt: <span class="operator">the</span> <span class="built_in">value</span> <span class="operator">of</span> SND.NXT <span class="keyword">at</span> <span class="operator">the</span> <span class="built_in">time</span> <span class="operator">of</span> TLP retransmission.
+</code></pre><p>算法步骤：</p>
+<pre><code><span class="number">1</span>. 初始化  
+    当TCP流进入ESTABLISHED状态，或者RTO超时后，或者进入Fast Recovery后，对上面两个变量进行初始化
+    <span class="variable">TLPRtxOut =</span> <span class="number">0</span>;
+    <span class="variable">TLPHighRxt =</span> <span class="number">0</span>;
+<span class="number">2</span>. 当发送一个TLP探测包后  
+    <span class="keyword">if</span> (<span class="variable">TLPRtxOut =</span>= <span class="number">0</span>)
+        <span class="variable">TLPHighRxt =</span> SND.NXT
+    TLPRtxOut++;
+<span class="number">3</span>. 在收到一个ACK包后  
+    当满足所有以下条件时，认为这个ACK是由TLP包触发的，而且这个TLP是完全多余的
+    a. TLPRtxOut &gt; <span class="number">0</span>                        <span class="comment">/* 首先当然得发送过TLP包 */</span>
+    b. SEG.<span class="variable">ACK =</span>= TLPHighRxt                <span class="comment">/* ACK包确认了SND.NXT序号 */</span>
+    c. ACK不包含序号超过TLPHighRxt的SACK段  <span class="comment">/* 意味着这个ACK就是TLP包序号触发的，而不是TLPHighRxt序号之后某个包触发的 */</span>
+    d. ACK没有移动SND.UNA                   <span class="comment">/* 说明这是一个纯粹的dupack，并且ACK号是SND.NXT证明这个ACK包对应的TLP是完全多余的 */</span>
+    e. ACK包不含数据                        <span class="comment">/* 就是要证明这个ACK是一个完全多余的TLP包触发的 */</span>
+    f. ACK包不是一个窗口更新包              <span class="comment">/* 理由同e */</span>
+    以上条件都满足时，TLPRtxOut--
+
+    如果ACK.SEQ &gt; TLPHighRxt，则说明TLP阶段应该结束了。最后来判断是否发现了丢包
+    <span class="variable">isLoss =</span> (TLPRtxOut &gt; <span class="number">0</span>) &amp;&amp;     <span class="comment">/* 不为0说明有一个TLP包不是多余的，也就是说有丢包发生 */</span>
+             (ACK不携带任何TLP重传相关的DSACK信息)      <span class="comment">/* 如果包含DSACK信息，也能证明TLP是多余的。所以要排除这种情况 */</span>
+    <span class="variable">TLPRtxOut =</span> <span class="number">0</span>
+    <span class="keyword">if</span> (isLoss)
+        EnterRecovery()
+<span class="number">4</span>. TLP探测包的发送条件，除了满足TLP原始算法中步骤<span class="number">2</span>中的条件外，还要满足  
+    (<span class="variable">TLPRxtOut =</span>= <span class="number">0</span>) || (SND.<span class="variable">NXT =</span>= TLPHighRxt)
+    -- The sender maintains this invariant so that there is at most
+       one TLP retransmission <span class="string">"espisode"</span> happening at a time.
+</code></pre><hr>
+<h4 id="统一了丢包恢复机制">统一了丢包恢复机制</h4>
+<p>在原生TCP中，如果丢包发生在packet train的中间，很容易触发快速重传进行丢包恢复；<br>但是如果丢包发生packet train的末端，则基本只能靠RTO超时来恢复。<br>而这就意味着丢包的位置的不同，也可能造成TCP不同的重传机制被触发。这与TCP设计时的common sense不一致。  </p>
+<p>如果使用TLP机制，则能避免丢包位置的不同对TCP重传机制的选择造成影响。  </p>
+<hr>
+<h4 id="恢复任意程度的尾丢包">恢复任意程度的尾丢包</h4>
+<p>根据Googler们的讨论，Tail Loss Probe + Early Retransmit能够解决任意程度的尾丢包<br>下面是所有case情境的讨论汇总  </p>
+<table>
+<thead>
+<tr>
+<th>number of losses</th>
+<th>scoreboard after TLP retrans ACKed</th>
+<th>mechanism</th>
+<th>final outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AAAL</td>
+<td>AAAA</td>
+<td>TLP loss detection</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>AALL</td>
+<td>AALS</td>
+<td>ER</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>ALLL</td>
+<td>ALLS</td>
+<td>enhanced ER</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>LLLL</td>
+<td>LLLS</td>
+<td>FACK FR</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>&gt;=5 L</td>
+<td>..LS</td>
+<td>FACK FR</td>
+<td>all repaired</td>
+</tr>
+</tbody>
+</table>
+<p>其中：<br>A = ACKed segment<br>L = Lost segment<br>S = SACKed segment  </p>
+<p>其中case “ALLL”依赖于Googler们提出的enhanced ER机制，首先这个增加做了什么  </p>
+<pre><code>Propose <span class="built_in">to</span> allow <span class="operator">a</span> delayed early retransmit <span class="operator">in</span> <span class="operator">the</span> <span class="keyword">case</span> where there
+are <span class="constant">three</span> outstanding segments that have <span class="operator">not</span> been cumulatively
+acknowledged <span class="operator">and</span> ont segment that has been fully SACKed.
+</code></pre><p>具体来讲，就体现在之前介绍<a href="http://perthcharles.github.io/2015/10/31/wiki-network-tcp-early-retrans/" target="_blank" rel="external">ER的wiki</a>中提到的如下一个代码更改  </p>
+<pre><code>@ <span class="keyword">static</span> <span class="keyword">bool</span> tcp_time_to_recover()
+-   (tp-&gt;packets_out == (tp-&gt;sacked_out + <span class="number">1</span>) &amp;&amp; tp-&gt;packets_out &lt; <span class="number">4</span>) &amp;&amp; 
++   (tp-&gt;packets_out &gt;= (tp-&gt;sacked_out + <span class="number">1</span>) &amp;&amp; tp-&gt;packets_out &lt; <span class="number">4</span>) &amp;&amp; 
+</code></pre><p>具体分析以下，如果是’==’的形式，case”ALLL”会得到”ALLS”的scoreboard，但是这里的packets_out=3，而sacked_out=1所以还无法触发ER。<br>此时解决方法有两种：要么在重传一个TLP探测报，使sacked_out值增长为2，要么放松条件改用”&gt;=”。<br>很明显，Googler们选了后者。<br>而对于case”AALL”这种packets_out=2的情况，一个TLP包引起的dupack就能触发ER，也就无影响了。<br>下面我来讨论一下packets_out=3的情况，其中R表示reorder达到接收端，即没有被丢弃    </p>
+<pre><code><span class="number">1</span>. ALLL
+    这种使用TLP和enhanced ER能够做到all repaired。没问题
+<span class="number">2</span>. ALRR
+    这种能够通过ER机制修复。但是如果使用了enhanced ER，那么在收到第一个reorder触发的SACK信息后，
+    socreboard为ALS_状态，此时由于使用了enhanced ER，在第二个SACK信息没有收到时就会被判为启动ER。
+    因为<span class="variable">packets_out=</span><span class="number">3</span>, <span class="variable">sacked_out =</span> <span class="number">1</span>, 满足enhanced ER的条件
+    当然由于enhanced ER还有一个重要的特性是delayed，如果第二SACK信息能够及时的到来，最严重的后果也就是
+    early retransmit的timer被设置两次而已。
+
+<span class="number">3</span>. ALLR
+    这种情况首先肯定不会触发TLP机制，因为必能能收到一个dupack。应该属于ER机制要解决的范畴。  
+    但是它又由于没有足够的dupack，<span class="variable">packet_out=</span><span class="number">3</span>，dupack等于<span class="number">1</span>。标准的ER对此无能为力。  
+    只能靠enhanced ER来恢复。
+<span class="number">4</span>. ALRL
+    <span class="variable">packets_out=</span><span class="number">3</span>,<span class="variable">dupack=</span><span class="number">1</span>。不能触发TLP，标准ER又解决不了。只能靠enhanced ER来恢复。
+</code></pre><hr>
+<hr>
+<h3 id="源码分析">源码分析</h3>
+<p>以下代码基于Linux3.10内核  </p>
+<hr>
+<h4 id="函数调用逻辑">函数调用逻辑</h4>
+<pre><code>1. 正常数据的发送流程中，增加调度安装PTO超时计时器的逻辑
+   即TLP算法逻辑的第一步。  
+
+__tcp_push_pending_frame()
+    =<span class="ruby"><span class="output"><span class="status">=&gt;</span> tcp_write_xmit() with push_one=<span class="number">0</span></span>
+</span>        =<span class="ruby"><span class="output"><span class="status">=&gt;</span> tcp_schedule_loss_probe()   /* 尝试安装<span class="constant">PTO</span>超时计时器的安装 *<span class="regexp">/
+</span></span></span>
+2. 处理ack时，增加调度安装PTO超时计时器和结束TLP状态的逻辑
+   即TLP算法的最后一步 
+
+tcp_ack()
+    =<span class="ruby"><span class="output"><span class="status">=&gt;</span> if (tp-&gt;tlp_high_seq) tcp_process_tlp_ack();    <span class="regexp">/* 判断是否需要结束TLP状态 */</span></span>
+</span>    =<span class="ruby"><span class="output"><span class="status">=&gt;</span> tcp_schedule_loss_probe()</span></span>
+</code></pre><hr>
+<h4 id="安装PTO超时计时器">安装PTO超时计时器</h4>
+<pre><code><span class="comment">/* 返回false代表未设置timer, 返回true代表设置了PTO timer */</span>
+<span class="keyword">bool</span> tcp_schedule_loss_probe(<span class="keyword">struct</span> sock *sk)
+{
+    ...  
+    <span class="keyword">u32</span> rtt = tp-&gt;srtt &gt;&gt; <span class="number">3</span>;    <span class="comment">/* tp-&gt;srtt存的实际是RFC中SRTT的8倍 */</span>
+    ...  
+    <span class="comment">/* TLP is only scheduled when next timer event is RTO. */</span>
+    <span class="keyword">if</span> (icsk-&gt;icsk_pending != ICSK_TIME_RETRANS)
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+
+    <span class="comment">/* Schedule a loss probe in 2*RTT for SACK capable connections
+     * in Open state, that are either limited by cwnd or application.
+     */</span>
+    <span class="keyword">if</span> (sysctl_tcp_early_retrans &lt; <span class="number">3</span> ||     <span class="comment">/* 没开TLP */</span>
+        !rtt ||                             <span class="comment">/* 没有RTTsample可用，没法设置PTO */</span>
+        !tp-&gt;packets_out ||                 <span class="comment">/* 网络中没有未被确认的数据包，没必要设置PTO */</span>
+        !tcp_is_sack(tp) ||                 <span class="comment">/* 不支持SACK选项 */</span>
+        !inet_csk(sk)-&gt;icsk_ca_state != TCP_CA_Open)    <span class="comment">/* 只有在open状态才设置PTO */</span>
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+
+    <span class="comment">/* Probe timeout is at lease 1.5*rtt + TCP_DELACK_MAX to account
+     * for delayed ack when there's one outstanding packet.
+     */</span>
+    <span class="comment">/* 这段代码完全符合TLP算法逻辑，不解释了 */</span>
+    timeout = rtt &lt;&lt; <span class="number">1</span>;
+    <span class="keyword">if</span> (tp-&gt;packets_out == <span class="number">1</span>)
+        timeout = max_t(<span class="keyword">u32</span>, timeout, (rtt + (rtt &gt;&gt; <span class="number">1</span>) + TCP_DELACK_MAX));
+    timeout = max_t(<span class="keyword">u32</span>, timeout, msecs_to_jiffies(<span class="number">10</span>));
+
+    <span class="comment">/* If RTO is shorter, just schedule TLP in its place. */</span>
+    <span class="comment">/* PTO = min(PTO, RTO) */</span>
+    tlp_time_stamp = tcp_time_stamp + timeout;
+    rto_time_stamp = (<span class="keyword">u32</span>)inet_csk(sk)-&gt;icsk_timeout;
+    <span class="keyword">if</span> ((s32)(tlp_time_stamp - rto_time_stamp) &gt; <span class="number">0</span>) {
+        s32 delta = rto_time_stamp - tcp_time_stamp;
+        <span class="keyword">if</span> (delta &gt; <span class="number">0</span>)
+            timeout = delta;
+    }
+
+    inet_csk_reset_xmit_timer(sk, ICSK_TIME_LOSS_PROBE, timeout, TCP_RTO_MAX);
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">// 在tcp_write_timer_handler中会根据event的类型，来做相应的处理</span>
+<span class="comment">// 如果是PTO超时，则调用tcp_send_loss_probe(sk)来发送TLP探测包</span>
+<span class="comment">/* When probe timeout (PTO) fires, send a new segment if one exists, else
+ * retransmit the last segment.
+ */</span>
+void tcp_send_loss_probe(<span class="keyword">struct</span> sock *sk)
+{
+    ...
+    <span class="comment">/*
+     * 如果有新数据可以发送，则发新数据作为探测包
+     * TLP用了一个push_one=2的trick来区分是正常的发送包，还是loss probe包
+     */</span>
+    <span class="keyword">if</span> (tcp_send_head(sk) != NULL) {        
+        err = tcp_write_xmit(sk, mss, TCP_NAGLE_OFF, <span class="number">2</span>, GFP_ATOMIC);
+        goto rearm_timer;
+    }
+
+    <span class="comment">/* At most one outstanding TLP retransmission */</span>
+    <span class="keyword">if</span> (tp-&gt;tlp_high_seq)
+        goto rearm_timer;
+
+    <span class="comment">/* Retransmit last segment */</span>
+    skb = tcp_write_queue_tail(sk);
+    <span class="keyword">if</span> (WARN_ON(!skb))
+        goto rearm_timer;
+
+    <span class="comment">/* 省略一些判断tcp fragment的代码 */</span>
+
+    <span class="comment">/* Probe with zero data doesn't trigger fast recovery */</span>
+    <span class="keyword">if</span> (skb-&gt;len &gt; <span class="number">0</span>)
+        err = <span class="number">__</span>tcp_retransmit_skb(sk, skb);
+
+    <span class="comment">/* Record snd_nxt for loss detection */</span>
+    <span class="keyword">if</span> (!likely(!err))
+        tp-&gt;tlp_high_seq = tp-&gt;snd_nxt;
+
+rearm_timer:
+    <span class="comment">/* 重新安装RTO超时计时器 */</span>
+    inet_csk_reset_xmit_timer(sk, ICSK_TIME_RETRANS, inet_csk(sk)-&gt;icsk_rto, TCP_RTO_MAX);
+
+    <span class="keyword">if</span> (likely(!err))   <span class="comment">/* 增加计数器的值，可以在/proc/net/snmp中看到，netstat -s也可以 */</span>
+        NET_INC_STATS_BH(sock_net(sk), LINUX_MIB_TCPLOSSPROBES);
+
+    <span class="keyword">return</span>;
+}
+</code></pre><hr>
+<h4 id="何时结束一个episode">何时结束一个episode</h4>
+<pre><code><span class="comment">/* This routine deals with acks during a TLP episodes. */</span>
+<span class="keyword">static</span> void tcp_process_tlp_ack(<span class="keyword">struct</span> sock *sk, <span class="keyword">u32</span> ack, <span class="keyword">int</span> flag)
+{
+    <span class="keyword">struct</span> tcp_sock *tp = tcp_sk(sk);
+    <span class="comment">/* 判断TLP是否是多余的，及产生了多余的dupack。逻辑参考RFC */</span>
+    <span class="keyword">bool</span> is_tlp_dupack = (ack == tp-&gt;tlp_high_seq) &amp;&amp;   
+                         !(flag &amp; (FLAG_SND_UNA_ADVANCED | 
+                                  FLAG_NOT_DUP | FLAG_DATA_SACKED));
+
+    <span class="comment">/* Mark the end of TLP episode on receiving TLP dupack or when
+     * ack is after tlp_high_seq.
+     */</span>
+    <span class="comment">/* 可见实现TLP时，选择了最多有一个TLP包发送出去，所以省去了RFC中的TLPRxtOut计数器 */</span>
+    <span class="keyword">if</span> (is_tlp_dupack) {
+        tp-&gt;tlp_high_seq = <span class="number">0</span>;
+        <span class="keyword">return</span>;
+    }
+
+    <span class="keyword">if</span> (after(ack, tp-&gt;tlp_high_seq)) {
+        tp-&gt;tlp_high_seq = <span class="number">0</span>;
+        <span class="comment">/* Don't reduce cwnd if DSACK arrives for TLP retrans */</span>
+        <span class="keyword">if</span> (!(flag &amp; FLAG_DSACKING_ACK)) {
+            <span class="comment">/* 折腾这么一圈，最关键的就是降cwnd: ssthresh = 0.7*cwnd; cwnd=ssthresh */</span>
+            tcp_init_cwnd_reduction(sk, <span class="keyword">true</span>);
+            tcp_set_ca_state(sk, TCP_CA_CWR);
+            tcp_end_cwnd_reduction(sk);
+            tcp_set_ca_state(sk, TCP_CA_Open);
+            NET_INC_STATS_BH(sock_net(sk), LINUX_MIB_TCPLOSSPROBERECOVERY);
+        }
+    }
+}
+</code></pre><blockquote>
+<p>问题：代码什么地方体现了TLP中的Tail ?<br>&lt; 没有dupack收到，自然就认为是Tail了。并不需要想ER那样判断什么packets_out,sacked_out等。<br>这样的问题可能就是跟RTO抢活了。</p>
+</blockquote>
+<p>最后说一句，TLP的loss probe次数和loss recovery 次数Linux中都有相应的计数器跟踪，<br>分别对应LINUX_MIB_TCPLOSSPROBES，LINUX_MIB_TCPLOSSPROBERECOVERY。</p>
+<hr>
+<h4 id="TLP与ER的关系">TLP与ER的关系</h4>
+<p>一句话总结  </p>
+<pre><code>ER解决的是dupack不够用的情况
+TLP解决的是没有dupack可用的情况
+</code></pre><hr>
+<hr>
+<h3 id="TLP性能评测数据">TLP性能评测数据</h3>
+<p><a href="http://www.net.in.tum.de/fileadmin/TUM/NET/NET-2014-03-1/NET-2014-03-1_01.pdf" target="_blank" rel="external">Measuring TCP Tail Loss Probe Performance</a>中的测试数据显示</p>
+<pre><code>TLP <span class="keyword">is</span> able <span class="keyword">to</span> decrease <span class="keyword">the</span> total transfer <span class="property">time</span> <span class="keyword">in</span> high-speed networks <span class="keyword">by</span> <span class="number">38</span>% <span class="keyword">and</span> <span class="keyword">the</span> <span class="property">time</span> <span class="keyword">until</span> data <span class="keyword">is</span> retransmitted <span class="keyword">by</span> <span class="number">81</span>%.
+These improvements decrease significantly <span class="keyword">for</span> higher <span class="command">delay</span> links.
+</code></pre><p>文章中用到mininet和iptables的方式来模拟网络倒是点醒了我。之前我干嘛非得搭物理机环境啊。T_T  </p>
+<p><a href="http://www.sigcomm.org/sites/default/files/ccr/papers/2015/January/0000000-0000000.pdf" target="_blank" rel="external">An Evaluation of Tail Loss Recovery Mechanisms for TCP</a><br>文章评测了RTO Restart(RTOR)、TLP、TLPR三种技术对尾丢包情境性能的影响。都是TLPR得到的性能更好，当然TLP的性能也不赖。<br>RTOR这个技术主要解决的是现有RTO计时器在每次收到ACK后都会重新reset的问题。而RTOR的timer只要设置好，就不会随着dupack的到来而更改了。这个思路刚好解决了我看RTO代码时的疑问，又是脑洞大开啊。<br>看来paper还是要保持看下去啊，跟住研究的脚本才能了解技术的变迁。也能了解技术发展过程中的方方面面，而看内核代码只能了解被社区选用的技术(暂且不去评论社区选的好坏)。 </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://tools.ietf.org/html/draft-dukkipati-tcpm-tcp-loss-probe-01" target="_blank" rel="external">Tail Loss Probe (TLP): An Algorithm for Fast Recovery of Tail Losses Probe</a><br><a href="http://www.net.in.tum.de/fileadmin/TUM/NET/NET-2014-03-1/NET-2014-03-1_01.pdf" target="_blank" rel="external">Measuring TCP Tail Loss Probe Performance</a><br><a href="http://www.sigcomm.org/sites/default/files/ccr/papers/2015/January/0000000-0000000.pdf" target="_blank" rel="external">An Evaluation of Tail Loss Recovery Mechanisms for TCP</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/" data-id="np6sn9pdy4spel24" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rfc/">rfc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tlp/">tlp</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2015/10/31/wiki-network-tcp-early-retrans/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Early Retransmit for TCP</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/networking/">networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-tlp/">TCP Tail Loss Probe(TLP)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-early-retrans/">Early Retransmit for TCP</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/28/inspecting-internal-tcp-state/">在Linux上探测TCP的内部状态</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/26/wiki-weekly-readlist-20151026/">阅读周记(第三期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/19/wiki-weekly-readlist-20151019/">阅读周记(第二期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-weekly-readlist-20151015/">阅读周记(第一期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-report-internet-state-2015Q2/">2015 Q2 Akamai互联网状态报告</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/28/wiki-tool-free/">剖析free命令</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/22/ssh-forward/">使用ssh forward跨局域网访问</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/15/wiki-hybird-slow-start/">Taming the Elephants -- New TCP Slow Start</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/14/ip-route-initcwnd/">使用ip命令修改初始拥塞窗口和接收窗口</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/07/wiki-tcp-retries/">聊一聊重传次数</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/06/wiki-rtt-estimator/">RTO的计算方法(基于RFC6298和Linux 3.10)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-NAT/">一个NAT问题引起的思考</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/CPU/" style="font-size: 10.00px;">CPU</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KCon/" style="font-size: 10.00px;">KCon</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/crash/" style="font-size: 10.00px;">crash</a><a href="/tags/devops/" style="font-size: 10.00px;">devops</a><a href="/tags/digitalocean/" style="font-size: 10.00px;">digitalocean</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a><a href="/tags/ip/" style="font-size: 10.00px;">ip</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/linux/" style="font-size: 10.00px;">linux</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

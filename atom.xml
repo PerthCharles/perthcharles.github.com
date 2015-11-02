@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-10-26T01:31:10.545Z</updated>
+  <updated>2015-11-02T14:49:35.107Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,746 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[TCP Tail Loss Probe(TLP)]]></title>
+    <link href="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/"/>
+    <id>http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/</id>
+    <published>2015-10-31T11:01:45.000Z</published>
+    <updated>2015-11-02T14:47:53.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。<br>但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。<br>为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而提高TCP性能。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="RFC解读">RFC解读</h3>
+<hr>
+<h4 id="TLP基本策略">TLP基本策略</h4>
+<p>TLP算法会在TCP还是Open状态的时候，设置一个Probe TimeOut (PTO)。<br>当链路中有未被确认的数据包，同时在PTO时间内未收到任何ACK，则会触发PTO<br>超时处理机制。<br>TLP会选择传输序号最大的一个数据包作为tail loss probe包，这个序号最大的包可能是<br>一个可以发送的新的数据包，也可能是一个重传包。<br>TLP通过这样一个tail loss probe包，如果能够收到相应的ACK，则会触发FR机制，而不是RTO机制。  </p>
+<hr>
+<h4 id="触发超时机制的常见场景">触发超时机制的常见场景</h4>
+<p>这些case还是用大神们的原文描述比较准确:)</p>
+<pre><code>a. <span class="operator"><span class="keyword">Drop</span> tail <span class="keyword">at</span> the <span class="keyword">end</span> <span class="keyword">of</span> transactions.
+b. <span class="keyword">Mid</span>-<span class="keyword">transaction</span> loss <span class="keyword">of</span> an entire window <span class="keyword">of</span> <span class="keyword">data</span> <span class="keyword">or</span> ACKs.
+c. Insufficient <span class="built_in">number</span> <span class="keyword">of</span> duplicate ACKs <span class="keyword">to</span> <span class="keyword">trigger</span> <span class="keyword">fast</span> recovery <span class="keyword">at</span> sender.
+    <span class="comment">-- 基本被Eearly Retransmit机制解决了</span>
+d. An unexpectedly long <span class="keyword">round</span>-trip <span class="keyword">time</span>(RTT), such that the ACKs arrive <span class="keyword">after</span>
+   the RTO timer expires.
+    <span class="comment">-- F-RTO机制通过检测spurious retransmission，能够尽量的undo RTO造成的影响</span></span>
+</code></pre><p>Early Retransmit技术可参考<a href="http://perthcharles.github.io/2015/10/31/wiki-network-tcp-early-retrans/" target="_blank" rel="external">这篇wiki</a><br>F-RTO技术可参考<a href="http://perthcharles.github.io/2015/06/16/wiki-network-tcp-frto/" target="_blank" rel="external">这篇wiki</a>  </p>
+<p>Google Web servers上面，将近70%的重传是RTO超时重传，只有30%是Fast Recovery重传。<br>同时还有数据表明，96%的RTO超时重传是在没有收到任何dupack的情况下发生的。<br>没有到任何dupack就意味着FR和ER机制都是无法生效的。  </p>
+<hr>
+<h4 id="RTO与RTT的比值分布">RTO与RTT的比值分布</h4>
+<p>Googler们还收集RTO/RTT的分布，来了解RTO值到底比RTT值大多少。下面是统计结果  </p>
+<pre><code><span class="variable">Percentile</span>      <span class="variable">RTO</span>/<span class="variable">RTT</span>
+<span class="number">50</span><span class="comment">%             4.3</span>
+<span class="number">75</span><span class="comment">%             11.3</span>
+<span class="number">90</span><span class="comment">%             28.9</span>
+<span class="number">95</span><span class="comment">%             53.9</span>
+<span class="number">99</span><span class="comment">%             214</span>
+</code></pre><p>根据这个数据，显然这是一个CDF的统计。也就是说，50%的流，RTO/RTT小于4.3，75%的流，RTO/RTT小于11.3<br>不过反过来看，有50%的流RTO/RTT超过4.3，25%的流RTO/RTT超过11.3。<br>不过这个数据Googler并没有进一步的解释，有很多疑问在里面。<br>RTO的min值默认是200ms，这数据里面的是多少？这个数据里面是否同时包含了internet-face流和local-face流。<br>比如说，local-face流的rtt一般很小，常见值就是1.875ms，而min RTO值200ms的话，显然RTO/RTT很容易超过100<br>不过话说回来，数据来看，local-face的流应该没有包括，但是min RTO就不清楚了。  </p>
+<p>Googler认为”Such large RTOs make a huge contribution to the long tail on the<br>latency statistics of short flows.”<br>这点如果结合TLP考虑的情景，推断确实合理。  </p>
+<p>那将RTO的计算值设置的较小一点如何？可能会造成两个问题：<br>a. spurious retransmission<br>b. 更多的RTO =&gt; cwnd=1</p>
+<p>TLP试图解决的方式是将”尾丢包+RTO”这种case转换为”尾丢包+尾探测+FR”。</p>
+<hr>
+<h4 id="TLP算法">TLP算法</h4>
+<p>名词解释  </p>
+<pre><code>FlightSize: <span class="keyword">the</span> amount <span class="keyword">of</span> data <span class="keyword">that</span> has been sent <span class="keyword">but</span> <span class="keyword">not</span> yet *cumulatively* acknowledged.
+    <span class="comment">-- 这个与内核中的packet_in_flight计数器要区分开，这里要强调累计确认</span>
+
+PTO: Probe <span class="keyword">timeout</span> <span class="keyword">is</span> a timer event indicating <span class="keyword">that</span> an ACK <span class="keyword">is</span> overdue.
+
+Open state: <span class="keyword">the</span> sender has so far received <span class="keyword">in</span>-sequence ACKs <span class="keyword">with</span> no SACK
+            blocks, <span class="keyword">and</span> no other indications (such <span class="keyword">as</span> retransmission <span class="keyword">timeout</span>) <span class="keyword">that</span>
+            a loss may have occurred.
+    <span class="comment">-- 换成中文：TCP的正常状态，哈哈</span>
+
+Consecutive PTOs: <span class="keyword">back</span>-<span class="keyword">to</span>-<span class="keyword">back</span> PTOs all scheduled <span class="keyword">for</span> <span class="keyword">the</span> same tail packets <span class="keyword">in</span> a flight.
+</code></pre><p>算法逻辑  </p>
+<pre><code><span class="number">1.</span> 在Open state发送新数据后，设置一个PTO计时器  
+    <span class="keyword">if</span> (FlightSize &gt; <span class="number">1</span>)     PTO = <span class="built_in">max</span>(<span class="number">2</span>*SRTT, <span class="number">10</span>ms)
+    <span class="keyword">if</span> (FlightSize == <span class="number">0</span>)    PTO = <span class="built_in">max</span>(<span class="number">2</span>*SRTT, <span class="number">1.5</span>*SRTT + WCDelAckT)
+    <span class="keyword">if</span> (RTO is earlier)     PTO = <span class="built_in">min</span>(RTO, PTO)
+        其中WCDelAckT表示worst <span class="keyword">case</span> delayed ACK timer，默认值是<span class="number">200</span>ms
+
+<span class="number">2.</span> 启用PTO timer的条件：
+    <span class="operator">a</span>. connection is <span class="operator">in</span> <span class="built_in">open</span> state
+        <span class="comment">-- 如果不在open state，说明有其他信息帮助判断丢包。而无需启用TLP</span>
+    b. connection is either cwnd limited <span class="operator">or</span> application limited
+        <span class="comment">-- TLP必须满足tail这个条件</span>
+    c. <span class="built_in">number</span> <span class="operator">of</span> consecutive PTOs &lt;= <span class="number">2</span>
+        <span class="comment">-- TLP 不要尝试太多次</span>
+    d. connection is SACK enable
+        <span class="comment">-- TLP依赖于SACK选项来提供是否触发FR的决策</span>
+
+<span class="number">3.</span> 当PTO超时后：
+    <span class="keyword">if</span> (能发新数据)         发送一个新数据包，FlightSize += SMSS, cwnd不改变
+    <span class="keyword">if</span> (没有新数据可发)     发送一个序号最大的数据包
+    增加loss probe的计数器
+    如果步骤<span class="number">2</span>中的条件满足，则再次设置PTO；否则设置RTO超时计时器<span class="string">'now+RTO'</span>
+
+<span class="number">4.</span> 在处理收到的ACK包时
+    取消PTO timer
+    如果步骤<span class="number">2</span>条件满足，则设置PTO timer
+</code></pre><hr>
+<h4 id="基于FACK机制的FR触发算法">基于FACK机制的FR触发算法</h4>
+<p>理解FACK机制最终的一点就是意识到SACK信息能够反应较准确的接收端接收情况。<br>FACK机制的算法如下，非常好理解：  </p>
+<pre><code><span class="keyword">if</span> (SND.FACK - SND.UNA) &gt; dupack threshold:
+    -&gt; Invoke Fast Retransmit <span class="operator">and</span> Fast Recovery.
+SND.FACK relects <span class="operator">the</span> forward-most data held <span class="keyword">by</span> <span class="operator">the</span> received plus <span class="constant">one</span>.
+</code></pre><hr>
+<h4 id="如果丢失的包就是TLP重传的数据包会怎样">如果丢失的包就是TLP重传的数据包会怎样</h4>
+<p>如果丢失的包刚好是最后一个数据包，那么TLP的重传可能会恰巧修复了这个丢包。<br>这样对于congestion control机制来说，就无法发现这个丢包。这与TCP的拥塞控制<br>机制相违背。<br>因此TLP需要设计一个检测丢包是否被TLP探测包修复的逻辑。  </p>
+<p>检测的核心思想就是：  </p>
+<pre><code>如果发送了<span class="keyword">N</span>次TLP探测包，判断是否收到了<span class="keyword">N</span>个<span class="string">"TLP dupacks"</span>。
+如果没有，则意味着第一个TLP探测报可能就刚好修复了一个丢失包。  
+</code></pre><hr>
+<h4 id="TLP丢包检测算法">TLP丢包检测算法</h4>
+<p>名词解释  </p>
+<pre><code>TLPRtxOout: <span class="operator">the</span> <span class="built_in">number</span> <span class="operator">of</span> unacknowledged TLP retransmissions <span class="operator">in</span> current TCP episode.
+
+TLPHighRxt: <span class="operator">the</span> <span class="built_in">value</span> <span class="operator">of</span> SND.NXT <span class="keyword">at</span> <span class="operator">the</span> <span class="built_in">time</span> <span class="operator">of</span> TLP retransmission.
+</code></pre><p>算法步骤：</p>
+<pre><code><span class="number">1</span>. 初始化  
+    当TCP流进入ESTABLISHED状态，或者RTO超时后，或者进入Fast Recovery后，对上面两个变量进行初始化
+    <span class="variable">TLPRtxOut =</span> <span class="number">0</span>;
+    <span class="variable">TLPHighRxt =</span> <span class="number">0</span>;
+<span class="number">2</span>. 当发送一个TLP探测包后  
+    <span class="keyword">if</span> (<span class="variable">TLPRtxOut =</span>= <span class="number">0</span>)
+        <span class="variable">TLPHighRxt =</span> SND.NXT
+    TLPRtxOut++;
+<span class="number">3</span>. 在收到一个ACK包后  
+    当满足所有以下条件时，认为这个ACK是由TLP包触发的，而且这个TLP是完全多余的
+    a. TLPRtxOut &gt; <span class="number">0</span>                        <span class="comment">/* 首先当然得发送过TLP包 */</span>
+    b. SEG.<span class="variable">ACK =</span>= TLPHighRxt                <span class="comment">/* ACK包确认了SND.NXT序号 */</span>
+    c. ACK不包含序号超过TLPHighRxt的SACK段  <span class="comment">/* 意味着这个ACK就是TLP包序号触发的，而不是TLPHighRxt序号之后某个包触发的 */</span>
+    d. ACK没有移动SND.UNA                   <span class="comment">/* 说明这是一个纯粹的dupack，并且ACK号是SND.NXT证明这个ACK包对应的TLP是完全多余的 */</span>
+    e. ACK包不含数据                        <span class="comment">/* 就是要证明这个ACK是一个完全多余的TLP包触发的 */</span>
+    f. ACK包不是一个窗口更新包              <span class="comment">/* 理由同e */</span>
+    以上条件都满足时，TLPRtxOut--
+
+    如果ACK.SEQ &gt; TLPHighRxt，则说明TLP阶段应该结束了。最后来判断是否发现了丢包
+    <span class="variable">isLoss =</span> (TLPRtxOut &gt; <span class="number">0</span>) &amp;&amp;     <span class="comment">/* 不为0说明有一个TLP包不是多余的，也就是说有丢包发生 */</span>
+             (ACK不携带任何TLP重传相关的DSACK信息)      <span class="comment">/* 如果包含DSACK信息，也能证明TLP是多余的。所以要排除这种情况 */</span>
+    <span class="variable">TLPRtxOut =</span> <span class="number">0</span>
+    <span class="keyword">if</span> (isLoss)
+        EnterRecovery()
+<span class="number">4</span>. TLP探测包的发送条件，除了满足TLP原始算法中步骤<span class="number">2</span>中的条件外，还要满足  
+    (<span class="variable">TLPRxtOut =</span>= <span class="number">0</span>) || (SND.<span class="variable">NXT =</span>= TLPHighRxt)
+    -- The sender maintains this invariant so that there is at most
+       one TLP retransmission <span class="string">"espisode"</span> happening at a time.
+</code></pre><hr>
+<h4 id="统一了丢包恢复机制">统一了丢包恢复机制</h4>
+<p>在原生TCP中，如果丢包发生在packet train的中间，很容易触发快速重传进行丢包恢复；<br>但是如果丢包发生packet train的末端，则基本只能靠RTO超时来恢复。<br>而这就意味着丢包的位置的不同，也可能造成TCP不同的重传机制被触发。这与TCP设计时的common sense不一致。  </p>
+<p>如果使用TLP机制，则能避免丢包位置的不同对TCP重传机制的选择造成影响。  </p>
+<hr>
+<h4 id="恢复任意程度的尾丢包">恢复任意程度的尾丢包</h4>
+<p>根据Googler们的讨论，Tail Loss Probe + Early Retransmit能够解决任意程度的尾丢包<br>下面是所有case情境的讨论汇总  </p>
+<table>
+<thead>
+<tr>
+<th>number of losses</th>
+<th>scoreboard after TLP retrans ACKed</th>
+<th>mechanism</th>
+<th>final outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AAAL</td>
+<td>AAAA</td>
+<td>TLP loss detection</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>AALL</td>
+<td>AALS</td>
+<td>ER</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>ALLL</td>
+<td>ALLS</td>
+<td>enhanced ER</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>LLLL</td>
+<td>LLLS</td>
+<td>FACK FR</td>
+<td>all repaired</td>
+</tr>
+<tr>
+<td>&gt;=5 L</td>
+<td>..LS</td>
+<td>FACK FR</td>
+<td>all repaired</td>
+</tr>
+</tbody>
+</table>
+<p>其中：<br>A = ACKed segment<br>L = Lost segment<br>S = SACKed segment  </p>
+<p>其中case “ALLL”依赖于Googler们提出的enhanced ER机制，首先这个增加做了什么  </p>
+<pre><code>Propose <span class="built_in">to</span> allow <span class="operator">a</span> delayed early retransmit <span class="operator">in</span> <span class="operator">the</span> <span class="keyword">case</span> where there
+are <span class="constant">three</span> outstanding segments that have <span class="operator">not</span> been cumulatively
+acknowledged <span class="operator">and</span> ont segment that has been fully SACKed.
+</code></pre><p>具体来讲，就体现在之前介绍<a href="http://perthcharles.github.io/2015/10/31/wiki-network-tcp-early-retrans/" target="_blank" rel="external">ER的wiki</a>中提到的如下一个代码更改  </p>
+<pre><code>@ <span class="keyword">static</span> <span class="keyword">bool</span> tcp_time_to_recover()
+-   (tp-&gt;packets_out == (tp-&gt;sacked_out + <span class="number">1</span>) &amp;&amp; tp-&gt;packets_out &lt; <span class="number">4</span>) &amp;&amp; 
++   (tp-&gt;packets_out &gt;= (tp-&gt;sacked_out + <span class="number">1</span>) &amp;&amp; tp-&gt;packets_out &lt; <span class="number">4</span>) &amp;&amp; 
+</code></pre><p>具体分析以下，如果是’==’的形式，case”ALLL”会得到”ALLS”的scoreboard，但是这里的packets_out=3，而sacked_out=1所以还无法触发ER。<br>此时解决方法有两种：要么在重传一个TLP探测报，使sacked_out值增长为2，要么放松条件改用”&gt;=”。<br>很明显，Googler们选了后者。<br>而对于case”AALL”这种packets_out=2的情况，一个TLP包引起的dupack就能触发ER，也就无影响了。<br>下面我来讨论一下packets_out=3的情况，其中R表示reorder达到接收端，即没有被丢弃    </p>
+<pre><code><span class="number">1</span>. ALLL
+    这种使用TLP和enhanced ER能够做到all repaired。没问题
+<span class="number">2</span>. ALRR
+    这种能够通过ER机制修复。但是如果使用了enhanced ER，那么在收到第一个reorder触发的SACK信息后，
+    socreboard为ALS_状态，此时由于使用了enhanced ER，在第二个SACK信息没有收到时就会被判为启动ER。
+    因为<span class="variable">packets_out=</span><span class="number">3</span>, <span class="variable">sacked_out =</span> <span class="number">1</span>, 满足enhanced ER的条件
+    当然由于enhanced ER还有一个重要的特性是delayed，如果第二SACK信息能够及时的到来，最严重的后果也就是
+    early retransmit的timer被设置两次而已。
+
+<span class="number">3</span>. ALLR
+    这种情况首先肯定不会触发TLP机制，因为必能能收到一个dupack。应该属于ER机制要解决的范畴。  
+    但是它又由于没有足够的dupack，<span class="variable">packet_out=</span><span class="number">3</span>，dupack等于<span class="number">1</span>。标准的ER对此无能为力。  
+    只能靠enhanced ER来恢复。
+<span class="number">4</span>. ALRL
+    <span class="variable">packets_out=</span><span class="number">3</span>,<span class="variable">dupack=</span><span class="number">1</span>。不能触发TLP，标准ER又解决不了。只能靠enhanced ER来恢复。
+</code></pre><hr>
+<hr>
+<h3 id="源码分析">源码分析</h3>
+<p>以下代码基于Linux3.10内核  </p>
+<hr>
+<h4 id="函数调用逻辑">函数调用逻辑</h4>
+<pre><code>1. 正常数据的发送流程中，增加调度安装PTO超时计时器的逻辑
+   即TLP算法逻辑的第一步。  
+
+__tcp_push_pending_frame()
+    =<span class="ruby"><span class="output"><span class="status">=&gt;</span> tcp_write_xmit() with push_one=<span class="number">0</span></span>
+</span>        =<span class="ruby"><span class="output"><span class="status">=&gt;</span> tcp_schedule_loss_probe()   /* 尝试安装<span class="constant">PTO</span>超时计时器的安装 *<span class="regexp">/
+</span></span></span>
+2. 处理ack时，增加调度安装PTO超时计时器和结束TLP状态的逻辑
+   即TLP算法的最后一步 
+
+tcp_ack()
+    =<span class="ruby"><span class="output"><span class="status">=&gt;</span> if (tp-&gt;tlp_high_seq) tcp_process_tlp_ack();    <span class="regexp">/* 判断是否需要结束TLP状态 */</span></span>
+</span>    =<span class="ruby"><span class="output"><span class="status">=&gt;</span> tcp_schedule_loss_probe()</span></span>
+</code></pre><hr>
+<h4 id="安装PTO超时计时器">安装PTO超时计时器</h4>
+<pre><code><span class="comment">/* 返回false代表未设置timer, 返回true代表设置了PTO timer */</span>
+<span class="keyword">bool</span> tcp_schedule_loss_probe(<span class="keyword">struct</span> sock *sk)
+{
+    ...  
+    <span class="keyword">u32</span> rtt = tp-&gt;srtt &gt;&gt; <span class="number">3</span>;    <span class="comment">/* tp-&gt;srtt存的实际是RFC中SRTT的8倍 */</span>
+    ...  
+    <span class="comment">/* TLP is only scheduled when next timer event is RTO. */</span>
+    <span class="keyword">if</span> (icsk-&gt;icsk_pending != ICSK_TIME_RETRANS)
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+
+    <span class="comment">/* Schedule a loss probe in 2*RTT for SACK capable connections
+     * in Open state, that are either limited by cwnd or application.
+     */</span>
+    <span class="keyword">if</span> (sysctl_tcp_early_retrans &lt; <span class="number">3</span> ||     <span class="comment">/* 没开TLP */</span>
+        !rtt ||                             <span class="comment">/* 没有RTTsample可用，没法设置PTO */</span>
+        !tp-&gt;packets_out ||                 <span class="comment">/* 网络中没有未被确认的数据包，没必要设置PTO */</span>
+        !tcp_is_sack(tp) ||                 <span class="comment">/* 不支持SACK选项 */</span>
+        !inet_csk(sk)-&gt;icsk_ca_state != TCP_CA_Open)    <span class="comment">/* 只有在open状态才设置PTO */</span>
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+
+    <span class="comment">/* Probe timeout is at lease 1.5*rtt + TCP_DELACK_MAX to account
+     * for delayed ack when there's one outstanding packet.
+     */</span>
+    <span class="comment">/* 这段代码完全符合TLP算法逻辑，不解释了 */</span>
+    timeout = rtt &lt;&lt; <span class="number">1</span>;
+    <span class="keyword">if</span> (tp-&gt;packets_out == <span class="number">1</span>)
+        timeout = max_t(<span class="keyword">u32</span>, timeout, (rtt + (rtt &gt;&gt; <span class="number">1</span>) + TCP_DELACK_MAX));
+    timeout = max_t(<span class="keyword">u32</span>, timeout, msecs_to_jiffies(<span class="number">10</span>));
+
+    <span class="comment">/* If RTO is shorter, just schedule TLP in its place. */</span>
+    <span class="comment">/* PTO = min(PTO, RTO) */</span>
+    tlp_time_stamp = tcp_time_stamp + timeout;
+    rto_time_stamp = (<span class="keyword">u32</span>)inet_csk(sk)-&gt;icsk_timeout;
+    <span class="keyword">if</span> ((s32)(tlp_time_stamp - rto_time_stamp) &gt; <span class="number">0</span>) {
+        s32 delta = rto_time_stamp - tcp_time_stamp;
+        <span class="keyword">if</span> (delta &gt; <span class="number">0</span>)
+            timeout = delta;
+    }
+
+    inet_csk_reset_xmit_timer(sk, ICSK_TIME_LOSS_PROBE, timeout, TCP_RTO_MAX);
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">// 在tcp_write_timer_handler中会根据event的类型，来做相应的处理</span>
+<span class="comment">// 如果是PTO超时，则调用tcp_send_loss_probe(sk)来发送TLP探测包</span>
+<span class="comment">/* When probe timeout (PTO) fires, send a new segment if one exists, else
+ * retransmit the last segment.
+ */</span>
+void tcp_send_loss_probe(<span class="keyword">struct</span> sock *sk)
+{
+    ...
+    <span class="comment">/*
+     * 如果有新数据可以发送，则发新数据作为探测包
+     * TLP用了一个push_one=2的trick来区分是正常的发送包，还是loss probe包
+     */</span>
+    <span class="keyword">if</span> (tcp_send_head(sk) != NULL) {        
+        err = tcp_write_xmit(sk, mss, TCP_NAGLE_OFF, <span class="number">2</span>, GFP_ATOMIC);
+        goto rearm_timer;
+    }
+
+    <span class="comment">/* At most one outstanding TLP retransmission */</span>
+    <span class="keyword">if</span> (tp-&gt;tlp_high_seq)
+        goto rearm_timer;
+
+    <span class="comment">/* Retransmit last segment */</span>
+    skb = tcp_write_queue_tail(sk);
+    <span class="keyword">if</span> (WARN_ON(!skb))
+        goto rearm_timer;
+
+    <span class="comment">/* 省略一些判断tcp fragment的代码 */</span>
+
+    <span class="comment">/* Probe with zero data doesn't trigger fast recovery */</span>
+    <span class="keyword">if</span> (skb-&gt;len &gt; <span class="number">0</span>)
+        err = <span class="number">__</span>tcp_retransmit_skb(sk, skb);
+
+    <span class="comment">/* Record snd_nxt for loss detection */</span>
+    <span class="keyword">if</span> (!likely(!err))
+        tp-&gt;tlp_high_seq = tp-&gt;snd_nxt;
+
+rearm_timer:
+    <span class="comment">/* 重新安装RTO超时计时器 */</span>
+    inet_csk_reset_xmit_timer(sk, ICSK_TIME_RETRANS, inet_csk(sk)-&gt;icsk_rto, TCP_RTO_MAX);
+
+    <span class="keyword">if</span> (likely(!err))   <span class="comment">/* 增加计数器的值，可以在/proc/net/snmp中看到，netstat -s也可以 */</span>
+        NET_INC_STATS_BH(sock_net(sk), LINUX_MIB_TCPLOSSPROBES);
+
+    <span class="keyword">return</span>;
+}
+</code></pre><hr>
+<h4 id="何时结束一个episode">何时结束一个episode</h4>
+<pre><code><span class="comment">/* This routine deals with acks during a TLP episodes. */</span>
+<span class="keyword">static</span> void tcp_process_tlp_ack(<span class="keyword">struct</span> sock *sk, <span class="keyword">u32</span> ack, <span class="keyword">int</span> flag)
+{
+    <span class="keyword">struct</span> tcp_sock *tp = tcp_sk(sk);
+    <span class="comment">/* 判断TLP是否是多余的，及产生了多余的dupack。逻辑参考RFC */</span>
+    <span class="keyword">bool</span> is_tlp_dupack = (ack == tp-&gt;tlp_high_seq) &amp;&amp;   
+                         !(flag &amp; (FLAG_SND_UNA_ADVANCED | 
+                                  FLAG_NOT_DUP | FLAG_DATA_SACKED));
+
+    <span class="comment">/* Mark the end of TLP episode on receiving TLP dupack or when
+     * ack is after tlp_high_seq.
+     */</span>
+    <span class="comment">/* 可见实现TLP时，选择了最多有一个TLP包发送出去，所以省去了RFC中的TLPRxtOut计数器 */</span>
+    <span class="keyword">if</span> (is_tlp_dupack) {
+        tp-&gt;tlp_high_seq = <span class="number">0</span>;
+        <span class="keyword">return</span>;
+    }
+
+    <span class="keyword">if</span> (after(ack, tp-&gt;tlp_high_seq)) {
+        tp-&gt;tlp_high_seq = <span class="number">0</span>;
+        <span class="comment">/* Don't reduce cwnd if DSACK arrives for TLP retrans */</span>
+        <span class="keyword">if</span> (!(flag &amp; FLAG_DSACKING_ACK)) {
+            <span class="comment">/* 折腾这么一圈，最关键的就是降cwnd: ssthresh = 0.7*cwnd; cwnd=ssthresh */</span>
+            tcp_init_cwnd_reduction(sk, <span class="keyword">true</span>);
+            tcp_set_ca_state(sk, TCP_CA_CWR);
+            tcp_end_cwnd_reduction(sk);
+            tcp_set_ca_state(sk, TCP_CA_Open);
+            NET_INC_STATS_BH(sock_net(sk), LINUX_MIB_TCPLOSSPROBERECOVERY);
+        }
+    }
+}
+</code></pre><blockquote>
+<p>问题：代码什么地方体现了TLP中的Tail ?<br>&lt; 没有dupack收到，自然就认为是Tail了。并不需要想ER那样判断什么packets_out,sacked_out等。<br>这样的问题可能就是跟RTO抢活了。</p>
+</blockquote>
+<p>最后说一句，TLP的loss probe次数和loss recovery 次数Linux中都有相应的计数器跟踪，<br>分别对应LINUX_MIB_TCPLOSSPROBES，LINUX_MIB_TCPLOSSPROBERECOVERY。</p>
+<hr>
+<h4 id="TLP与ER的关系">TLP与ER的关系</h4>
+<p>一句话总结  </p>
+<pre><code>ER解决的是dupack不够用的情况
+TLP解决的是没有dupack可用的情况
+</code></pre><hr>
+<hr>
+<h3 id="TLP性能评测数据">TLP性能评测数据</h3>
+<p><a href="http://www.net.in.tum.de/fileadmin/TUM/NET/NET-2014-03-1/NET-2014-03-1_01.pdf" target="_blank" rel="external">Measuring TCP Tail Loss Probe Performance</a>中的测试数据显示</p>
+<pre><code>TLP <span class="keyword">is</span> able <span class="keyword">to</span> decrease <span class="keyword">the</span> total transfer <span class="property">time</span> <span class="keyword">in</span> high-speed networks <span class="keyword">by</span> <span class="number">38</span>% <span class="keyword">and</span> <span class="keyword">the</span> <span class="property">time</span> <span class="keyword">until</span> data <span class="keyword">is</span> retransmitted <span class="keyword">by</span> <span class="number">81</span>%.
+These improvements decrease significantly <span class="keyword">for</span> higher <span class="command">delay</span> links.
+</code></pre><p>文章中用到mininet和iptables的方式来模拟网络倒是点醒了我。之前我干嘛非得搭物理机环境啊。T_T  </p>
+<p><a href="http://www.sigcomm.org/sites/default/files/ccr/papers/2015/January/0000000-0000000.pdf" target="_blank" rel="external">An Evaluation of Tail Loss Recovery Mechanisms for TCP</a><br>文章评测了RTO Restart(RTOR)、TLP、TLPR三种技术对尾丢包情境性能的影响。都是TLPR得到的性能更好，当然TLP的性能也不赖。<br>RTOR这个技术主要解决的是现有RTO计时器在每次收到ACK后都会重新reset的问题。而RTOR的timer只要设置好，就不会随着dupack的到来而更改了。这个思路刚好解决了我看RTO代码时的疑问，又是脑洞大开啊。<br>看来paper还是要保持看下去啊，跟住研究的脚本才能了解技术的变迁。也能了解技术发展过程中的方方面面，而看内核代码只能了解被社区选用的技术(暂且不去评论社区选的好坏)。 </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://tools.ietf.org/html/draft-dukkipati-tcpm-tcp-loss-probe-01" target="_blank" rel="external">Tail Loss Probe (TLP): An Algorithm for Fast Recovery of Tail Losses Probe</a><br><a href="http://www.net.in.tum.de/fileadmin/TUM/NET/NET-2014-03-1/NET-2014-03-1_01.pdf" target="_blank" rel="external">Measuring TCP Tail Loss Probe Performance</a><br><a href="http://www.sigcomm.org/sites/default/files/ccr/papers/2015/January/0000000-0000000.pdf" target="_blank" rel="external">An Evaluation of Tail Loss Recovery Mechanisms for TCP</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。<br>但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。<br>为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而提高TCP性能。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="tlp" scheme="http://perthcharles.github.com/tags/tlp/"/>
+    
+      <category term="rfc" scheme="http://perthcharles.github.com/tags/rfc/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Early Retransmit for TCP]]></title>
+    <link href="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/"/>
+    <id>http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/</id>
+    <published>2015-10-31T02:00:21.000Z</published>
+    <updated>2015-10-31T10:52:50.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的<br>dupack触发fast retransmit造成的问题。<br>本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。<br>具体需要考虑那些特定场景后续后详细介绍。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="RFC5827解读">RFC5827解读</h3>
+<p>ER要解决的问题:<br>当无法收到足够的dupack时，TCP标准的Fast Retransmit机制无法被<br>触发，只能等待RTO超时才能进行丢包的重传。而RTO超时不管是时间等待代价，还是<br>性能损耗代价都很大。</p>
+<p>ER的解决方法:<br>检测出无法收到足够dupack的场景，进而降低dupack threshold来触发快速重传。<br>从而避免等待RTO超时重传，对性能造成较大的损耗。  </p>
+<p>TCP中的标准的重传机制:<br>a. 如果超过RTO时间没有收到ACK包，则会触发RTO超时机制。代价就是cwnd=1，慢启动<br>b. 如果收到三个重复dupack，则会触发快速重传。代价是cwnd减半(视congestion算法而定)，拥塞避免</p>
+<p>为什么需要等三个重复dupack ？<br>那是因为dupack即可能是丢包造成的，也可能是网络乱序造成的。所以那帮设计标准的<br>牛牛们，一方面拍拍脑袋，一方面测点实验数据定了这么一个值：3。<br>倒也正好吻合了一句古话：事不过三。哈哈</p>
+<p>但是阈值设置为三，也存在一些问题。<br>比如当cwnd较小时(比如3)，当发生丢包后，可能就无法产生足够的dupack来触发快速重传。<br>结果就是只能靠RTO超时来重传丢包了。  </p>
+<p>那么什么情况下cwnd会比较小呢？</p>
+<pre><code><span class="bullet">1. </span>TCP流经过的链路bandwidth-delay product (BDP)很小，就会导致很小的cwnd
+
+<span class="bullet">2. </span>应用层限制，没有足够的数据可以发送，进而导致cwnd一直很小
+
+<span class="bullet">3. </span>由于接收端的接收窗口的限制，导致cwnd很小
+</code></pre><hr>
+<p>总结下，出现dupack不够的情况：<br>a. cwnd较小<br>b. 发送窗口里大量的数据包都被丢失了<br>c. 在数据发送的尾端发生丢包时  </p>
+<p>但是，上面各种极端的case有共同的特点：<br>m. 无法产生足够的dupack<br>n. 没有新的数据包可以发送进入网络  </p>
+<p>Early Retransmit机制就是在判断条件m和n都成立后，选择降低触发Fast Retransmit<br>的阈值，来避免只能通过RTO超时重传的问题。  </p>
+<hr>
+<h4 id="ER算法">ER算法</h4>
+<p>名词解释</p>
+<pre><code><span class="label">oseg:</span> outstanding segments, segements sent but not yet acknowledged
+    并且是没有被累计确认！及内核中的snd_nxt - snd_una
+
+<span class="label">ER_thresh:</span> 启用ER算法后，触发快速重传的dupack个数阈值
+</code></pre><p>算法逻辑</p>
+<pre><code>ER_thresh = <span class="number">3</span>   <span class="comment">// 等于3，表示还是标准的FR算法</span>
+<span class="keyword">if</span> (oseg &lt; <span class="number">4</span> &amp;&amp; <span class="keyword">new</span> data cannot be sent)    <span class="comment">// 如果满足条件，考虑启用ER算法</span>
+    <span class="keyword">if</span> (SACK <span class="keyword">is</span> unsupport)                  <span class="comment">// 如果SACK选项不支持，则使用oseg-1作为阈值</span>
+        ER_thresh = oseg - <span class="number">1</span>
+    elif (SACKed packet == oseg-<span class="number">1</span>)          <span class="comment">// 否则，只有当oseg-1个包被SACK，才能启用ER    </span>
+        ER_thresh = oseg - <span class="number">1</span>
+</code></pre><p>RFC的算法的算法主要是看个思路，具体算法的实现和逻辑细节还是要看代码。<br>The code in the real world is another cat compared with RFC’s.  </p>
+<hr>
+<h4 id="开启SACK的必要性">开启SACK的必要性</h4>
+<p>总的来说就是更推荐使用SACK选项的方法  </p>
+<pre><code>假设发送了三个数据包，S1，S2，S3，但是S2被丢弃了。
+当S1到达接收端时，它是按序到达的。接收方可能会delay这个ACK，所以分两种情况讨论：
+
+a. S1的ack被delay了：这种情况下S3的接收会触发一个ACK被发送（因为delay ack
+   机制最多能delay一个数据包）。那么此时如果没有带SACK信息，发送发就会收到
+   一个正常的ACK，而不是dupack。这样一个dupack都没有收到过，所以也就不会触发
+   ER机制，而只能靠RTO超时来进行重传(而且S2和S3都要重传)。
+   而如果有SACK信息，<span class="variable">oseg=</span><span class="number">1</span>，进而ER算法就能被启用。
+   具体就是：支持SACK，<span class="variable">oseg=</span><span class="number">1</span>, <span class="variable">oseg-1=</span><span class="number">0</span>     =&gt; 启用ER
+             不支持SACK，<span class="variable">oseg=</span><span class="number">2</span>, <span class="variable">oseg-1=</span><span class="number">1</span>   =&gt; 无法启用ER，因为没收到任何dupack
+
+b. 如果ack没有被delay，ER都能被启用。
+   具体就是：支持SACK，<span class="variable">oseg=</span><span class="number">1</span>, <span class="variable">oseg-1=</span><span class="number">0</span>     =&gt; 启用ER
+             不支持SACK，<span class="variable">oseg=</span><span class="number">2</span>, <span class="variable">oseg-1=</span><span class="number">1</span>   =&gt; 启用ER
+</code></pre><hr>
+<h4 id="ER的问题">ER的问题</h4>
+<p>核心意思就是：如果一条TCP流，cwnd一直很小，然后cwnd内发送的数据<br>每次都乱序到达接收端，这样使用ER算法就可能导致较多的spurious retransmit。<br>比如cwnd=2，而每次这两个包都reorder，结果就是发两个数据包，就ER重传一个。</p>
+<p>是的，这就叫TCP设计里面常提到的pathological case.  </p>
+<p>一种可能的解决办法就是发送一个TCP层data payload=0的包去增加dupack的个数，<br>但是这会一定程度上浪费网络资源。暂时未找到采用了这一思想的TCP实现。  </p>
+<hr>
+<h4 id="解决降低DupACK阈值可能带来的问题">解决降低DupACK阈值可能带来的问题</h4>
+<p>RFC附录提到了三种缓解ER可能带来问题的方法，具体如下<br>a. 判断ER是否发送了多次spurious retransmit数据，利用的手段就是D-SACK技术<br>b. 如果无法判断ER是否发送了spurious retransmit，则可以暴力的设置一个固定值来限制ER被触发的次数<br>c. 当需要触发ER机制时，等待一个固定长度的时间再重传。<br>   Linux默认选用这种方式</p>
+<hr>
+<hr>
+<h3 id="源码分析">源码分析</h3>
+<p>下面的源码分析，基于Linux3.10版本  </p>
+<hr>
+<h4 id="是否开启ER功能">是否开启ER功能</h4>
+<p>既然RFC中说了ER还是实验性的，而不是标准。故Linux kernel提供了选项来开启或关闭ER功能。<br>开关的名字是tcp_early_retrans，当然3.10的代码中还有Tail Loss Probe(TLP)的内容，暂时咱可以<br>忽略，之后再写一篇关于TLP的wiki。 </p>
+<pre><code>sysctl_tcp_early_retrans (defalut:<span class="number">3</span>)
+    <span class="number">0</span> disables ER
+    <span class="number">1</span> enables ER
+    <span class="number">2</span> enables ER but delays fast recovery <span class="operator">and</span> fast retransmit <span class="keyword">by</span> <span class="operator">a</span>
+    <span class="keyword">fourth</span> <span class="operator">of</span> RTT.
+    <span class="number">3</span> enables delayed ER <span class="operator">and</span> TLP.
+    <span class="number">4</span> enables TLP only.
+</code></pre><p>具体的判断函数就是在TCP sock初始化(tcp_init_sock)时，调用tcp_enable_early_retrans()<br>来判断是否开启  </p>
+<pre><code>static inline <span class="keyword">void</span> tcp_enable_early_retrans(<span class="class"><span class="keyword">struct</span> <span class="title">tcp_sock</span> *tp)
+</span>{
+    tp-&gt;do_early_retrans = 
+        sysctl_tcp_early_retrans &amp;&amp;         <span class="comment">/* ER开关是否开启 */</span>
+        sysctl_tcp_early_retrans &lt; <span class="number">4</span> &amp;&amp;     <span class="comment">/* ER开关是否开启 */</span>
+        !sysctl_tcp_thin_dupack &amp;&amp;          <span class="comment">/* 只有关闭thin-dupack才开ER */</span>
+        sysctl_tcp_reordering == <span class="number">3</span>;         <span class="comment">/* 需要默认的reordering是3菜开ER */</span>
+}
+</code></pre><p>根据3.10内核默认的配置，ER是默认开启的，也就是tp-&gt;do_early_retrans默认等于1</p>
+<p>当然了，在下面几种情况下也会disable ER<br>a. 应用程序通过setsockopt设置了TCP_THIN_DUPACK<br>b. TCP层发现了reorder，调用tcp_update_reordering尝试更新了reorder值<br>c. 配置了TCP_METRIC_REORDERING值，改变了reordering值</p>
+<hr>
+<h4 id="判断是否触发FR中ER判断部分">判断是否触发FR中ER判断部分</h4>
+<p>tcp_time_to_recoever这个函数就是判断是否该触发FR的函数  </p>
+<pre><code><span class="keyword">static</span> <span class="keyword">bool</span> tcp_time_to_recover(<span class="keyword">struct</span> sock *sk, <span class="keyword">int</span> flag)
+{
+    ...
+
+    <span class="comment">/* Trick#6: TCP early retransmit, per RFC5827. To avoid spurious
+     * retransmissions due to small network reorderings, we implement
+     * Mitigation A.3 in the RFC and delay the retransmission for a short
+     * interval if appropriate.
+     */</span>
+    <span class="keyword">if</span> (tp-&gt;do_early_retrans &amp;&amp;                     <span class="comment">/* 内核配置是否开启ER */</span>
+        !tp-&gt;retrans_out &amp;&amp;                         <span class="comment">/* 当前没有重传数据 */</span>
+        tp-&gt;sacked_out &amp;&amp;                           <span class="comment">/* 当前收到了dupack */</span>
+        tp-&gt;packets_out &lt; <span class="number">4</span> &amp;&amp;                      <span class="comment">/* packets_out很小, 及RFC oseg &lt; 4 */</span>
+        tp-&gt;packets_out &gt;= (tp-&gt;sacked_out + <span class="number">1</span>) &amp;&amp;  <span class="comment">/* dupack个数满足ER/TLP条件 */</span>
+        !tcp_may_send_now(sk))                      <span class="comment">/* 没有新数据可发送 */</span>
+        <span class="keyword">return</span> !tcp_pause_early_retransmit(sk, flag);   <span class="comment">/* 判断是否等待一段时间再触发ER */</span>
+
+    <span class="keyword">return</span> <span class="keyword">false</span>;   <span class="comment">// 默认返回false，即不进入fast recovery阶段</span>
+}
+</code></pre><p>主要需要解释的变量，应该是tp-&gt;sacked_out。<br>如果没有开SACK选项，那么该值就是表示dupack的个数。具体可参考tcp_add_reno_sack()函数相关代码<br>如果开启了SACK选项，那么这个值无疑就是表示被SACK的乱序包的个数。具体可参考tcp_sacktag_one()函数相关代码。  </p>
+<p>另外，观察仔细的人也许会发现”tp-&gt;packets_out &gt;= (tp-&gt;sacked_out + 1)”与ER的RFC不一致，<br>应该是’==’，而不是’&gt;=’。至于为什么代码中是这样修改的，暂时还不明确。<br>但可以确定的是这个概念是由于TLP算法的引入而改变的，具体的修改发生在<a href="https://github.com/torvalds/linux/commit/6ba8a3b19e764b6a65e4030ab0999be50c291e6c#diff-d06665370d013ab0df986a88d8e3a128" target="_blank" rel="external">Nandita的这个patch中</a>  </p>
+<hr>
+<h4 id="等四分之一RTT再触发ER">等四分之一RTT再触发ER</h4>
+<p>Linux中选择了等待四分之一RTT再触发ER的方式，来缓解降低dupack threshold可能带来的问题。<br>相关代码在tcp_pause_early_retransmit()中  </p>
+<pre><code><span class="comment">// 返回false表示立即进入FR，即立即触发ER；返回ture则是等待一个超时时间后再进入FR</span>
+<span class="keyword">static</span> <span class="keyword">bool</span> tcp_pause_early_retransmit(<span class="keyword">struct</span> sock *sk, <span class="keyword">int</span> flag)
+{
+    <span class="keyword">struct</span> tcp_sock *tp = tcp_sk(sk);
+    <span class="keyword">unsigned</span> <span class="keyword">long</span> delay;
+
+    <span class="comment">/* Delay early retransmit and entering fast recovery for
+     * max(RTT/4, 2msec) unless ack has ECE mark, mo RTT samples
+     * available, or RTO is scheduled to fire first.
+     */</span>
+    <span class="keyword">if</span> (sysctl_tcp_early_retrans &lt; <span class="number">2</span> ||     <span class="comment">/* kernel就没开delay ER的功能*/</span>
+        sysctl_tcp_early_retrans &gt; <span class="number">3</span> ||     <span class="comment">/* kernel跟本就没开ER功能(这个地方与do_early_retrans的判断有重复，感觉有点多余) */</span> 
+        (flag &amp; FLAG_ECE) ||                <span class="comment">/* ECE mark，ECN-Echo, Explict Congestion Notification */</span>
+        !tp-&gt;srtt)                          <span class="comment">/* 没有RTT采样 */</span>
+        <span class="keyword">return</span> <span class="literal">false</span>;
+
+    delay = max_t(<span class="keyword">unsigned</span> <span class="keyword">long</span>, (tp-&gt;srtt &gt;&gt; <span class="number">5</span>), msecs_to_jiffiec(<span class="number">2</span>));     <span class="comment">/* 计算delay ER的时间 */</span>
+    <span class="keyword">if</span> (!time_after(inet_csk(sk)-&gt;icsk_timeout, (jiffies + delay)))         <span class="comment">/* 如果RTO先超时 */</span>
+        <span class="keyword">return</span> <span class="literal">false</span>;
+
+    <span class="comment">// 设置ER超时计时器</span>
+    inet_csk_reset_xmit_timer(sk, ICSK_TIME_EARLY_RETRANS, delay, TCP_RTO_MAX);
+    <span class="keyword">return</span> <span class="literal">true</span>;
+}
+</code></pre><p>ICSK_TIME_EARLY_RETRANS超时后，会调用tcp_resume_early_retransmit(sk)  </p>
+<pre><code><span class="keyword">void</span> tcp_resume_early_retransmit(<span class="keyword">struct</span> sock *sk)
+{
+    strcut tcp_sock *tp = tcp_sk(sk);
+
+    tcp_rearm_rto(sk);  <span class="comment">// 重设RTO计时器</span>
+
+    <span class="comment">/* Stop if ER is disabled after the delayed ER timer is sheduled */</span>
+    <span class="keyword">if</span> (!tp-&gt;do_early_retrans)
+        <span class="keyword">return</span>;
+
+    <span class="comment">// 进入快速重传阶段</span>
+    tcp_enter_recovery(sk, <span class="keyword">false</span>);
+    tcp_update_scoreboard(sk, <span class="number">1</span>);
+    tcp_xmit_retransmit_queue(sk);
+}
+</code></pre><hr>
+<p>说一句题外话，TCP的具体设计经常需要考虑很多极端的case。<br>这类case，以前一般也就称之为corner case。但是越看RFC，越发现corner已经不足以<br>形容TCP设计的严谨性了，只能用pathological了。T_T</p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://tools.ietf.org/html/rfc5827" target="_blank" rel="external">RFC 5827</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的<br>dupack触发fast retransmit造成的问题。<br>本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。<br>具体需要考虑那些特定场景后续后详细介绍。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="tcp" scheme="http://perthcharles.github.com/tags/tcp/"/>
+    
+      <category term="rfc" scheme="http://perthcharles.github.com/tags/rfc/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[在Linux上探测TCP的内部状态]]></title>
+    <link href="http://perthcharles.github.com/2015/10/28/inspecting-internal-tcp-state/"/>
+    <id>http://perthcharles.github.com/2015/10/28/inspecting-internal-tcp-state/</id>
+    <published>2015-10-28T13:28:11.000Z</published>
+    <updated>2015-10-28T14:27:48.000Z</updated>
+    <content type="html"><![CDATA[<p>发现一篇使用ss获取TCP内部状态信息的好文，不由的记录一笔。<br>并结合之前会的方法适当总结总结。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="Inspecting_Internal_TCP_State_on_Linux"><a href="https://blogs.janestreet.com/inspecting-internal-tcp-state-on-linux/" target="_blank" rel="external">Inspecting Internal TCP State on Linux</a></h3>
+<p>这种好文当然是推荐去读原文了，这里对文章中的方法只做简单摘要。<br>而这类相似方法还有哪些，以及各自的优缺点可以看看下一节的总结。  </p>
+<pre><code><span class="comment">// 可查看尽量多的显示socket相关的内部信息  </span>
+<span class="preprocessor"># ss -eipn  </span>
+
+Internally, ss uses the tcp_diag kernel module to extract
+information (<span class="keyword">this</span> is done via an<span class="constant"> AF_NETLINK </span>socket).
+
+<span class="comment">// 通过crash根据sk的内存地址，获取更多的sk结构体item信息</span>
+<span class="preprocessor"># sudo crash -e emacs</span>
+
+crash &gt; <span class="keyword">struct</span> tcp_sock.rcv_nxt,snd_una,reordering ffff8802305a0800
+</code></pre><hr>
+<h3 id="总结">总结</h3>
+<p>目前掌握的获取TCP内部状态的方法，这里讨论的方法都是不需要额外在内核中做开发的：<br>a. 使用tcp_probe内核模块<br>改改tcp_probe几乎可以获取TCP内部的任何状态<br>具体怎么使用tcp_probe模块，在之前的<a href="http://perthcharles.github.io/2014/12/19/tcp-probe-intro/" target="_blank" rel="external">这篇博客</a>中有详细的介绍。  </p>
+<pre><code>优点(考虑适当自定制该模块)：
+    1. 功能性：可查看TCP流的几乎所有的内部状态
+    2. 灵活性：定制一次必须重编一次模块
+缺点：
+    1. 功能性：不适合线上设备使用，大量不同流的信息混在一起简直是灾难(如何有效的使用过滤策略是一个好问题)
+    2. 可用性：如果没有kernel-devel包，无法自定制编译使用内核模块
+</code></pre><p>b. 使用systemtap脚本  </p>
+<pre><code>优点：
+    <span class="number">1</span>. 功能性：几乎可以探测TCP流在任何处理逻辑(内联函数是一个痛点)处的信息
+    <span class="number">2</span>. 灵活性：方便设置过滤策略，(相对tcp_probe而言)可方便的统计出想要的信息。
+       不管是通过指定脚本参数，还是直接修改脚本，都比修改tcp_probe内核模块方便
+缺点：
+    <span class="number">1</span>. 可用性：依赖kernel-devel, kernel-debuginfo, kernel-debuginfo-<span class="built_in">common</span>包
+       而为了避免暴露自定制内核的内部实现，这些包默认都是不安装的
+</code></pre><p>c. ss+crash<br>如果只需要ss默认支持的信息，那这种方法当然是最佳的。<br>但可信的就是ss默认支持的信息，还是太少，因此可能需要crash来补充  </p>
+<pre><code>优点：
+    <span class="number">1</span>. 功能性：在仅需要<span class="literal">ss</span>默认支持的信息时，最实用。只要安装<span class="literal">ss</span>软件即可
+       本质上<span class="literal">ss</span>输出的信息，是内核统计的，<span class="literal">ss</span>只是一个输出工具而已
+缺点：
+    <span class="number">1</span>. 功能性：受限于内核统计的信息，受限与<span class="literal">ss</span>工具的选择的输出信息
+    <span class="number">2</span>. 可用性：如果试图通过<span class="literal">ss</span>得到的sk内存地址，利用crash进一步获得信息，则需要内核image能找到。
+       这点在线上设备上也显然是不现实的
+</code></pre><p>不过受ss+crash这种方法的启发，既然能拿到sk结构体的内存地址，有没有更简单，<br>方便的方法来获取sk内部item的值呢？<br>如果大家有更好的方法，非常欢迎留言交流。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>发现一篇使用ss获取TCP内部状态信息的好文，不由的记录一笔。<br>并结合之前会的方法适当总结总结。<br>]]>
+    
+    </summary>
+    
+      <category term="ss" scheme="http://perthcharles.github.com/tags/ss/"/>
+    
+      <category term="crash" scheme="http://perthcharles.github.com/tags/crash/"/>
+    
+      <category term="networking" scheme="http://perthcharles.github.com/categories/networking/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[阅读周记(第三期)]]></title>
+    <link href="http://perthcharles.github.com/2015/10/26/wiki-weekly-readlist-20151026/"/>
+    <id>http://perthcharles.github.com/2015/10/26/wiki-weekly-readlist-20151026/</id>
+    <published>2015-10-26T13:30:23.000Z</published>
+    <updated>2015-11-02T14:49:30.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h2 id="DigitalOcean如何在红海市场做用户增长"><a href="https://strace.co/cn/post/growth-hacking-digitalocean.html" target="_blank" rel="external">DigitalOcean如何在红海市场做用户增长</a></h2>
+<pre><code>摘要：
+    1. 先确立独特点，研究增长计划  
+    2. 做产品而非服务，产品更容易扩张  
+    3. 加入创业加速器，获得初期用户和商业关系网络  
+    4. 漂亮的增长数字和对未来清晰的定位，是打动顶级风投的亮点
+    5. Freemium模式
+    6. 获取并了解前100个客户(找一个高水准的技术聚会是一个很好的切入点)
+    7. 针对高智商的开发者用户的口碑营销和社区营销
+    8. 测量各个推广渠道的转化率
+点评：
+    1. 学到一个新词：<span class="function">freemium</span>(免费增值),即通过为少部分有更高需求的用户提供增值服务赢利
+    2. digitalocean在linode已经拥有大量客户的时候，才进入VPS服务器这个红海市场，
+       依然能做起来。至今成为行业第二，足以说明它的战术和战略都是很成功的。
+       找机会得去体验一把digitalocean。
+</code></pre><a id="more"></a>  
+
+<hr>
+<h2 id="好的架构是进化来的，不是设计来的"><a href="http://news.oneapm.com/shenjian-oneapm-course/?hmsr=toutiao.io&amp;utm_medium=toutiao.io&amp;utm_source=toutiao.io" target="_blank" rel="external">好的架构是进化来的，不是设计来的</a></h2>
+<pre><code>摘要：
+    <span class="number">1.</span> 创业初期，成本是设计架构的重要因素
+    <span class="number">2.</span> 在每一个阶段，找到对应该阶段网站架构所面临的问题，然后在不断解决这些问题的过程中，
+       真个战略的架构就是在不断的演进了
+    <span class="number">3.</span> 第一阶段：<span class="literal">ALL</span> <span class="keyword">IN</span> ONE。特点：单机系统，程序耦合，逻辑核心是CURD
+    <span class="number">4.</span> 中等规模：流量跨过十万阶段，数据库成为瓶颈。特点：分布式系统，动静分离，读写分离
+    <span class="number">5.</span> 进一步：静态数据使用CDN服务，MVC结构，负载均衡
+    <span class="number">6.</span> 大流量：将整个windows技术体系转向了Java体系
+    <span class="number">7.</span> 高可用：进一步垂直拆分，分层抽象，水平拆分
+    <span class="number">8.</span> 技术：反向代理，智能DNS
+    <span class="number">9.</span> 当架构变成蜘蛛网，人肉已很难搞定
+点评：
+    <span class="number">1.</span> 架构这个东西不是想出来的，而是做出来的
+    <span class="number">2.</span> 同时，做也要聪明的做。前期好的设计，好的远见很重要
+    <span class="number">3.</span> learn <span class="keyword">to</span> <span class="keyword">do</span>(学会去做), learning <span class="keyword">by</span> doing(从实践中学)
+</code></pre><hr>
+<h2 id="The_50_Most_Popular_MOOCs_of_All_Time"><a href="http://www.onlinecoursereport.com/the-50-most-popular-moocs-of-all-time/" target="_blank" rel="external">The 50 Most Popular MOOCs of All Time</a></h2>
+<pre><code>摘要：
+    <span class="number">50.</span> Internet History, Technology, <span class="operator">and</span> Security / University <span class="operator">of</span> Michigan
+    <span class="number">39.</span> Social Network Analysis / University <span class="operator">of</span> Michigan
+    <span class="number">37.</span> Introduction <span class="built_in">to</span> Databases / Stanford University
+    <span class="number">34.</span> Statistics – Making Sense <span class="operator">of</span> Data / University <span class="operator">of</span> Toronto
+    <span class="number">33.</span> Critical Thinking <span class="operator">in</span> Global Challenges / The University <span class="operator">of</span> Edinburgh
+    <span class="number">29.</span> A History <span class="operator">of</span> <span class="operator">the</span> World Since <span class="number">1300</span> / Princeton University
+    <span class="number">28.</span> Justice / Harvard University
+    <span class="number">23.</span> Data Analysis / Johns Hopkins Bloomberg School
+    <span class="number">20.</span> Introduction <span class="built_in">to</span> Financial Accounting / University <span class="operator">of</span> Pennsylvania / Wharton
+    <span class="number">17.</span> Financial Markets / Yale University
+    <span class="number">16.</span> Computational Investing, Part I / Georgia Institute <span class="operator">of</span> Technology
+    <span class="number">9.</span> Think Again: How <span class="built_in">to</span> Reason <span class="operator">and</span> Argue / Duke University
+    <span class="number">2.</span> Introduction <span class="built_in">to</span> Philosophy / University <span class="operator">of</span> Edinburgh
+</code></pre><hr>
+<h2 id="相信技术的力量，出门问问获谷歌投资"><a href="http://www.infoq.com/cn/news/2015/10/chumenwenwen-the-new-milestone" target="_blank" rel="external">相信技术的力量，出门问问获谷歌投资</a></h2>
+<pre><code>点评：了解了解出门问问
+</code></pre><p>相关阅读:<br><a href="http://www.ifanr.com/378180" target="_blank" rel="external">出门问问李志飞：我们想做 Google 那样的公司</a><br><a href="http://www.csdn.net/article/2014-11-13/2822638-From-Hardcore-Coder-to-Startup-TechManager" target="_blank" rel="external">雷欣：从技术极客到核心管理的秘密</a><br><a href="http://www.huxiu.com/article/42572/1.html" target="_blank" rel="external">出门问问CEO李志飞: 那些牛逼的工程师适合创业吗?</a>  </p>
+<hr>
+<h2 id="Five_Things_Old_Programmers_Should_Remember"><a href="https://medium.com/@garywiz/five-things-old-programmers-need-to-remember-e78caf0b0973?imm_mid=0daeb8&amp;cmp=em-prog-na-na-newsltr_20151024#.bpqamw9yz" target="_blank" rel="external">Five Things Old Programmers Should Remember</a></h2>
+<pre><code>摘要：
+    <span class="number">1.</span> The industry I joined was an industry <span class="keyword">of</span> specialists.
+       Commitment <span class="keyword">and</span> discipline were a requirement. 
+    <span class="number">2.</span> <span class="keyword">If</span> I may be so bold, it was a mistake <span class="keyword">for</span> you <span class="keyword">to</span> accept promotion.
+       Commanding a starship <span class="keyword">is</span> your first, best destiny;
+       anything <span class="keyword">else</span> <span class="keyword">is</span> a waste <span class="keyword">of</span> material. — Spock (引自星际迷航)
+    <span class="number">3.</span> It’s what you signed up <span class="keyword">for</span>, <span class="keyword">and</span> <span class="keyword">if</span> you really want <span class="keyword">to</span> contribute,
+       you need <span class="keyword">to</span> rope <span class="keyword">in</span> the demons <span class="keyword">of</span> getting old <span class="keyword">and</span> be different
+       than most everybody you grew up <span class="keyword">with</span>. Go out <span class="keyword">on</span> a limb, <span class="keyword">and</span> enjoy
+       the fact that life <span class="keyword">is</span> <span class="keyword">not</span> ending, it <span class="keyword">is</span> always just beginning.
+    <span class="number">4.</span> Just <span class="keyword">like</span> any accessible sport, most people are amateurs,
+       a few have promise, <span class="keyword">and</span> very few reach the Olympics.
+    <span class="number">5.</span> Your Health <span class="keyword">Is</span> Your <span class="keyword">New</span> Business Partner.
+点评：
+    <span class="number">1.</span> 选你所爱，爱你所选
+    <span class="number">2.</span> <span class="keyword">do</span> one thing, <span class="keyword">do</span> onething perfectly
+    <span class="number">3.</span> 安心做技术人，忌浮躁。太多的潜力项目、公司都是被半吊子的技术型管理人员搞挂的。
+       <span class="keyword">Do</span> <span class="keyword">not</span> be one <span class="keyword">of</span> them !
+    <span class="number">4.</span> 这篇博文给国内一种<span class="string">"程序员是年轻人的职业"</span>的论调一记响亮的耳光。
+       博主和评论中的诸多older coders都非常高龄。
+    <span class="number">5.</span> 正确看待你的工作，用心认真对待它。它是你的事业，也是一生中重要的标记，可以引以为豪的标记。
+</code></pre><hr>
+<h2 id="过一过ArchSummit的PPT">过一过ArchSummit的PPT</h2>
+<p>百度云盘地址: <a href="http://pan.baidu.com/s/1hqngEqg" target="_blank" rel="external">http://pan.baidu.com/s/1hqngEqg</a></p>
+<hr>
+<h2 id="不要使用公共DNS服务"><a href="http://mawenjian.net/p/281.html" target="_blank" rel="external">不要使用公共DNS服务</a></h2>
+<p>多一些看待公共DNS服务的视角</p>
+<hr>
+<h2 id="过一个QCon的PPT">过一个QCon的PPT</h2>
+<p>重点了解跟网络相关的部分，无论网络运维、网络虚拟化、网络加速、网络架构、网络加速。  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h2 id="DigitalOcean如何在红海市场做用户增长"><a href="https://strace.co/cn/post/growth-hacking-digitalocean.html" target="_blank" rel="external">DigitalOcean如何在红海市场做用户增长</a></h2>
+<pre><code>摘要：
+    1. 先确立独特点，研究增长计划  
+    2. 做产品而非服务，产品更容易扩张  
+    3. 加入创业加速器，获得初期用户和商业关系网络  
+    4. 漂亮的增长数字和对未来清晰的定位，是打动顶级风投的亮点
+    5. Freemium模式
+    6. 获取并了解前100个客户(找一个高水准的技术聚会是一个很好的切入点)
+    7. 针对高智商的开发者用户的口碑营销和社区营销
+    8. 测量各个推广渠道的转化率
+点评：
+    1. 学到一个新词：<span class="function">freemium</span>(免费增值),即通过为少部分有更高需求的用户提供增值服务赢利
+    2. digitalocean在linode已经拥有大量客户的时候，才进入VPS服务器这个红海市场，
+       依然能做起来。至今成为行业第二，足以说明它的战术和战略都是很成功的。
+       找机会得去体验一把digitalocean。
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="digitalocean" scheme="http://perthcharles.github.com/tags/digitalocean/"/>
+    
+      <category term="wiki-阅读周记" scheme="http://perthcharles.github.com/categories/wiki-%E9%98%85%E8%AF%BB%E5%91%A8%E8%AE%B0/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[阅读周记(第二期)]]></title>
@@ -1889,249 +2629,6 @@ $ sudo nginx -s reload
       <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
     
       <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[像linux kernel一样管理你的项目]]></title>
-    <link href="http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/"/>
-    <id>http://perthcharles.github.com/2015/08/14/manage-project-code-like-linux-kernel/</id>
-    <published>2015-08-14T02:34:06.000Z</published>
-    <updated>2015-08-14T09:47:29.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>坚持良好的代码管理习惯，将极大的帮助我们做出更好的项目。<br>本文用于记录如何有效的使用git进行代码管理，像诸多优秀的项目一样。<br>本文尤其适合需要向其他项目提交patch的情形。不懂这句话的请参考标题，哈哈。  </p>
-<a id="more"></a>  
-
-<hr>
-<h3 id="1-_如何正确的对待commit_？">1. 如何正确的对待commit ？</h3>
-<p>commit是一个项目的变更史，如何维持一个高质量的commit log对于项目的质量<br>至关重要。<br>那么什么样的commit log是合格的呢？  </p>
-<h4 id="1-1_避免初级的错误">1.1 避免初级的错误</h4>
-<pre><code><span class="array"># git diff </span>--check   <span class="comment">// identifies possible whitespace errors  </span>
-</code></pre><h4 id="1-2_坚持一个commit对应一个功能">1.2 坚持一个commit对应一个功能</h4>
-<p>这点在实践的过程中可能很难满足，但是git提供了其他的方式让你可以在事后<br>进行弥补<a href="http://git-scm.com/book/en/v2/Git-Tools-Rewriting-History" target="_blank" rel="external">[1]</a>。<br>尽管如此，这些弥补措施只能在将代码与他人共享(git push)之前使用。<br>尽管如此，这些弥补措施只能在将代码与他人共享(git push)之前使用。<br>尽管如此，这些弥补措施只能在将代码与他人共享(git push)之前使用。  </p>
-<pre><code>// 方式1：修改最近的一次<span class="operator"><span class="keyword">commit</span>信息  
-// 同时也会将已进行的更改添加进入修改后的<span class="keyword">commit</span>  
-// 典型应用场景：<span class="keyword">commit</span>后才发现遗漏了某个文件  
-# git <span class="keyword">commit</span> <span class="comment">--amend  </span>
-
-// 方式<span class="number">2</span>：修改最近的多次<span class="keyword">commit</span>信息  
-// 正式使用该方法前，最好用一个测试分支先体验一下。  
-# git rebase -i HEAD~n    // 修改最近的n个<span class="keyword">commit</span>  
-&lt;&lt; 将需要被修改的<span class="keyword">commit</span>信息对应行的<span class="string">"pick"</span>改为<span class="string">"edit"</span>  
-# git <span class="keyword">commit</span> <span class="comment">--amend      // 真实的修改选择的commit信息  </span>
-# git rebase <span class="comment">--continue   // 让rebase自动完成后续(未修改)的commit  </span>
-
-// 方式<span class="number">3</span>：将最近的多个<span class="keyword">commit</span>替换为一个<span class="keyword">commit</span>
-# git rebase -i HEAD~n  
-&lt;&lt; 将需要被合并的前n-<span class="number">1</span>个<span class="keyword">commit</span>对应行的<span class="string">"pick"</span>改为<span class="string">"squash"</span>  
-&lt;&lt; 之后会自动进入修改<span class="keyword">commit</span>的文本编辑页面，让你编辑新的<span class="keyword">commit</span> message  
-
-// 方式<span class="number">4</span>：使用相对人工的方式合并多个<span class="keyword">commit</span>  
-# git <span class="keyword">reset</span> <span class="comment">--soft HEAD~n  // 使用soft选项，仅将commit log回退n个记录  </span>
-# git <span class="keyword">commit</span> -a // 提交正式的<span class="keyword">commit</span> message  </span>
-</code></pre><h4 id="1-3_使用更规范的commit_message格式">1.3 使用更规范的commit message格式</h4>
-<p>在确保了一个commit对应一个功能后，最后就是确保commit message的规范性了。<br>首先贴一下写一个合格commit message的规则，最后贴一下Tim Pope给出来的一个<br>模板<a href="http://git-scm.com/book/ch5-2.html" target="_blank" rel="external">[2]</a>。  </p>
-<pre><code>第一行用一句简短的话总结这个<span class="operator"><span class="keyword">commit</span>  
-
-第一行最好用一个描述性的前缀开始，比如  
-  <span class="string">"net:"</span>表示针对net子系统的修改  
-  <span class="string">"fix:"</span>表示这是一个bug fix  
-
-第二行为空行
-
-最后可以增加一些详细的描述，用以解释<span class="keyword">commit</span>具体干了什么，为什么这么干  </span>
-</code></pre><p>commit message格式的一个模板如下，为保持原文含义，直接贴上英文版。  </p>
-<pre><code>Short (<span class="number">50</span> <span class="keyword">chars</span> <span class="operator">or</span> less) summary <span class="operator">of</span> changes
-
-More <span class="keyword">detailed</span> explanatory <span class="keyword">text</span>, <span class="keyword">if</span> necessary.  Wrap <span class="keyword">it</span> <span class="built_in">to</span>
-about <span class="number">72</span> <span class="keyword">characters</span> <span class="operator">or</span> so.  In some contexts, <span class="operator">the</span> <span class="keyword">first</span>
-<span class="built_in">line</span> is treated <span class="keyword">as</span> <span class="operator">the</span> subject <span class="operator">of</span> <span class="operator">an</span> email <span class="operator">and</span> <span class="operator">the</span> rest <span class="operator">of</span>
-<span class="operator">the</span> <span class="keyword">text</span> <span class="keyword">as</span> <span class="operator">the</span> body.  The blank <span class="built_in">line</span> separating <span class="operator">the</span>
-summary <span class="built_in">from</span> <span class="operator">the</span> body is critical (unless you omit <span class="operator">the</span> body
-entirely); tools like rebase can <span class="built_in">get</span> confused <span class="keyword">if</span> you run
-<span class="operator">the</span> <span class="constant">two</span> together.
-
-Further paragraphs come <span class="keyword">after</span> blank <span class="keyword">lines</span>.
-
-  - Bullet points are okay, too
-
-  - Typically <span class="operator">a</span> hyphen <span class="operator">or</span> asterisk is used <span class="keyword">for</span> <span class="operator">the</span> bullet,
-    preceded <span class="keyword">by</span> <span class="operator">a</span> single <span class="constant">space</span>, <span class="operator">with</span> blank <span class="keyword">lines</span> <span class="operator">in</span>
-    between, but conventions vary here
-</code></pre><hr>
-<h3 id="2-_如何通过commit生成patch_？">2. 如何通过commit生成patch ？</h3>
-<p>在得到合格的commit log后，则可以通过commit log直接得到想要的patch。<br>这里推荐使用format-patch格式的，理由自行理解。  </p>
-<pre><code><span class="comment">// 生成前两个commit对应的patch，一个commit生成一个patch  </span>
-<span class="comment">//     -s 表示添加签名</span>
-<span class="comment">//     -n 表示patch里面会有[patch n/m]类似的标记 </span>
-<span class="preprocessor"># git format-patch -sn -2</span>
-<span class="comment">// 与上一条命令含义相同</span>
-<span class="preprocessor"># git format-patch -sn HEAD HEAD~2..HEAD  </span>
-<span class="comment">// 忽略掉diff里面的prefix  </span>
-<span class="preprocessor"># git format-patch -sn --no-prefix -1  </span>
-</code></pre><p>由于git format-patch会将每一个commit单独生成一个patch，这也就更加依赖<br>在上一步中是否严格控制好commit log的风格了。  </p>
-<hr>
-<h3 id="3-_如何检查patch的代码风格？">3. 如何检查patch的代码风格？</h3>
-<p>坚持良好的代码风格是长久做项目的基石，所以在提交patch前最好自行检查好<br>代码是否符合目标项目的代码风格。<br>以Linux kernel为例，它提供了scripts/checkpatch.pl脚本用于检查代码风格。  </p>
-<pre><code><span class="preprocessor"># scripts/checkpatch.pl PATCH-NAME</span>
-<span class="preprocessor"># scripts/checkpatch.pl --terse PATCH-NAME   // 生成简单的报告  </span>
-</code></pre><hr>
-<h3 id="4-_如何使用tag管理重要的发行版？">4. 如何使用tag管理重要的发行版？</h3>
-<p>项目在进行到一定阶段后，可能需要对外进行发布。长久下来，实际作业环境下<br>可能同时使用着不同的发布版本。但是项目本身的git管理肯定不会同时维护多<br>个分支。当然要求项目的所有开发人员都凭脑力记住特定发型版本对应的commit<br>也不太现实。这就是我理解的tag的用途：通过tag标识诸多发行版本与git仓库<br>某个时期状态的关系。<br>git中tag分为lightweight tag和annotated tag，建议仅使用annotated tag。<br>以下便是tag常见的用法：  </p>
-<pre><code><span class="array"># git tag                </span><span class="comment">// 显示当前所有的tag  </span>
-<span class="array"># git tag </span>-l <span class="string">'v1.0.*'</span>    <span class="comment">// 仅显示满足特定pattern的tag  </span>
-
-<span class="array"># git tag </span>-a v1<span class="number">.5</span> -m <span class="string">'my version 1.5'</span>   <span class="comment">// 创建一个带标签的tag  </span>
-<span class="array"># git tag </span>-a v1<span class="number">.6</span>        <span class="comment">// 如果不适用-m，则会进入文本编辑器进行编辑  </span>
-
-<span class="array"># git show v</span>1<span class="number">.5</span>          <span class="comment">// 查看v1.5的信息  </span>
-
-<span class="array"># git log </span>--pretty=oneline      <span class="comment">// 查看commit log  </span>
-<span class="array"># git tag </span>-a v1<span class="number">.7</span> abcdef        <span class="comment">// 为特定的commit添加tag</span>
-
-<span class="array"># git push origin v</span>1<span class="number">.7</span>   <span class="comment">// 提交tag v1.7  </span>
-<span class="array"># git push origin </span>--tags <span class="comment">// 提交所有的tag</span>
-
-<span class="array"># git checkout </span>-b version <span class="number">2.0</span> v2<span class="number">.0</span>   <span class="comment">// 新建一个branch查看v2.0源码  </span>
-</code></pre><hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html" target="_blank" rel="external">A Note About Git Commit Messages</a><br><a href="http://git-scm.com/book/ch5-2.html" target="_blank" rel="external">Distributed Git - Contributing to a Project</a><br><a href="http://git-scm.com/book/en/v2/Git-Tools-Rewriting-History" target="_blank" rel="external">Git Tools - Rewriting History</a><br><a href="http://linux.koolsolutions.com/2011/02/26/howto-create-and-submit-your-first-linux-kernel-patch/" target="_blank" rel="external">HOWTO: Create and submit your first Linux kernel patch using GIT</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>坚持良好的代码管理习惯，将极大的帮助我们做出更好的项目。<br>本文用于记录如何有效的使用git进行代码管理，像诸多优秀的项目一样。<br>本文尤其适合需要向其他项目提交patch的情形。不懂这句话的请参考标题，哈哈。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="Git" scheme="http://perthcharles.github.com/tags/Git/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[使用ISO镜像配置yum源]]></title>
-    <link href="http://perthcharles.github.com/2015/07/08/iso-yum/"/>
-    <id>http://perthcharles.github.com/2015/07/08/iso-yum/</id>
-    <published>2015-07-08T01:28:18.000Z</published>
-    <updated>2015-07-08T01:47:57.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<h2 id="问题">问题</h2>
-<hr>
-<p>在无网络连接时，需要安装常见的工具软件。如果每次都先下好然后拷贝到这台机器，则太繁琐。何况很多常见的工具看似简单，但却有许多依赖，从源码安装太麻烦而且易出错。最典型的例子就是GCC（不要问我是怎么知道的T_T）  </p>
-<a id="more"></a>  
-
-<h2 id="解决方法">解决方法</h2>
-<hr>
-<p>目前常见的Linux发行版本的ISO镜像都可以在挂载后配置为yum源。这样就能直接从ISO镜像中带的rpm包中安装到大部分常用的软件。以下以CentOS 6.5为例进行说明：  </p>
-<p>第一步：下载CentOS6.5的ISO镜像<br>第二步：挂载ISO镜像  </p>
-<pre><code><span class="preprocessor"># mkdir -p /cdrom/iso  </span>
-<span class="preprocessor"># mount -o loop ISO-FILE-PATH /cdrom/iso</span>
-</code></pre><p>第三步：配置yum源  </p>
-<pre><code><span class="comment"># cd /etc/yum.repos.d</span>
-<span class="comment"># mkdir BAK; mv *.repo BAK  // 备份现有yum源配置  </span>
-<span class="comment"># vim ISO.repo  </span>
-  [base]
-  <span class="variable">name=</span>CentOS-ISO1
-  <span class="variable">baseurl=</span>file:///cdrom/iso
-  <span class="variable">enabled=</span><span class="number">1</span>
-  <span class="variable">gpgcheck=</span><span class="number">1</span>
-  <span class="variable">gpgkey=</span>file:///cdrom/iso/RPM-GPG-KEY-CentOS-<span class="number">6</span>
-</code></pre><p>第四步：检查yum源配置  </p>
-<pre><code><span class="preprocessor"># yum list  </span>
-</code></pre><p>至此应该能看到ISO镜像中RPM包已经配置好了yum源。对于CentOS6.5来说，可以看到它有repodata文件夹，这意味着它的ISO镜像能够直接配置为yum源而不用额外的动作。<br>而如果ISO没有repodata文件夹或手头仅有RPM包时，则需要借助辅助工具createrepo来创建正确的yum源。<br>在安装好createrepo后，仅需在RPM包所在的目录执行以下命令就可以创建一个可用的yum源。  </p>
-<pre><code><span class="preprocessor"># createrepo .</span>
-</code></pre><h2 id="参考资料">参考资料</h2>
-<hr>
-<p><a href="http://blog.csdn.net/gzh0222/article/details/6724142" target="_blank" rel="external">如何使用yum工具从iso镜像文件上安装</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<h2 id="问题">问题</h2>
-<hr>
-<p>在无网络连接时，需要安装常见的工具软件。如果每次都先下好然后拷贝到这台机器，则太繁琐。何况很多常见的工具看似简单，但却有许多依赖，从源码安装太麻烦而且易出错。最典型的例子就是GCC（不要问我是怎么知道的T_T）  </p>
-]]>
-    
-    </summary>
-    
-      <category term="yum" scheme="http://perthcharles.github.com/tags/yum/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Random early detection]]></title>
-    <link href="http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/"/>
-    <id>http://perthcharles.github.com/2015/06/18/wiki-network-tcp-random-early-drop/</id>
-    <published>2015-06-18T09:05:52.000Z</published>
-    <updated>2015-06-18T10:03:06.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>下图是RED机制的工作原理流程图<br><img src="/resources/RED_algorithm.png" alt="">  </p>
-<h3 id="参考资料">参考资料</h3>
-<hr>
-<p><a href="https://en.wikipedia.org/?title=Random_early_detection" target="_blank" rel="external">Random Early Detection: wiki</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>下图是RED机制的工作原理流程图<br><img src="/resources/RED_algorithm.png" alt="">  </p>
-<h3 id="参考资料">参考资料</h3>
-<hr>
-<p><a href="https://en.wikipe]]>
-    </summary>
-    
-      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[Understand the Performance of Pacing]]></title>
-    <link href="http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/"/>
-    <id>http://perthcharles.github.com/2015/06/18/wiki-network-paper-understand-the-performance-of-pacing/</id>
-    <published>2015-06-18T05:20:22.000Z</published>
-    <updated>2015-06-18T09:56:26.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>这篇文章给出了对于TCP Pacing技术的详细评测分析结果。<br>对于pacing想要解决的问题和实际效果给出了详细的实验数据分析，是理解pacing<br>技术的一篇很好的入门文章。<br><a id="more"></a>  </p>
-<h2 id="1-_What_is_Pacing_?">1. What is Pacing ?</h2>
-<hr>
-<p>TCP的数据发送目前有三种策略：<br>a. ACK-Clocking: 这是Linux TCP/IP协议栈现有的实现策略。每一个数据包的发送<br>都是由收到的确认包触发的。当数据确认包ACK由于网络拥塞无法及时达到发送端时，<br>发送方是不会发送数据的，除非timeout。总的来说就是，ack控制数据发送的时机，<br>min(cwnd, rwnd)控制发送数据的多少。  </p>
-<p>b. Rate-based: pure的rate-based的方法使用一个估计的瓶颈链路带宽rate来控制<br>数据发送的多少和时机。  </p>
-<p>c. Pacing: pacing算是以上两种方法的一个hybrid。pure的rate-based的方法最大的<br>缺点就是可能造成瓶颈链路的over-subscribed，而不能及时的发现。而在Pacing方法<br>中，发送数据量的多少还是由min(cwnd, rwnd)控制，而数据的发送时机则由timer控制。<br>timer控制的目的就是保证在一个RTT内，数据是比较平滑的发送出去的。  </p>
-<h2 id="why_needs_pacing_?">why needs pacing ?</h2>
-<hr>
-<p>Pacing的提出主要是为了解决传统协议栈中存在的bursty transmission的情况。<br>文章总结的TCP中可能产生burst的情况有：  </p>
-<pre><code><span class="tag">a</span>. <span class="tag">Slow</span> <span class="tag">Start</span>：慢启动阶段<span class="tag">cwnd</span>的增长是指数级的  
-<span class="tag">b</span>. <span class="tag">Losses</span>: 当<span class="tag">rwnd</span>用完后，在丢包发生时无法发送新数据，重传结束后会引发<span class="tag">burst</span>。  
-  <span class="tag">Note</span>: 这种<span class="tag">burst</span>可以用<span class="tag">opportunistic</span> <span class="tag">retransmission</span> 解决 <span class="pseudo">:)</span>  
-<span class="tag">c</span>. <span class="tag">ACK</span> <span class="tag">Compression</span>: 当存在双向的数据流时，<span class="tag">ACK</span>包可能会在瓶颈链路中排队，破坏<span class="tag">ack-clocking</span>机制。  
-<span class="tag">d</span>. <span class="tag">Multiplexing</span>: 当多条流共享一个高速瓶颈链路时，尽管同一条流数据包可能到达瓶颈链路的时间不同(细小的维持<span class="tag">ack-clocking</span>的<span class="tag">gap</span>)，但当数据包经历在瓶颈链路排队后，维持<span class="tag">ack-clocking</span>的<span class="tag">gap</span>被完全的破坏了。最终导致的结果就是数据包的发送都是突发性的。  
-</code></pre><h2 id="Results">Results</h2>
-<hr>
-<p>Pacing的实现：  </p>
-<pre><code>Timeouts are scheduled <span class="keyword">at</span> regular intervals <span class="operator">of</span> duration RTT/window.  
-A packet is transmitted <span class="built_in">from</span> <span class="operator">the</span> window whenever <span class="operator">the</span> timer fires.  
-</code></pre><p>单条流的情况：  </p>
-<pre><code>a. 当瓶颈链路<span class="keyword">buffer</span>小于BDP时，reno会更早的遭遇丢包，因此pacing在throughput方面表现更好  
-b. 当瓶颈链路<span class="keyword">buffer</span>超过BDP时，pacing的throughput更差，这主要是由于pacing会delay congestion <span class="keyword">signal</span>  
-</code></pre><p>多条流的情况：  </p>
-<pre><code><span class="keyword">a</span>. 在initial period，reno反而性能更好。主要是pacing流几乎同时丢包造成的性能下降，即synchronization effect现象。  
-    synchronization effect：pacing流由于将数据包打散，当瓶颈链路<span class="keyword">buffer</span>溢出时，  
-    许多pacing流都会产生丢包，进而许多pacing流都会下降cwnd。  
-    而reno由于数据包相对是以burst的形式发送的，要么有一条流丢很多包，  
-    要么可能某些流一个包都不丢。 
-
-<span class="keyword">b</span>. 在steady state，pacing反而性能更好。主要是de-synchronization effect现象导致的。  
-    de-synchronization effect：在稳定状态，Reno每个RTT会将cwnd加<span class="number">1</span>。  
-    在<span class="keyword">buffer</span>用满后，每个Reno流多发的这个数据包(burst最后一个包)很大概率就会<span class="keyword">drop</span>。  
-    而pacing由于将数据包打散了，丢包的发生有一定的随机性。对于单条pacing流而言就可能没有包被<span class="keyword">drop</span>  
-</code></pre><h2 id="参考资料">参考资料</h2>
-<hr>
-<p>Understanding the Performance of TCP Pacing, INFOCOM’2000  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>这篇文章给出了对于TCP Pacing技术的详细评测分析结果。<br>对于pacing想要解决的问题和实际效果给出了详细的实验数据分析，是理解pacing<br>技术的一篇很好的入门文章。<br>]]>
-    
-    </summary>
-    
-      <category term="wiki-paper" scheme="http://perthcharles.github.com/categories/wiki-paper/"/>
     
   </entry>
   

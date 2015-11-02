@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>Early Retransmit for TCP | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的dupack触发fast retransmit造成的问题。本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。具体需要考虑那些特定场景后续后详细介绍。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Early Retransmit for TCP">
+<meta property="og:url" content="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的dupack触发fast retransmit造成的问题。本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。具体需要考虑那些特定场景后续后详细介绍。">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Early Retransmit for TCP">
+<meta name="twitter:description" content="Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的dupack触发fast retransmit造成的问题。本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。具体需要考虑那些特定场景后续后详细介绍。">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-wiki-network-tcp-early-retrans" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/10/31/wiki-network-tcp-early-retrans/" class="article-date">
+  <time datetime="2015-10-31T02:00:21.000Z" itemprop="datePublished">10月 31 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Early Retransmit for TCP
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#RFC5827解读"><span class="toc-text">RFC5827解读</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#ER算法"><span class="toc-text">ER算法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#开启SACK的必要性"><span class="toc-text">开启SACK的必要性</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ER的问题"><span class="toc-text">ER的问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#解决降低DupACK阈值可能带来的问题"><span class="toc-text">解决降低DupACK阈值可能带来的问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#源码分析"><span class="toc-text">源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#是否开启ER功能"><span class="toc-text">是否开启ER功能</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#判断是否触发FR中ER判断部分"><span class="toc-text">判断是否触发FR中ER判断部分</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#等四分之一RTT再触发ER"><span class="toc-text">等四分之一RTT再触发ER</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<p>Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的<br>dupack触发fast retransmit造成的问题。<br>本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。<br>具体需要考虑那些特定场景后续后详细介绍。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="RFC5827解读">RFC5827解读</h3>
+<p>ER要解决的问题:<br>当无法收到足够的dupack时，TCP标准的Fast Retransmit机制无法被<br>触发，只能等待RTO超时才能进行丢包的重传。而RTO超时不管是时间等待代价，还是<br>性能损耗代价都很大。</p>
+<p>ER的解决方法:<br>检测出无法收到足够dupack的场景，进而降低dupack threshold来触发快速重传。<br>从而避免等待RTO超时重传，对性能造成较大的损耗。  </p>
+<p>TCP中的标准的重传机制:<br>a. 如果超过RTO时间没有收到ACK包，则会触发RTO超时机制。代价就是cwnd=1，慢启动<br>b. 如果收到三个重复dupack，则会触发快速重传。代价是cwnd减半(视congestion算法而定)，拥塞避免</p>
+<p>为什么需要等三个重复dupack ？<br>那是因为dupack即可能是丢包造成的，也可能是网络乱序造成的。所以那帮设计标准的<br>牛牛们，一方面拍拍脑袋，一方面测点实验数据定了这么一个值：3。<br>倒也正好吻合了一句古话：事不过三。哈哈</p>
+<p>但是阈值设置为三，也存在一些问题。<br>比如当cwnd较小时(比如3)，当发生丢包后，可能就无法产生足够的dupack来触发快速重传。<br>结果就是只能靠RTO超时来重传丢包了。  </p>
+<p>那么什么情况下cwnd会比较小呢？</p>
+<pre><code><span class="bullet">1. </span>TCP流经过的链路bandwidth-delay product (BDP)很小，就会导致很小的cwnd
+
+<span class="bullet">2. </span>应用层限制，没有足够的数据可以发送，进而导致cwnd一直很小
+
+<span class="bullet">3. </span>由于接收端的接收窗口的限制，导致cwnd很小
+</code></pre><hr>
+<p>总结下，出现dupack不够的情况：<br>a. cwnd较小<br>b. 发送窗口里大量的数据包都被丢失了<br>c. 在数据发送的尾端发生丢包时  </p>
+<p>但是，上面各种极端的case有共同的特点：<br>m. 无法产生足够的dupack<br>n. 没有新的数据包可以发送进入网络  </p>
+<p>Early Retransmit机制就是在判断条件m和n都成立后，选择降低触发Fast Retransmit<br>的阈值，来避免只能通过RTO超时重传的问题。  </p>
+<hr>
+<h4 id="ER算法">ER算法</h4>
+<p>名词解释</p>
+<pre><code><span class="label">oseg:</span> outstanding segments, segements sent but not yet acknowledged
+    并且是没有被累计确认！及内核中的snd_nxt - snd_una
+
+<span class="label">ER_thresh:</span> 启用ER算法后，触发快速重传的dupack个数阈值
+</code></pre><p>算法逻辑</p>
+<pre><code>ER_thresh = <span class="number">3</span>   <span class="comment">// 等于3，表示还是标准的FR算法</span>
+<span class="keyword">if</span> (oseg &lt; <span class="number">4</span> &amp;&amp; <span class="keyword">new</span> data cannot be sent)    <span class="comment">// 如果满足条件，考虑启用ER算法</span>
+    <span class="keyword">if</span> (SACK <span class="keyword">is</span> unsupport)                  <span class="comment">// 如果SACK选项不支持，则使用oseg-1作为阈值</span>
+        ER_thresh = oseg - <span class="number">1</span>
+    elif (SACKed packet == oseg-<span class="number">1</span>)          <span class="comment">// 否则，只有当oseg-1个包被SACK，才能启用ER    </span>
+        ER_thresh = oseg - <span class="number">1</span>
+</code></pre><p>RFC的算法的算法主要是看个思路，具体算法的实现和逻辑细节还是要看代码。<br>The code in the real world is another cat compared with RFC’s.  </p>
+<hr>
+<h4 id="开启SACK的必要性">开启SACK的必要性</h4>
+<p>总的来说就是更推荐使用SACK选项的方法  </p>
+<pre><code>假设发送了三个数据包，S1，S2，S3，但是S2被丢弃了。
+当S1到达接收端时，它是按序到达的。接收方可能会delay这个ACK，所以分两种情况讨论：
+
+a. S1的ack被delay了：这种情况下S3的接收会触发一个ACK被发送（因为delay ack
+   机制最多能delay一个数据包）。那么此时如果没有带SACK信息，发送发就会收到
+   一个正常的ACK，而不是dupack。这样一个dupack都没有收到过，所以也就不会触发
+   ER机制，而只能靠RTO超时来进行重传(而且S2和S3都要重传)。
+   而如果有SACK信息，<span class="variable">oseg=</span><span class="number">1</span>，进而ER算法就能被启用。
+   具体就是：支持SACK，<span class="variable">oseg=</span><span class="number">1</span>, <span class="variable">oseg-1=</span><span class="number">0</span>     =&gt; 启用ER
+             不支持SACK，<span class="variable">oseg=</span><span class="number">2</span>, <span class="variable">oseg-1=</span><span class="number">1</span>   =&gt; 无法启用ER，因为没收到任何dupack
+
+b. 如果ack没有被delay，ER都能被启用。
+   具体就是：支持SACK，<span class="variable">oseg=</span><span class="number">1</span>, <span class="variable">oseg-1=</span><span class="number">0</span>     =&gt; 启用ER
+             不支持SACK，<span class="variable">oseg=</span><span class="number">2</span>, <span class="variable">oseg-1=</span><span class="number">1</span>   =&gt; 启用ER
+</code></pre><hr>
+<h4 id="ER的问题">ER的问题</h4>
+<p>核心意思就是：如果一条TCP流，cwnd一直很小，然后cwnd内发送的数据<br>每次都乱序到达接收端，这样使用ER算法就可能导致较多的spurious retransmit。<br>比如cwnd=2，而每次这两个包都reorder，结果就是发两个数据包，就ER重传一个。</p>
+<p>是的，这就叫TCP设计里面常提到的pathological case.  </p>
+<p>一种可能的解决办法就是发送一个TCP层data payload=0的包去增加dupack的个数，<br>但是这会一定程度上浪费网络资源。暂时未找到采用了这一思想的TCP实现。  </p>
+<hr>
+<h4 id="解决降低DupACK阈值可能带来的问题">解决降低DupACK阈值可能带来的问题</h4>
+<p>RFC附录提到了三种缓解ER可能带来问题的方法，具体如下<br>a. 判断ER是否发送了多次spurious retransmit数据，利用的手段就是D-SACK技术<br>b. 如果无法判断ER是否发送了spurious retransmit，则可以暴力的设置一个固定值来限制ER被触发的次数<br>c. 当需要触发ER机制时，等待一个固定长度的时间再重传。<br>   Linux默认选用这种方式</p>
+<hr>
+<hr>
+<h3 id="源码分析">源码分析</h3>
+<p>下面的源码分析，基于Linux3.10版本  </p>
+<hr>
+<h4 id="是否开启ER功能">是否开启ER功能</h4>
+<p>既然RFC中说了ER还是实验性的，而不是标准。故Linux kernel提供了选项来开启或关闭ER功能。<br>开关的名字是tcp_early_retrans，当然3.10的代码中还有Tail Loss Probe(TLP)的内容，暂时咱可以<br>忽略，之后再写一篇关于TLP的wiki。 </p>
+<pre><code>sysctl_tcp_early_retrans (defalut:<span class="number">3</span>)
+    <span class="number">0</span> disables ER
+    <span class="number">1</span> enables ER
+    <span class="number">2</span> enables ER but delays fast recovery <span class="operator">and</span> fast retransmit <span class="keyword">by</span> <span class="operator">a</span>
+    <span class="keyword">fourth</span> <span class="operator">of</span> RTT.
+    <span class="number">3</span> enables delayed ER <span class="operator">and</span> TLP.
+    <span class="number">4</span> enables TLP only.
+</code></pre><p>具体的判断函数就是在TCP sock初始化(tcp_init_sock)时，调用tcp_enable_early_retrans()<br>来判断是否开启  </p>
+<pre><code>static inline <span class="keyword">void</span> tcp_enable_early_retrans(<span class="class"><span class="keyword">struct</span> <span class="title">tcp_sock</span> *tp)
+</span>{
+    tp-&gt;do_early_retrans = 
+        sysctl_tcp_early_retrans &amp;&amp;         <span class="comment">/* ER开关是否开启 */</span>
+        sysctl_tcp_early_retrans &lt; <span class="number">4</span> &amp;&amp;     <span class="comment">/* ER开关是否开启 */</span>
+        !sysctl_tcp_thin_dupack &amp;&amp;          <span class="comment">/* 只有关闭thin-dupack才开ER */</span>
+        sysctl_tcp_reordering == <span class="number">3</span>;         <span class="comment">/* 需要默认的reordering是3菜开ER */</span>
+}
+</code></pre><p>根据3.10内核默认的配置，ER是默认开启的，也就是tp-&gt;do_early_retrans默认等于1</p>
+<p>当然了，在下面几种情况下也会disable ER<br>a. 应用程序通过setsockopt设置了TCP_THIN_DUPACK<br>b. TCP层发现了reorder，调用tcp_update_reordering尝试更新了reorder值<br>c. 配置了TCP_METRIC_REORDERING值，改变了reordering值</p>
+<hr>
+<h4 id="判断是否触发FR中ER判断部分">判断是否触发FR中ER判断部分</h4>
+<p>tcp_time_to_recoever这个函数就是判断是否该触发FR的函数  </p>
+<pre><code><span class="keyword">static</span> <span class="keyword">bool</span> tcp_time_to_recover(<span class="keyword">struct</span> sock *sk, <span class="keyword">int</span> flag)
+{
+    ...
+
+    <span class="comment">/* Trick#6: TCP early retransmit, per RFC5827. To avoid spurious
+     * retransmissions due to small network reorderings, we implement
+     * Mitigation A.3 in the RFC and delay the retransmission for a short
+     * interval if appropriate.
+     */</span>
+    <span class="keyword">if</span> (tp-&gt;do_early_retrans &amp;&amp;                     <span class="comment">/* 内核配置是否开启ER */</span>
+        !tp-&gt;retrans_out &amp;&amp;                         <span class="comment">/* 当前没有重传数据 */</span>
+        tp-&gt;sacked_out &amp;&amp;                           <span class="comment">/* 当前收到了dupack */</span>
+        tp-&gt;packets_out &lt; <span class="number">4</span> &amp;&amp;                      <span class="comment">/* packets_out很小, 及RFC oseg &lt; 4 */</span>
+        tp-&gt;packets_out &gt;= (tp-&gt;sacked_out + <span class="number">1</span>) &amp;&amp;  <span class="comment">/* dupack个数满足ER/TLP条件 */</span>
+        !tcp_may_send_now(sk))                      <span class="comment">/* 没有新数据可发送 */</span>
+        <span class="keyword">return</span> !tcp_pause_early_retransmit(sk, flag);   <span class="comment">/* 判断是否等待一段时间再触发ER */</span>
+
+    <span class="keyword">return</span> <span class="keyword">false</span>;   <span class="comment">// 默认返回false，即不进入fast recovery阶段</span>
+}
+</code></pre><p>主要需要解释的变量，应该是tp-&gt;sacked_out。<br>如果没有开SACK选项，那么该值就是表示dupack的个数。具体可参考tcp_add_reno_sack()函数相关代码<br>如果开启了SACK选项，那么这个值无疑就是表示被SACK的乱序包的个数。具体可参考tcp_sacktag_one()函数相关代码。  </p>
+<p>另外，观察仔细的人也许会发现”tp-&gt;packets_out &gt;= (tp-&gt;sacked_out + 1)”与ER的RFC不一致，<br>应该是’==’，而不是’&gt;=’。至于为什么代码中是这样修改的，暂时还不明确。<br>但可以确定的是这个概念是由于TLP算法的引入而改变的，具体的修改发生在<a href="https://github.com/torvalds/linux/commit/6ba8a3b19e764b6a65e4030ab0999be50c291e6c#diff-d06665370d013ab0df986a88d8e3a128" target="_blank" rel="external">Nandita的这个patch中</a>  </p>
+<hr>
+<h4 id="等四分之一RTT再触发ER">等四分之一RTT再触发ER</h4>
+<p>Linux中选择了等待四分之一RTT再触发ER的方式，来缓解降低dupack threshold可能带来的问题。<br>相关代码在tcp_pause_early_retransmit()中  </p>
+<pre><code><span class="comment">// 返回false表示立即进入FR，即立即触发ER；返回ture则是等待一个超时时间后再进入FR</span>
+<span class="keyword">static</span> <span class="keyword">bool</span> tcp_pause_early_retransmit(<span class="keyword">struct</span> sock *sk, <span class="keyword">int</span> flag)
+{
+    <span class="keyword">struct</span> tcp_sock *tp = tcp_sk(sk);
+    <span class="keyword">unsigned</span> <span class="keyword">long</span> delay;
+
+    <span class="comment">/* Delay early retransmit and entering fast recovery for
+     * max(RTT/4, 2msec) unless ack has ECE mark, mo RTT samples
+     * available, or RTO is scheduled to fire first.
+     */</span>
+    <span class="keyword">if</span> (sysctl_tcp_early_retrans &lt; <span class="number">2</span> ||     <span class="comment">/* kernel就没开delay ER的功能*/</span>
+        sysctl_tcp_early_retrans &gt; <span class="number">3</span> ||     <span class="comment">/* kernel跟本就没开ER功能(这个地方与do_early_retrans的判断有重复，感觉有点多余) */</span> 
+        (flag &amp; FLAG_ECE) ||                <span class="comment">/* ECE mark，ECN-Echo, Explict Congestion Notification */</span>
+        !tp-&gt;srtt)                          <span class="comment">/* 没有RTT采样 */</span>
+        <span class="keyword">return</span> <span class="literal">false</span>;
+
+    delay = max_t(<span class="keyword">unsigned</span> <span class="keyword">long</span>, (tp-&gt;srtt &gt;&gt; <span class="number">5</span>), msecs_to_jiffiec(<span class="number">2</span>));     <span class="comment">/* 计算delay ER的时间 */</span>
+    <span class="keyword">if</span> (!time_after(inet_csk(sk)-&gt;icsk_timeout, (jiffies + delay)))         <span class="comment">/* 如果RTO先超时 */</span>
+        <span class="keyword">return</span> <span class="literal">false</span>;
+
+    <span class="comment">// 设置ER超时计时器</span>
+    inet_csk_reset_xmit_timer(sk, ICSK_TIME_EARLY_RETRANS, delay, TCP_RTO_MAX);
+    <span class="keyword">return</span> <span class="literal">true</span>;
+}
+</code></pre><p>ICSK_TIME_EARLY_RETRANS超时后，会调用tcp_resume_early_retransmit(sk)  </p>
+<pre><code><span class="keyword">void</span> tcp_resume_early_retransmit(<span class="keyword">struct</span> sock *sk)
+{
+    strcut tcp_sock *tp = tcp_sk(sk);
+
+    tcp_rearm_rto(sk);  <span class="comment">// 重设RTO计时器</span>
+
+    <span class="comment">/* Stop if ER is disabled after the delayed ER timer is sheduled */</span>
+    <span class="keyword">if</span> (!tp-&gt;do_early_retrans)
+        <span class="keyword">return</span>;
+
+    <span class="comment">// 进入快速重传阶段</span>
+    tcp_enter_recovery(sk, <span class="keyword">false</span>);
+    tcp_update_scoreboard(sk, <span class="number">1</span>);
+    tcp_xmit_retransmit_queue(sk);
+}
+</code></pre><hr>
+<p>说一句题外话，TCP的具体设计经常需要考虑很多极端的case。<br>这类case，以前一般也就称之为corner case。但是越看RFC，越发现corner已经不足以<br>形容TCP设计的严谨性了，只能用pathological了。T_T</p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://tools.ietf.org/html/rfc5827" target="_blank" rel="external">RFC 5827</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/" data-id="927qo0pfwvjlgcl4" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rfc/">rfc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tcp/">tcp</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/10/31/wiki-network-tcp-tlp/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          TCP Tail Loss Probe(TLP)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/10/28/inspecting-internal-tcp-state/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">在Linux上探测TCP的内部状态</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/networking/">networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-tlp/">TCP Tail Loss Probe(TLP)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-early-retrans/">Early Retransmit for TCP</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/28/inspecting-internal-tcp-state/">在Linux上探测TCP的内部状态</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/26/wiki-weekly-readlist-20151026/">阅读周记(第三期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/19/wiki-weekly-readlist-20151019/">阅读周记(第二期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-weekly-readlist-20151015/">阅读周记(第一期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-report-internet-state-2015Q2/">2015 Q2 Akamai互联网状态报告</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/28/wiki-tool-free/">剖析free命令</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/22/ssh-forward/">使用ssh forward跨局域网访问</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/15/wiki-hybird-slow-start/">Taming the Elephants -- New TCP Slow Start</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/14/ip-route-initcwnd/">使用ip命令修改初始拥塞窗口和接收窗口</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/07/wiki-tcp-retries/">聊一聊重传次数</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/06/wiki-rtt-estimator/">RTO的计算方法(基于RFC6298和Linux 3.10)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
+          </li>
+        
+          <li>
+            <a href="/2015/08/27/timestamp-NAT/">一个NAT问题引起的思考</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/CPU/" style="font-size: 10.00px;">CPU</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KCon/" style="font-size: 10.00px;">KCon</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/crash/" style="font-size: 10.00px;">crash</a><a href="/tags/devops/" style="font-size: 10.00px;">devops</a><a href="/tags/digitalocean/" style="font-size: 10.00px;">digitalocean</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a><a href="/tags/ip/" style="font-size: 10.00px;">ip</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/linux/" style="font-size: 10.00px;">linux</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

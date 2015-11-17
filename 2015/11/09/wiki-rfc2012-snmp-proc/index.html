@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>netstat -s输出解析(一) | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="当执行以下命令查看netstat统计信息来源时，发现一个重要的来源是/proc/net/snmp接口的输出信息因此在刨根问底分析源码的过程中，找到了这个接口对应的RFC2012文档。本wiki就记录下相关的解读，以便后续更加透彻的立即netstat的统计信息。  
+# strace -e open netstat -s
+注：netstat -s的另一个重要的数据来源是/proc/net/nets">
+<meta property="og:type" content="article">
+<meta property="og:title" content="netstat -s输出解析(一)">
+<meta property="og:url" content="http://perthcharles.github.com/2015/11/09/wiki-rfc2012-snmp-proc/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="当执行以下命令查看netstat统计信息来源时，发现一个重要的来源是/proc/net/snmp接口的输出信息因此在刨根问底分析源码的过程中，找到了这个接口对应的RFC2012文档。本wiki就记录下相关的解读，以便后续更加透彻的立即netstat的统计信息。  
+# strace -e open netstat -s
+注：netstat -s的另一个重要的数据来源是/proc/net/nets">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="netstat -s输出解析(一)">
+<meta name="twitter:description" content="当执行以下命令查看netstat统计信息来源时，发现一个重要的来源是/proc/net/snmp接口的输出信息因此在刨根问底分析源码的过程中，找到了这个接口对应的RFC2012文档。本wiki就记录下相关的解读，以便后续更加透彻的立即netstat的统计信息。  
+# strace -e open netstat -s
+注：netstat -s的另一个重要的数据来源是/proc/net/nets">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-wiki-rfc2012-snmp-proc" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/11/09/wiki-rfc2012-snmp-proc/" class="article-date">
+  <time datetime="2015-11-09T05:31:40.000Z" itemprop="datePublished">11月 9 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      netstat -s输出解析(一)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#snmp4_tcp_list数组元素解析"><span class="toc-text">snmp4_tcp_list数组元素解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#snmp4_tcp_list统计结果实例一则"><span class="toc-text">snmp4_tcp_list统计结果实例一则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考资料"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<p>当执行以下命令查看netstat统计信息来源时，发现一个重要的来源是/proc/net/snmp接口的输出信息<br>因此在刨根问底分析源码的过程中，找到了这个接口对应的RFC2012文档。本wiki就记录下<br>相关的解读，以便后续更加透彻的立即netstat的统计信息。  </p>
+<pre><code><span class="preprocessor"># strace -e open netstat -s</span>
+</code></pre><p>注：netstat -s的另一个重要的数据来源是/proc/net/netstat下的信息，但鉴于<br>该接口信息量较大，因此会单独独立整理。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="snmp4_tcp_list数组元素解析">snmp4_tcp_list数组元素解析</h3>
+<p>netstat -s的Tcp类选的数据均来自内核中定义的snmp4_tcp_list数组。<br>snmp4_tcp_list数组的每一个成员都是一个snmp_mib结构体  </p>
+<pre><code><span class="keyword">struct</span> snmp_mib {
+    <span class="keyword">const</span> <span class="keyword">char</span> *name;
+    <span class="keyword">int</span> entry;
+};
+</code></pre><p>snmp4_tcp_list数组就是/proc/net/snmp接口输出的TCP部分内容  </p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>描述</th>
+<th>Linux 3.10实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RtoAlgorithm</td>
+<td>用于计算RTO的算法</td>
+<td>RTO算法遵循RFC2698，对应值为1.</td>
+</tr>
+<tr>
+<td>RtoMin</td>
+<td>限定RTO的最小值</td>
+<td>使用常量HZ/5限定，即200ms</td>
+</tr>
+<tr>
+<td>RtoMax</td>
+<td>限定RTO的最大值</td>
+<td>使用常量120HZ限定，即120s</td>
+</tr>
+<tr>
+<td>MaxConn</td>
+<td>TCP流数量的上限</td>
+<td>并不会在协议栈层限制，默认值为-1</td>
+</tr>
+<tr>
+<td>ActiveOpens</td>
+<td>CLOSE =&gt; SYN-SENT次数<br>可理解为主动建联数</td>
+<td>在tcp_connect()函数中计数<br>相当于SYN包的发送次数(但不包含重传次数)</td>
+</tr>
+<tr>
+<td>PassiveOpens</td>
+<td>LISTEN =&gt; SYN-RECV次数<br>可理解为被动建联数</td>
+<td>实现上则是在三次握手成功后，<br>建立tcp_sock结构体后才加1  <br> 在tcp_create_openreq_child()函数中调用</td>
+</tr>
+<tr>
+<td>AttemptFails</td>
+<td>SYN-SENT =&gt; CLOSE次数 <br> 加上SYN-RECV =&gt; CLOSE次数 <br> 加上SYN-RECV =&gt; LISTEN次数<br> 建联失败的次数</td>
+<td>回CLOSE部分在tcp_done()函数中计数，<br>回LISTEN部分在tcp_check_req()中计数</td>
+</tr>
+<tr>
+<td>EstabResets</td>
+<td>ESTABLISHED =&gt; CLOSE次数<br> 加上CLOSE-WAIT =&gt; CLOSE次数 <br> 这些情况，基本都是reset导致的</td>
+<td>在tcp_set_state()函数中，如果之前的状态是<br>TCP_CLOSE_WAIT或TCP_ESTABLISHED就加1</td>
+</tr>
+<tr>
+<td>CurrEstab</td>
+<td>ESTABLISHED和CLOSE-WAIT<br>状态的TCP流数</td>
+<td>在tcp_set_state()中处理 <br>实现体现的是进入ESTABLISHED之后<br>进入CLOSE之前的TCP流数</td>
+</tr>
+<tr>
+<td>InSegs</td>
+<td>所有收到的TCP包<br>即使是个错误包</td>
+<td>在tcp_v4_rcv()和tcp_v6_rcv()中计数</td>
+</tr>
+<tr>
+<td>OutSegs</td>
+<td>所有发送出去的TCP包<br>包括新数据包、重传数据包<br>、syn包、synack包和reset包</td>
+<td>tcp_v4_send_reset()中统计reset包<br>tcp_v4_send_ack()中统计SYN-RECV和TIME-WAIT状态下发送的ACK包<br>tcp_v6_send_response()中统计ipv6相应数据<br>tcp_make_synack()中统计发送的SYNACK包<br><br>tcp_transmit_skb()中统计所有的其他包</td>
+</tr>
+<tr>
+<td>RetransSegs</td>
+<td>所有重传出去的TCP包</td>
+<td>tcp_v4_rtx_synack()和tcp_v6_rtx_synack()中<br>统计重传的SYNACK包，<br>tcp_retransmit_skb()中统计其他重传包</td>
+</tr>
+<tr>
+<td>InErrs</td>
+<td>所有收到的有问题的TCP包数量<br>比如checksum有问题</td>
+<td>tcp_validate_incoming()中统计seq有问题的包<br>tcp_rcv_established()、tcp_v4_do_rcv()、tcp_v4_rcv()、<br>tcp_v6_do_rcv()、tcp_v6_rcv()中根据checksum来判断出错误包</td>
+</tr>
+<tr>
+<td>OutRsts</td>
+<td>发送的带RST标记的TCP包数量</td>
+<td>在tcp_v4_send_reset()、tcp_send_active_reset()、<br>tcp_v6_send_response()中统计</td>
+</tr>
+<tr>
+<td>InCsumErrors</td>
+<td>checksum有问题的数据包数量</td>
+<td>是3.10相对于2.6.32新增的内容，算是细化InErrs统计</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="snmp4_tcp_list统计结果实例一则">snmp4_tcp_list统计结果实例一则</h3>
+<pre><code><span class="preprocessor"># cat /proc/net/snmp |grep Tcp  /* 适当调整了输个格式，以增加可读性 */</span>
+<span class="label">Tcp:</span> RtoAlgorithm RtoMin RtoMax MaxConn ActiveOpens PassiveOpens AttemptFails
+<span class="label">Tcp:</span> <span class="number">1</span>            <span class="number">200</span>    <span class="number">120000</span> -<span class="number">1</span>      <span class="number">818674494</span>   <span class="number">564859834</span>    <span class="number">83498657</span>
+
+EstabResets CurrEstab InSegs       OutSegs      RetransSegs InErrs   OutRsts   InCsumErrors
+<span class="number">38663863</span>    <span class="number">4790</span>      <span class="number">213696000469</span> <span class="number">253602471635</span> <span class="number">2134386615</span>  <span class="number">18675977</span> <span class="number">171550781</span> <span class="number">125433</span>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://tools.ietf.org/html/rfc2012" target="_blank" rel="external">RFC 2012:  SNMPv2 Management Information Base for the Transmission Control Protocol using SMIv2</a>  </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/11/09/wiki-rfc2012-snmp-proc/" data-id="op1sfn6myxbyy90a" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/11/09/wiki-rfc2012-snmp-proc/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netstat/">netstat</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/snmp/">snmp</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tcp/">tcp</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/11/10/wiki-netstat-proc/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          netstat -st输出解析(二)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/11/03/wiki-weekly-readlist-20151103/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">阅读周记(第四期)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/networking/">networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/11/15/wiki-tool-ntopng/">使用ntopng监控网络信息</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/15/apnic-ip-list/">获取亚太地区IP库</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-weekly-readlist-20151110/">阅读周记(第五期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-tool-iptraf/">wiki-tool-iptraf</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-netstat-proc/">netstat -st输出解析(二)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/09/wiki-rfc2012-snmp-proc/">netstat -s输出解析(一)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/03/wiki-weekly-readlist-20151103/">阅读周记(第四期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-tlp/">TCP Tail Loss Probe(TLP)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-early-retrans/">Early Retransmit for TCP</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/28/inspecting-internal-tcp-state/">在Linux上探测TCP的内部状态</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/26/wiki-weekly-readlist-20151026/">阅读周记(第三期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/19/wiki-weekly-readlist-20151019/">阅读周记(第二期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-weekly-readlist-20151015/">阅读周记(第一期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-report-internet-state-2015Q2/">2015 Q2 Akamai互联网状态报告</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/28/wiki-tool-free/">剖析free命令</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/CPU/" style="font-size: 10.00px;">CPU</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KCon/" style="font-size: 10.00px;">KCon</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/apnic/" style="font-size: 10.00px;">apnic</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/cpu/" style="font-size: 10.00px;">cpu</a><a href="/tags/crash/" style="font-size: 10.00px;">crash</a><a href="/tags/devops/" style="font-size: 10.00px;">devops</a><a href="/tags/digitalocean/" style="font-size: 10.00px;">digitalocean</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/fastopen/" style="font-size: 10.00px;">fastopen</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-archive/" style="font-size: 10.00px;">http archive</a><a href="/tags/http2/" style="font-size: 10.00px;">http2</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/11/">November 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/11/09/wiki-rfc2012-snmp-proc/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

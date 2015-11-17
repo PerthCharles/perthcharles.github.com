@@ -1,0 +1,108 @@
+title: 个人git使用规范总结(持续更新)
+toc: true
+date: 2015-08-20 20:24:58
+categories:
+tags: git
+---
+
+***  
+一个工具的强大往往体现在它的灵活上，但在团队中必须制定一定的规范才能
+进行高效的合作。  
+GIT就是这样一个强大到不行的工具，本文由于记录在实践中选择的一些实用技巧
+和规范。  
+纪念那些年掉的坑T_T   
+
+<!--more-->  
+
+***  
+### 1. 实用alias  
+这个可以根据个人使用最频繁的命令来设置，然后保存到/etc/rc.local文件。    
+
+```  
+# alias gl='git pull'
+# alias gf='git fetch'
+# alias gb='git branch'
+# alias gco='git checkout'
+# alias gamend='git commit --amend -C HEAD'
+# alias gst='git status'
+# alias log='git log --oneline --graph --decorate --color=always'
+# alias logg='git log --graph --all --format=format:'\''%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(bold white)—     %an%C(reset)%C(bold yellow)%d%C(reset)'\'' --abbrev-commit --date=relative'
+```  
+
+***
+### 2. 配置git  
+这部分很简单，但是很重要。尤其是git配置中的name和email会出现在后续所有
+用于标注身份的地方。  
+如果实在不放心，或者忘记了有没有做过user.name等配置，最直接的方法就是上config文件里面亲眼看一下。  
+
+```  
+# git config -l                       // 查看当前配置  
+# git config user.name "your-name"    // 配置你的名字
+# git config user.email "your-email"  // 配置你的邮箱
+# vim .git/config                     // 也可以直接在config文件中进行修改
+// 如果是在自己的独立使用的机器上，则可以配置全局name和email  
+# git config --global user.name "Your Name"
+# git config --global user.email "you@example.com" 
+
+# vim .gitignore                      // 添加.gitignore配置是一个好习惯  
+    比如常见的*.o  TODO tmp TMP文件
+
+#git checkout -b your-feature-branch  // 立即创建一个新分支使用，保持master分支整洁
+```  
+
+***  
+### . 合并远端master  
+在开始修改和准备提交之前，*规范*的合并远端master和本地master显得非常重要。  
+这里的*规范*选用fetch + rebase的方式。至于为什么请参考[1](http://www.cnblogs.com/iammatthew/archive/2011/12/06/2277383.html)。  
+
+```  
+# git checkout master
+# git fetch
+# git rebase origin/master
+```
+
+### . 解决冲突  
+
+### . 关于amend/reset/rebase  
+在这一节不打算详细解释这几个命令的用法，仅谈谈对这几个命令的理解和功能。  
+至于具体的用法和注意事项，[这是一篇很好的说明文章](https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history)。  
+
+关键切入点：把一个commit理解为一个规范的patch。  
+
+尽管这几个命令使用时需要比较谨慎，但是熟悉了rewrite git history才算是真的熟悉了git啊。  
+
+### . 清理本地仓库  
+长期使用下来，如果远端有些分支已经删除了，则需要清理本地repo。  
+否则git branch -a就会看到很多无用的分支。  
+
+```  
+# git remote prune origin  // prune会删除任何不存在于远端仓库的分支
+```  
+
+***  
+### 为什么使用git format-patch生成patch至关重要  
+
+
+***  
+### 常用命令  
+
+	git branch new-branch-name origin/branch-name    // 新建一个本地branch指向远端指定branch
+
+***  
+### 总结  
+多看git help <command>，一些你认为git不支持的功能，可能加个选项就能实现了。  
+
+
+***  
+### 参考资料  
+
+[Git 常用命令](http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/)  
+[Git 使用规范流程](http://www.ruanyifeng.com/blog/2015/08/git-use-process.html)  
+[Git Protocol](https://github.com/thoughtbot/guides/tree/master/protocol/git)  
+[Git 版本控制系統3: 還沒 push 前可以做的事](https://ihower.tw/blog/archives/2622)  
+[Git 版本控制系統](https://ihower.tw/git/)  
+[Git-rebase 小筆記](https://blog.yorkxin.org/posts/2011/07/29/git-rebase/)  
+[从git merge 和 git rebase想到](http://www.cnblogs.com/iammatthew/archive/2011/12/06/2277383.html)  
+[Git分支管理策略](http://www.ruanyifeng.com/blog/2012/07/git.html)  
+[A successful Git branching model](http://nvie.com/posts/a-successful-git-branching-model/)  
+[Git Interactive Rebase, Squash, Amend and Other Ways of Rewriting History](https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history)  

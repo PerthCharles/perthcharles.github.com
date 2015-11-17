@@ -1,0 +1,190 @@
+title: TCP SACK 选项及其扩展DSACK
+toc: true
+date: 2015-11-03 22:58:23
+categories: wiki-network
+tags: [tcp, sack, rfc]
+---
+
+***  
+为了帮助发送端判断哪些数据包已经被接收端乱序收到了，Select-ACK (SACK)选项
+被提出来。尤其是在一个窗口内发送多个丢包时，SACK选项对于TCP的性能帮助明显。  
+
+<!--more-->  
+
+***  
+### RFC解读  
+
+TCP使用一种称为累计确认的机制来处理收到的确认包，所以那些乱序到达接收端的数据包
+是无法通过TCP包头中的seq域来确认的。
+当发生丢包时，sender也就无从确认哪些包已经乱序到达了receiver，只能挨个重传
+未被累计确认的数据包。  
+进而如果一个TCP窗口内的多个数据包丢失，TCP流的吞吐率往往会出现严重的问题。
+
+SACK选项就被提提出来解决这一问题。利用Selective-ACK选项，receiver能够告知
+sender哪些包已经被收到了，进而能减少不必要的数据包重传。
+
+SACK选项需要使用两个TCP option。
+第一个是"SACK-permitted"选项，用在SYN包中通知对端可以启用SACK选项。  
+第二个就是SACK block本身，用来通知对端哪些包被乱序收到了。  
+
+***  
+#### SACK-permitted选项  
+
+    格式：
+       +---------+---------+
+       | Kind=4  | Length=2|
+       +---------+---------+
+
+RFC中强调了SACK-permitted选项不能使用在非SYN包中。同时SACK选项的使用规则如下：  
+
+    1. If the data receiver has received a SACK-Permitted option on the SYN
+       for this connection, the data receiver *MAY* elect to generate SACK
+       options.
+
+    2. If the data receiver has not received a SACK-Permitted option for
+       a given connection, it *MUST NOT* send SACK options on that connection.
+
+从这个规则中可以看出，SACK-Permitted其实不是一个双方协商的过程，而是一个单方面
+通知对端的功能。
+比如sender发送的SYN包中带有SACK-Permitted选项，receiver是可以选择发送不带SACK-Permitted
+选项的SYN包的，即使receiver可能支持SACK。  
+
+***  
+#### SACK选项  
+
+    格式： length是可变长的
+
+                         +--------+--------+
+                         | Kind=5 | Length |
+       +--------+--------+--------+--------+
+       |      Left Edge of 1st Block       |
+       +--------+--------+--------+--------+
+       |      Right Edge of 1st Block      |
+       +--------+--------+--------+--------+
+       |                                   |
+       /            . . .                  /
+       |                                   |
+       +--------+--------+--------+--------+
+       |      Left Edge of nth Block       |
+       +--------+--------+--------+--------+
+       |      Right Edge of nth Block      |
+       +--------+--------+--------+--------+
+
+接收队列中每一段连续的乱序block可通过一个SACK选项定义，Left Edge表示是block
+的最小的序号值，Rright Edge表示最大的序号值。每个值占32bits。  
+
+一个包含n个block的SACK option的长度为`8*n+2`，而TCP选项部分的最大长度为40字节。
+如果同时在使用timestamp机制的话，则最多能包含3个block。
+
+如果数据接收方选择发送一个SACK选项，则需要遵守以下规则：  
+
+    1. 第一个SACK block必须包含触发该ACK包的数据包。这样能保证SACK选项能
+       反应数据接收队列的最新情况。
+
+    2. SACK option中*SHOULD*包括尽可能多的SACK block。  -- 当然这里说的是应该...
+
+    3. SACK option中*SHOULD*重复上一个ACK中的第一个SACK选项。这样能保证
+       一个block最少能被重复确认三次。
+
+当发送方收到一个包含SACK option的ACK后，会将重传队列中所有被SACK option
+选择确认的数据段(内核中用SKB表示)标志为SACKed。  
+如果一个SKB被标记为了SACKed，那么在重传时就会被数据发送方跳过。
+所有未被SACKed标记，并且序号小于最大的SACKed段的SBK都可以被重传。  
+
+但是如果发生了RTO，发送方*SHOULD*清掉所有的SACKed 标志位，因为RTO超时可能意味着
+接收端违背了之前的行为(称为renege)。
+因此一个SKB只有在被累计确认之后(被TCP option中的ACK域确认)，才能从重传队列中清除，而不能在收到SACK后就清除。  
+
+导致这一现象的本质原因就是：接收方是允许丢弃被SACKed的数据的。
+尽管这一行为不被推荐，但在缓存空间不足时还是有可能发生的。  
+
+因此数据发送方选择发送一个SACK option的时候，还需满足一下规则：  
+
+    4. 规则1必须遵守，尽管被SACK的数据将要被丢弃
+
+    5. 除了触发ACK的那个数据段，所有其他已经被丢弃的数据段*MUST NOT*包含在SACK信息中。  
+
+***  
+### DSACK扩展解读  
+
+---
+     The guidelines for reporting duplicate segments are summarized below:
+       (1) A D-SACK block is only used to report a duplicate contiguous
+   sequence of data received by the receiver in the most recent packet.
+
+   (2) Each duplicate contiguous sequence of data received is reported
+   in at most one D-SACK block.  (I.e., the receiver sends two identical
+   D-SACK blocks in subsequent packets only if the receiver receives two
+   duplicate segments.)
+
+   (3) The left edge of the D-SACK block specifies the first sequence
+   number of the duplicate contiguous sequence, and the right edge of
+   the D-SACK block specifies the sequence number immediately following
+   the last sequence in the duplicate contiguous sequence.
+
+   (4) If the D-SACK block reports a duplicate contiguous sequence from
+   a (possibly larger) block of data in the receiver's data queue above
+   the cumulative acknowledgement, then the second SACK block in that
+   SACK option should specify that (possibly larger) block of data.
+
+   (5) Following the SACK blocks described above for reporting duplicate
+   segments, additional SACK blocks can be used for reporting additional
+   blocks of data, as specified in RFC 2018.
+
+   Note that because each duplicate segment is reported in only one ACK
+   packet, information about that duplicate segment will be lost if that
+   ACK packet is dropped in the network.
+---
+    It may be possible that a sender transmits a packet that includes one
+   or more duplicate sub-segments--that is, only part but not all of the
+   transmitted packet has already arrived at the receiver.  This can
+   occur when the size of the sender's transmitted segments increases,
+   which can occur when the PMTU increases in the middle of a TCP
+   session, for example.  The guidelines in Section 4 above apply to
+   reporting partial as well as full duplicate segments.  This section
+   gives examples of these guidelines when reporting partial duplicate
+   segments.
+
+   When the SACK option is used for reporting partial duplicate
+   segments, the first D-SACK block reports the first duplicate sub-
+   segment.  If the data packet being acknowledged contains multiple
+   partial duplicate sub-segments, then only the first such duplicate
+   sub-segment is reported in the SACK option.  We illustrate this with
+   the examples below.
+---
+    In order for the sender to check that the first (D)SACK block of an
+   acknowledgement in fact acknowledges duplicate data, the sender
+   should compare the sequence space in the first SACK block to the
+   cumulative ACK which is carried IN THE SAME PACKET.  If the SACK
+   sequence space is less than this cumulative ACK, it is an indication
+   that the segment identified by the SACK block has been received more
+   than once by the receiver.  An implementation MUST NOT compare the
+   sequence space in the SACK block to the TCP state variable snd.una
+   (which carries the total cumulative ACK), as this may result in the
+   wrong conclusion if ACK packets are reordered.
+---
+    If the sequence space in the first SACK block is greater than the
+   cumulative ACK, then the sender next compares the sequence space in
+   the first SACK block with the sequence space in the second SACK
+   block, if there is one.  This comparison can determine if the first
+   SACK block is reporting duplicate data that lies above the cumulative
+   ACK.
+---
+     An
+   ACK containing a D-SACK block which is lower than its ACK field and
+   is not identical to a previously retransmitted segment is indicative
+   of a replication by the network.
+---
+    
+
+***  
+***  
+### 源码解读  
+
+
+***  
+### 参考资料  
+[RFC2018: TCP Selective Acknowledgment Options](https://tools.ietf.org/html/rfc2018)  
+[RFC2018: errata](https://www.rfc-editor.org/errata_search.php?rfc=2018)  
+[RFC2883: An Extension to the Selective Acknowledgement Option for TCP](http://tools.ietf.org/html/rfc2883)  
+[]()  

@@ -1,0 +1,137 @@
+title: RFC 7323阅读笔记
+toc: true
+date: 2015-09-04 16:03:54
+categories: wiki-network
+tags: [timestamp, paws]
+---
+
+
+***  
+### window scale值是如何计算的？  
+
+***  
+### 为什么上限是14？
+TCP determines if a data segment is "old" or "new" by testing whether
+   its sequence number is within 2^31 bytes of the left edge of the
+   window, and if it is not, discarding the data as "old".  To insure
+   that new data is never mistakenly considered old and vice versa, the
+   left edge of the sender's window has to be at most 2^31 away from the
+   right edge of the receiver's window.  The same is true of the
+   sender's right edge and receiver's left edge.  Since the right and
+   left edges of either the sender's or receiver's window differ by the
+   window size, and since the sender and receiver windows can be out of
+   phase by at most the window size, the above constraints imply that
+   two times the maximum window size must be less than 2^31, or
+
+                             max window < 2^30
+
+   Since the max window is 2^S (where S is the scaling shift count)
+   times at most 2^16 - 1 (the maximum unscaled window), the maximum
+   window is guaranteed to be < 2^30 if S <= 14.  Thus, the shift count
+   MUST be limited to 14 (which allows windows of 2^30 = 1 GiB).
+
+***  
+### window scale的注意事项  
+
+
+***  
+### window scale在内核中是怎么实现和使用的呢  
+
+***  
+### 什么叫window retraction?  
+Appendix F
+
+***  
+### Eifel algorithm是什么？  
+RFC 3522 和 RFC 4015
+
+
+***  
+### timestamp的echo值如何选取？  
+
+    if SEG.TSval >= TS.Recent and SEG.SEQ <= Last.ACK.sent
+    then SEG.TSVAL is copied to TS.Recent; otherwire, it is ignored.
+    
+    为什么是SEG.SEQ <= Last.ACK ? 因为如果SEG.SEQ > Last.ACK则意味着
+    这是一个乱序到达的数据包。
+    其实上面式子判断中的<是为了处理delay ack部分的情况，
+    =是处理RCV_NXT往后移动了的情况，即能够更新ACK包中的seq序号的情况。
+
+***  
+### timestmap的注意事项  
+RTTM Rule: A TSecr value received in a segment MAY be used to update
+              the averaged RTT measurement only if the segment advances
+              the left edge of the send window, i.e., SND.UNA is
+              increased.
+
+***  
+### timestamp的作用总结  
+最初设计时的主要目的是为了提高重传时的
+
+***  
+### RTO的计算  
+RFC 6298: http://tools.ietf.org/html/rfc6298  
+
+***  
+### Basic PAWS algorithm  
+
+
+***  
+### 不必要被丢弃的包情形及解释  
+    In certain unlikely circumstances, the algorithm of rules R1-R5 could
+   lead to discarding some segments unnecessarily, as shown in the
+   following example:
+
+      Suppose again that segments: A.1, B.1, C.1, ..., Z.1 have been
+      sent in sequence and that segment B.1 has been lost.  Furthermore,
+      suppose delivery of some of C.1, ... Z.1 is delayed until *after*
+      the retransmission B.2 arrives at the receiver.  These delayed
+      segments will be discarded unnecessarily when they do arrive,
+      since their timestamps are now out of date.
+
+   This case is very unlikely to occur.  If the retransmission was
+   triggered by a timeout, some of the segments C.1, ... Z.1 must have
+   been delayed longer than the RTO time.  This is presumably an
+   unlikely event, or there would be many spurious timeouts and
+   retransmissions.  If B's retransmission was triggered by the "Fast
+   Retransmit" algorithm, i.e., by duplicate <ACK>s, then the queued
+   segments that caused these <ACK>s must have been received already.
+
+   Even if a segment were delayed past the RTO, the Fast Retransmit
+   mechanism [Jacobson90c] will cause the delayed segments to be
+   retransmitted at the same time as B.2, avoiding an extra RTT and,
+   therefore, causing a very small performance penalty.
+
+   We know of no case with a significant probability of occurrence in
+   which timestamps will cause performance degradation by unnecessarily
+   discarding segments.
+
+***  
+### PAWS机制对timestamp的依赖  
+PAWS的根本: From the receiver's
+   viewpoint, the timestamp is acting as a logical extension of the
+   high-order bits of the sequence number.
+
+***  
+### Outdated Timestmaps  
+这就是为什么在tcp_paws_check函数中会有如下一段代码
+
+    if (unlikely(get_seconds() >= rx_opt->ts_recent_stamp + TCP_PAWS_24DAYS))
+        return true;
+
+
+***  
+### Header Prediction  
+
+
+***  
+### Security Consideration  
+
+
+***  
+### System Crash with loss of state  
+使用timestamp放松MSL的时候，需要假设：机器在reboot后的timestamp依然是递增的
+    -- 通过实际的抓取测试环境中的树莓派的timestamp值，发现这点无法保证。。。
+    因此依赖于timestamp来彻底解决TIME-WAIT问题也是不严谨的
+
+

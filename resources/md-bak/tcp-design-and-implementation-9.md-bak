@@ -1,0 +1,17 @@
+title: "TCP ADI in Linux(9): TCP Memory Management"
+date: 2014-11-28 17:13:03
+categories: 读书笔记
+tags: [TCP, Linux]
+toc: false
+---
+
+
+
+
+***  
+###TODO  
+1. sk->forward_alloc的真实含义？  
+2. sk_wmem_schedule 和 sk_rmem_schedule的用途？  
+    Note: 书中有提到tcp_mem_schedule是一个forward allocation of memory的相关函数。  
+    所以sk_wmem_schedule这些是不是也有可能是一样的？  
+

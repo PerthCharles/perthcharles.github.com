@@ -1,0 +1,10 @@
+title: TCP time_wait机制
+toc: false
+date: 2015-07-16 10:44:06
+categories: wiki-network
+tags: [time_wait, tcp]
+---
+
+***  
+
+![](/resources/tcp_state_diagram.png)

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="google-site-verification" content="TN4jq42p9Tdqwy1NxtyOij1pfpRwl1Zlu9QEdVUhORs" />
+  <meta name="baidu-site-verification" content="5OluwBJ7xM" />
+
+  
+  <title>阅读周记(第五期) | 天赋  无与伦比的坚持</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="使用HTTP/2提升性能的7个建议
+摘要：
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
+点评：
+    HTTP/2仅使用一个连接是一个重要的改变，对于客">
+<meta property="og:type" content="article">
+<meta property="og:title" content="阅读周记(第五期)">
+<meta property="og:url" content="http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/">
+<meta property="og:site_name" content="天赋  无与伦比的坚持">
+<meta property="og:description" content="使用HTTP/2提升性能的7个建议
+摘要：
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
+点评：
+    HTTP/2仅使用一个连接是一个重要的改变，对于客">
+<meta property="og:image" content="/resources/tfo-normal-3whs.png">
+<meta property="og:image" content="/resources/tfo-generating-cookies.png">
+<meta property="og:image" content="/resources/tfo-enploying-cookies.png">
+<meta property="og:image" content="/resources/latencyAndThroughputFull.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="阅读周记(第五期)">
+<meta name="twitter:description" content="使用HTTP/2提升性能的7个建议
+摘要：
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
+点评：
+    HTTP/2仅使用一个连接是一个重要的改变，对于客">
+
+  
+    <link rel="alternative" href="/atom.xml" title="天赋  无与伦比的坚持" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">天赋  无与伦比的坚持</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+          <a class="main-nav-link" href="/2015/01/14/test-wiki">Wiki</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><input type="submit" value="&#xF002;" class="search-form-submit"><input type="hidden" name="q" value="site:http://perthcharles.github.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-wiki-weekly-readlist-20151110" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/11/10/wiki-weekly-readlist-20151110/" class="article-date">
+  <time datetime="2015-11-10T15:56:22.000Z" itemprop="datePublished">11月 10 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      阅读周记(第五期)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <!-- add for TOC @ by charles -->
+        
+          <!--%- toc(post.content, {list_number: false}) %-->
+          <!--%- partial('toc') %-->
+          <script src="/js/wiki/jquery-2.0.3.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.imagesloaded.min.js" type="text/javascript"></script>
+
+<script src="/js/wiki/jquery.tableofcontents.min.js" type="text/javascript"></script>
+
+
+<div id="menu-nav">
+    <div id="title-nav">文章导航<div>→</div>
+    </div>
+    <div id="content-nav">
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#使用HTTP/2提升性能的7个建议"><span class="toc-text">使用HTTP/2提升性能的7个建议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#从理论到实践，全方位认识DNS（理论篇）"><span class="toc-text">从理论到实践，全方位认识DNS（理论篇）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TCP_Fast_Open:_expediting_web_services"><span class="toc-text">TCP Fast Open: expediting web services</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Some_relevant_networking_concepts"><span class="toc-text">Some relevant networking concepts</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A_few_things_about_Redis_security"><span class="toc-text">A few things about Redis security</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#What_Your_Computer_Does_While_You_Wait"><span class="toc-text">What Your Computer Does While You Wait</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#我是如何从3亿IP中找到CISCO后门路由器的"><span class="toc-text">我是如何从3亿IP中找到CISCO后门路由器的</span></a></li></ol>
+    </div>
+</div>
+<script>
+(function($, scrollSpeed, hiddenSpeed, fadeSpeed) {
+    var T = $('#main');
+    var M = $('#menu-nav');
+    var C = $('#content-nav');
+    var Tx = T.position().top;
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= Tx + 0) {
+            M.stop().fadeIn(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 0);
+        } else {
+            M.stop().fadeOut(fadeSpeed);
+        //    T.stop().fadeTo(fadeSpeed, 1);
+        }
+    });
+    $('.toc-link').click(function(e) {
+        //阻止默认跳转
+        e.preventDefault();
+        //定义滚动动画
+        var scrollTarget = $('#' + $(this).children('.toc-text').first().text());
+        $("html,body").animate({
+            scrollTop: scrollTarget.prev().offset().top
+        }, scrollSpeed);
+    });
+    C.click(function(e) {
+        e.stopPropagation();
+    });
+    M.click(function() {
+        C.toggle(hiddenSpeed, 'linear', function() {
+            var T = $('#title-nav div');
+            T.text() == '←' ? T.text('→') : T.text('←');
+        });
+    });
+})(jQuery, 500, 200, 100);
+</script>
+
+        
+        <hr>
+<h3 id="使用HTTP/2提升性能的7个建议"><a href="http://toutiao.com/i6214953977478382082/" target="_blank" rel="external">使用HTTP/2提升性能的7个建议</a></h3>
+<pre><code>摘要：
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
+点评：
+    HTTP/2仅使用一个连接是一个重要的改变，对于客户端可以省去多次建连时间，
+    对于服务器端能少建立和维护大量的连接(尤其是HTTP/1中那些什么数据也没传过的流)
+</code></pre><a id="more"></a>  
+
+<hr>
+<h3 id="从理论到实践，全方位认识DNS（理论篇）"><a href="http://blog.jobbole.com/94132/" target="_blank" rel="external">从理论到实践，全方位认识DNS（理论篇）</a></h3>
+<pre><code>点评：
+    介绍DNS的，逻辑比较清晰。适合作为入门读物
+</code></pre><hr>
+<h3 id="TCP_Fast_Open:_expediting_web_services"><a href="https://lwn.net/Articles/508865/" target="_blank" rel="external">TCP Fast Open: expediting web services</a></h3>
+<p>TFO技术暂时还未正式成为标准，不过已经进入了Linux内核的源码中。<br>了解一下基本原理还是很有必要的，下面摘录三张图来展示TFO的原理和过程。 </p>
+<p><img src="/resources/tfo-normal-3whs.png" alt="正常三次握手过程"><br><img src="/resources/tfo-generating-cookies.png" alt="第一次建连生成cookie"><br><img src="/resources/tfo-enploying-cookies.png" alt="后续建连使用cookie"></p>
+<p>另外需要注意的是，目前TFO还不推荐在服务设备上开启(LINUX3.10内核默认关闭)，<br>这是因为有些middlebox可能会丢弃携带它不认识的选项的SYN包。<br><a href="http://packetpushers.net/tcp-fast-curious-a-look-at-tcp-fast-open/" target="_blank" rel="external">这里是一篇比较好的参考资料</a>  </p>
+<hr>
+<h3 id="Some_relevant_networking_concepts"><a href="http://careers.directi.com/display/tu/Understanding+and+optimizing+Network+utilization" target="_blank" rel="external">Some relevant networking concepts</a></h3>
+<pre><code>点评：
+    这篇文章中介绍的一些网络工具和网络调优思路很值得借鉴的
+</code></pre><hr>
+<h3 id="A_few_things_about_Redis_security"><a href="http://www.antirez.com/news/96" target="_blank" rel="external">A few things about Redis security</a></h3>
+<pre><code>点评：
+    再来点安全的东西，开开脑洞
+    看完这个作者的文章没几天，国内各大安全厂商就开始爆料国内的该漏洞的安全状态
+    还真不好是喜是忧的好。
+</code></pre><hr>
+<h3 id="What_Your_Computer_Does_While_You_Wait"><a href="http://duartes.org/gustavo/blog/post/what-your-computer-does-while-you-wait/" target="_blank" rel="external">What Your Computer Does While You Wait</a></h3>
+<pre><code>摘要：
+    <span class="number">1.</span> The <span class="keyword">first</span> thing that jumps out is how absurdly fast our processors are. 
+       Most simple instructions <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">Core</span> <span class="title">2</span> <span class="title">take</span> <span class="title">one</span> <span class="title">clock</span> <span class="title">cycle</span> <span class="title">to</span> <span class="title">execute</span>,</span>
+       hence <span class="operator">a</span> <span class="keyword">third</span> <span class="operator">of</span> <span class="operator">a</span> nanosecond <span class="keyword">at</span> <span class="number">3.0</span>Ghz.
+       For reference, light only travels ~<span class="number">4</span> inches (<span class="number">10</span> cm) <span class="operator">in</span> <span class="operator">the</span> <span class="built_in">time</span> taken <span class="keyword">by</span> <span class="operator">a</span> clock cycle.
+       It’s worth keeping this <span class="operator">in</span> mind when you’re thinking <span class="operator">of</span> optimization – instructions are comically cheap <span class="built_in">to</span> execute nowadays.
+
+    <span class="number">2.</span> As <span class="operator">the</span> CPU works away, <span class="keyword">it</span> must <span class="built_in">read</span> <span class="built_in">from</span> <span class="operator">and</span> <span class="built_in">write</span> <span class="built_in">to</span> <span class="keyword">system</span> memory,
+       which <span class="keyword">it</span> accesses via <span class="operator">the</span> L1 <span class="operator">and</span> L2 caches. The caches use static RAM,
+       <span class="operator">a</span> much faster (<span class="operator">and</span> expensive) type <span class="operator">of</span> memory than <span class="operator">the</span> DRAM memory used <span class="keyword">as</span> <span class="operator">the</span> main <span class="keyword">system</span> memory.
+       The caches are part <span class="operator">of</span> <span class="operator">the</span> processor itself <span class="operator">and</span> <span class="keyword">for</span> <span class="operator">the</span> pricier memory we <span class="built_in">get</span> very low latency. 
+
+    <span class="number">3.</span> Here we see our <span class="keyword">first</span> major hit, <span class="operator">a</span> massive ~<span class="number">250</span> cycles <span class="operator">of</span> latency that often leads <span class="built_in">to</span> <span class="operator">a</span> stall,
+       when <span class="operator">the</span> CPU has no work <span class="built_in">to</span> <span class="built_in">do</span> <span class="keyword">while</span> <span class="keyword">it</span> waits.
+       To <span class="built_in">put</span> this <span class="keyword">into</span> perspective, reading <span class="built_in">from</span> L1 cache is like grabbing <span class="operator">a</span> piece <span class="operator">of</span> paper <span class="built_in">from</span> your desk (<span class="number">3</span> <span class="built_in">seconds</span>),
+       L2 cache is picking up <span class="operator">a</span> book <span class="built_in">from</span> <span class="operator">a</span> nearby shelf (<span class="number">14</span> <span class="built_in">seconds</span>),
+       <span class="operator">and</span> main <span class="keyword">system</span> memory is taking <span class="operator">a</span> <span class="number">4</span>-minute walk down <span class="operator">the</span> hall <span class="built_in">to</span> buy <span class="operator">a</span> Twix bar.
+
+点评：
+    了解各个部件之间的latency概况，算是一个*专业人士*的必备知识吧，哈哈
+    本文写的非常的生动，解释访问速度时都有非常智能能理解的例子做对比。
+    既然如此，那就再贴张文章中的图.
+</code></pre><p><img src="/resources/latencyAndThroughputFull.png" alt="latency and throughput">  </p>
+<hr>
+<h3 id="我是如何从3亿IP中找到CISCO后门路由器的"><a href="http://www.tuicool.com/articles/BFZj6nA" target="_blank" rel="external">我是如何从3亿IP中找到CISCO后门路由器的</a></h3>
+<pre><code>点评：再开开脑洞<span class="keyword">...</span>  
+不过freebuf的原文被删了，吓得我赶紧备份了网页原文。  
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/" data-id="xs1ntuvzzj280b1i" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/cpu/">cpu</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/fastopen/">fastopen</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/http2/">http2</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/security/">security</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/11/15/apnic-ip-list/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          获取亚太地区IP库
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/11/10/wiki-tool-iptraf/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">wiki-tool-iptraf</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/networking/">networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recents</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2015/11/15/wiki-tool-ntopng/">使用ntopng监控网络信息</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/15/apnic-ip-list/">获取亚太地区IP库</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-weekly-readlist-20151110/">阅读周记(第五期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-tool-iptraf/">wiki-tool-iptraf</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-netstat-proc/">netstat -st输出解析(二)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/09/wiki-rfc2012-snmp-proc/">netstat -s输出解析(一)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/03/wiki-weekly-readlist-20151103/">阅读周记(第四期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-tlp/">TCP Tail Loss Probe(TLP)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/31/wiki-network-tcp-early-retrans/">Early Retransmit for TCP</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/28/inspecting-internal-tcp-state/">在Linux上探测TCP的内部状态</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/26/wiki-weekly-readlist-20151026/">阅读周记(第三期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/19/wiki-weekly-readlist-20151019/">阅读周记(第二期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-weekly-readlist-20151015/">阅读周记(第一期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/10/15/wiki-report-internet-state-2015Q2/">2015 Q2 Akamai互联网状态报告</a>
+          </li>
+        
+          <li>
+            <a href="/2015/09/28/wiki-tool-free/">剖析free命令</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+  
+    <div id="to-top">↑</div>
+<script>
+(function($, scrollSpeed, fadeSpeed) {
+    var T = $('#to-top');
+    $(window).scroll(function() {
+        var top = $(this).scrollTop();
+        if (top >= 300) {
+            T.stop().fadeIn(fadeSpeed);
+        } else {
+            T.stop().fadeOut(fadeSpeed);
+        }
+    });
+    T.click(function() {
+        $("html,body").animate({
+            scrollTop: 0
+        }, scrollSpeed);
+    });
+})(jQuery, 500, 200);
+</script>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/CPU/" style="font-size: 10.00px;">CPU</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KCon/" style="font-size: 10.00px;">KCon</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/apnic/" style="font-size: 10.00px;">apnic</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/cpu/" style="font-size: 10.00px;">cpu</a><a href="/tags/crash/" style="font-size: 10.00px;">crash</a><a href="/tags/devops/" style="font-size: 10.00px;">devops</a><a href="/tags/digitalocean/" style="font-size: 10.00px;">digitalocean</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/fastopen/" style="font-size: 10.00px;">fastopen</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-archive/" style="font-size: 10.00px;">http archive</a><a href="/tags/http2/" style="font-size: 10.00px;">http2</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/11/">November 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">访问统计</h3>
+    <div class="widget">
+        <table border="0">
+          <tr>
+        	<td>
+        		<!-- hitwebcounter Code START -->
+        		<a href="http://www.hitwebcounter.com/" target="_blank">
+        		<img src="http://hitwebcounter.com/counter/counter.php?page=5062985&style=0006&nbdigits=7&type=page&initCount=0" title="counter with different designs" Alt="counter with different designs"   border="0" >
+        		</a><br/>
+        	</td>
+          </tr>
+        </table>
+    </div>
+  </div>
+
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2015 Perth Charles<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/2015/01/14/test-wiki" class="mobile-nav-link">Wiki</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'mybloglife-perthcharles';
+  
+  var disqus_url = 'http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+  <script src="/fancybox/jquery.fancybox.pack.js" type="text/javascript"></script>
+
+
+
+<script src="/js/script.js" type="text/javascript"></script>
+
+
+  </div>
+</body>
+</html>

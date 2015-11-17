@@ -1,0 +1,39 @@
+title: systemtap实用技巧
+toc: true
+date: 2015-11-06 11:26:46
+categories: wiki-tools
+tags: [systemtap]
+---
+
+***  
+本文记录日常使用过程中使用的wireshark和tshark相关实用技巧  
+
+<!--more-->  
+
+***  
+### 探测点例子  
+
+    /* 进入read()系统调用时触发 */
+    syscall.read
+
+    /* close()返回时触发 */
+    syscall.close.return
+
+    /* 进入任何floppy模块中的函数时触发 */
+    module("floppy").function("*")
+
+    /* 调用任何net/socket.c文件中函数时触发 */
+    kernel.function("*@net/socket.c")
+
+    /* 当kernel/sched.c第2917行语句被执行时触发 */
+    kernel.statement("*@kernel/sched.c:2917")
+    具体例子，打印这个探测点处的所有局部变量
+    probe kernel.statement("*@net/ipv4/inet_connection_sock.c:558")
+    {
+        printf("local variables %s      \n", $$locals);
+    }
+
+    /* 每200ms触发一次 */
+    timer.ms(200)
+
+

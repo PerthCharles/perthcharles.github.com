@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://perthcharles.github.com/"/>
-  <updated>2015-11-02T14:49:35.107Z</updated>
+  <updated>2015-11-17T02:55:56.859Z</updated>
   <id>http://perthcharles.github.com/</id>
   
   <author>
@@ -13,6 +13,785 @@
   </author>
   
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用ntopng监控网络信息]]></title>
+    <link href="http://perthcharles.github.com/2015/11/15/wiki-tool-ntopng/"/>
+    <id>http://perthcharles.github.com/2015/11/15/wiki-tool-ntopng/</id>
+    <published>2015-11-15T10:43:43.000Z</published>
+    <updated>2015-11-15T14:46:43.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>ntopng(ntop next generation)能够有效的监控网络信息，<br>即使是free版本功能也十分强大。  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="安装">安装</h3>
+<p>在MAC上安装ntopng  </p>
+<pre><code><span class="preprocessor"># brew install ntopng   // 失败，坑！</span>
+
+<span class="comment">/* install nDPI */</span>
+<span class="preprocessor"># git clone https://github.com/ntop/nDPI.git</span>
+<span class="preprocessor"># cd nDPI; ./autogen.sh; make</span>
+
+<span class="comment">/* install MYSQL */</span>
+<span class="preprocessor"># brew install mysql</span>
+
+<span class="comment">/* install ntopng */</span>
+<span class="preprocessor"># wget http://sourceforge.net/projects/ntop/files/ntopng/ntopng-2.0.tar.gz/download</span>
+<span class="preprocessor"># move download ntopng-2.0.tar.gz; tar zxvf ntopng-2.0.tar.gz</span>
+<span class="preprocessor"># cd ntopng-2.0; ./autogen.sh; ./configure;</span>
+<span class="preprocessor"># make; make geoip</span>
+</code></pre><hr>
+<h3 id="运行ntopng">运行ntopng</h3>
+<pre><code><span class="array"># redis</span>-server          <span class="comment">// 在一个terminal开启redis-server</span>
+<span class="array"># ntopng                </span><span class="comment">// 在另一个terminal开启ntopng</span>
+</code></pre><p>之后网页打开localhost:3000，然后使用默认账号(admin)和密码(admin)登陆即可  </p>
+<hr>
+<h3 id="ntopng常用用法">ntopng常用用法</h3>
+<pre><code><span class="operator">a</span>. 指定监听网卡
+    <span class="comment"># ntopng -i eth0,eth1</span>
+
+b. Ntopng is also able <span class="built_in">to</span> compute statistics based <span class="command"><span class="keyword">on</span> <span class="title">pcap</span> <span class="title">traffic</span> <span class="title">files</span></span>
+    <span class="comment"># ntopng -i example.pcap</span>
+</code></pre><p>更多的使用方法，可查看参考资料中的user guide  </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://github.com/ntop/ntopng/blob/dev/doc/UserGuide.pdf" target="_blank" rel="external">Ntopng User Guide</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>ntopng(ntop next generation)能够有效的监控网络信息，<br>即使是free版本功能也十分强大。  </p>
+]]>
+    
+    </summary>
+    
+      <category term="ntopng" scheme="http://perthcharles.github.com/tags/ntopng/"/>
+    
+      <category term="wiki-tools" scheme="http://perthcharles.github.com/categories/wiki-tools/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[获取亚太地区IP库]]></title>
+    <link href="http://perthcharles.github.com/2015/11/15/apnic-ip-list/"/>
+    <id>http://perthcharles.github.com/2015/11/15/apnic-ip-list/</id>
+    <published>2015-11-15T08:11:36.000Z</published>
+    <updated>2015-11-15T09:59:12.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>想要玩转网络，当然得要有一些基本的数据来源，这篇就先介绍一下如何获得某地区的IP库  </p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="获取最新的亚太地区IP库">获取最新的亚太地区IP库</h3>
+<pre><code><span class="array"># wget http</span>:<span class="comment">//ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest  </span>
+</code></pre><hr>
+<h3 id="抽取CN地区的IP库">抽取CN地区的IP库</h3>
+<pre><code><span class="comment"># cat parsh.sh</span>
+<span class="shebang">#!/bin/sh</span>
+<span class="comment"># Get IP allocated to CN</span>
+grep <span class="string">'apnic|CN|ipv4'</span> delegated-apnic-latest |
+cut <span class="operator">-f</span> <span class="number">4</span>,<span class="number">5</span> <span class="operator">-d</span> <span class="string">'|'</span> |
+tr <span class="string">'|'</span> <span class="string">' '</span> |
+awk <span class="string">'{
+    ip=$1;
+    mask = 32 - log($2)/log(2);
+    print ip"/"mask
+}'</span> &gt; china-ip-list.txt
+
+<span class="comment"># head -n 5 china-ip-list.txt</span>
+<span class="number">1.0</span>.<span class="number">1.0</span>/<span class="number">24</span>
+<span class="number">1.0</span>.<span class="number">2.0</span>/<span class="number">23</span>
+<span class="number">1.0</span>.<span class="number">8.0</span>/<span class="number">21</span>
+<span class="number">1.0</span>.<span class="number">32.0</span>/<span class="number">19</span>
+<span class="number">1.1</span>.<span class="number">0.0</span>/<span class="number">24</span>
+</code></pre><hr>
+<h3 id="使用whois查看IP具体归属">使用whois查看IP具体归属</h3>
+<pre><code><span class="comment"># whois 1.0.1.0/24</span>
+<span class="keyword">...</span>
+% Information related to <span class="string">'1.0.1.0 - 1.0.1.255'</span>
+
+inetnum:        <span class="number">1.0</span><span class="number">.1</span><span class="number">.0</span> - <span class="number">1.0</span><span class="number">.1</span><span class="number">.255</span>
+netname:        CHINANET-FJ
+descr:          CHINANET FUJIAN PROVINCE NETWORK
+descr:          China Telecom
+<span class="keyword">...</span>
+</code></pre><hr>
+<h3 id="使用zmap扫描IP">使用zmap扫描IP</h3>
+<p>在我的一台机器上面，扫描全部CN范围内开放80端口的IP数花了大概25min，得到92万个结果</p>
+<pre><code><span class="array"># head </span>-n <span class="number">20</span> china-ip-list.txt &gt; top20.txt  <span class="comment">// 作为演示，仅扫描部分网段</span>
+<span class="array"># zmap </span>-w <span class="number">1.</span>txt -p <span class="number">80</span> -o <span class="number">80.</span>txt             <span class="comment">// 扫描80端口开启的IP地址 </span>
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>想要玩转网络，当然得要有一些基本的数据来源，这篇就先介绍一下如何获得某地区的IP库  </p>
+]]>
+    
+    </summary>
+    
+      <category term="ip" scheme="http://perthcharles.github.com/tags/ip/"/>
+    
+      <category term="apnic" scheme="http://perthcharles.github.com/tags/apnic/"/>
+    
+      <category term="zmap" scheme="http://perthcharles.github.com/tags/zmap/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[阅读周记(第五期)]]></title>
+    <link href="http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/"/>
+    <id>http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/</id>
+    <published>2015-11-10T15:56:22.000Z</published>
+    <updated>2015-11-15T07:15:03.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h3 id="使用HTTP/2提升性能的7个建议"><a href="http://toutiao.com/i6214953977478382082/" target="_blank" rel="external">使用HTTP/2提升性能的7个建议</a></h3>
+<pre><code>摘要：
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
+点评：
+    HTTP/2仅使用一个连接是一个重要的改变，对于客户端可以省去多次建连时间，
+    对于服务器端能少建立和维护大量的连接(尤其是HTTP/1中那些什么数据也没传过的流)
+</code></pre><a id="more"></a>  
+
+<hr>
+<h3 id="从理论到实践，全方位认识DNS（理论篇）"><a href="http://blog.jobbole.com/94132/" target="_blank" rel="external">从理论到实践，全方位认识DNS（理论篇）</a></h3>
+<pre><code>点评：
+    介绍DNS的，逻辑比较清晰。适合作为入门读物
+</code></pre><hr>
+<h3 id="TCP_Fast_Open:_expediting_web_services"><a href="https://lwn.net/Articles/508865/" target="_blank" rel="external">TCP Fast Open: expediting web services</a></h3>
+<p>TFO技术暂时还未正式成为标准，不过已经进入了Linux内核的源码中。<br>了解一下基本原理还是很有必要的，下面摘录三张图来展示TFO的原理和过程。 </p>
+<p><img src="/resources/tfo-normal-3whs.png" alt="正常三次握手过程"><br><img src="/resources/tfo-generating-cookies.png" alt="第一次建连生成cookie"><br><img src="/resources/tfo-enploying-cookies.png" alt="后续建连使用cookie"></p>
+<p>另外需要注意的是，目前TFO还不推荐在服务设备上开启(LINUX3.10内核默认关闭)，<br>这是因为有些middlebox可能会丢弃携带它不认识的选项的SYN包。<br><a href="http://packetpushers.net/tcp-fast-curious-a-look-at-tcp-fast-open/" target="_blank" rel="external">这里是一篇比较好的参考资料</a>  </p>
+<hr>
+<h3 id="Some_relevant_networking_concepts"><a href="http://careers.directi.com/display/tu/Understanding+and+optimizing+Network+utilization" target="_blank" rel="external">Some relevant networking concepts</a></h3>
+<pre><code>点评：
+    这篇文章中介绍的一些网络工具和网络调优思路很值得借鉴的
+</code></pre><hr>
+<h3 id="A_few_things_about_Redis_security"><a href="http://www.antirez.com/news/96" target="_blank" rel="external">A few things about Redis security</a></h3>
+<pre><code>点评：
+    再来点安全的东西，开开脑洞
+    看完这个作者的文章没几天，国内各大安全厂商就开始爆料国内的该漏洞的安全状态
+    还真不好是喜是忧的好。
+</code></pre><hr>
+<h3 id="What_Your_Computer_Does_While_You_Wait"><a href="http://duartes.org/gustavo/blog/post/what-your-computer-does-while-you-wait/" target="_blank" rel="external">What Your Computer Does While You Wait</a></h3>
+<pre><code>摘要：
+    <span class="number">1.</span> The <span class="keyword">first</span> thing that jumps out is how absurdly fast our processors are. 
+       Most simple instructions <span class="command"><span class="keyword">on</span> <span class="title">the</span> <span class="title">Core</span> <span class="title">2</span> <span class="title">take</span> <span class="title">one</span> <span class="title">clock</span> <span class="title">cycle</span> <span class="title">to</span> <span class="title">execute</span>,</span>
+       hence <span class="operator">a</span> <span class="keyword">third</span> <span class="operator">of</span> <span class="operator">a</span> nanosecond <span class="keyword">at</span> <span class="number">3.0</span>Ghz.
+       For reference, light only travels ~<span class="number">4</span> inches (<span class="number">10</span> cm) <span class="operator">in</span> <span class="operator">the</span> <span class="built_in">time</span> taken <span class="keyword">by</span> <span class="operator">a</span> clock cycle.
+       It’s worth keeping this <span class="operator">in</span> mind when you’re thinking <span class="operator">of</span> optimization – instructions are comically cheap <span class="built_in">to</span> execute nowadays.
+
+    <span class="number">2.</span> As <span class="operator">the</span> CPU works away, <span class="keyword">it</span> must <span class="built_in">read</span> <span class="built_in">from</span> <span class="operator">and</span> <span class="built_in">write</span> <span class="built_in">to</span> <span class="keyword">system</span> memory,
+       which <span class="keyword">it</span> accesses via <span class="operator">the</span> L1 <span class="operator">and</span> L2 caches. The caches use static RAM,
+       <span class="operator">a</span> much faster (<span class="operator">and</span> expensive) type <span class="operator">of</span> memory than <span class="operator">the</span> DRAM memory used <span class="keyword">as</span> <span class="operator">the</span> main <span class="keyword">system</span> memory.
+       The caches are part <span class="operator">of</span> <span class="operator">the</span> processor itself <span class="operator">and</span> <span class="keyword">for</span> <span class="operator">the</span> pricier memory we <span class="built_in">get</span> very low latency. 
+
+    <span class="number">3.</span> Here we see our <span class="keyword">first</span> major hit, <span class="operator">a</span> massive ~<span class="number">250</span> cycles <span class="operator">of</span> latency that often leads <span class="built_in">to</span> <span class="operator">a</span> stall,
+       when <span class="operator">the</span> CPU has no work <span class="built_in">to</span> <span class="built_in">do</span> <span class="keyword">while</span> <span class="keyword">it</span> waits.
+       To <span class="built_in">put</span> this <span class="keyword">into</span> perspective, reading <span class="built_in">from</span> L1 cache is like grabbing <span class="operator">a</span> piece <span class="operator">of</span> paper <span class="built_in">from</span> your desk (<span class="number">3</span> <span class="built_in">seconds</span>),
+       L2 cache is picking up <span class="operator">a</span> book <span class="built_in">from</span> <span class="operator">a</span> nearby shelf (<span class="number">14</span> <span class="built_in">seconds</span>),
+       <span class="operator">and</span> main <span class="keyword">system</span> memory is taking <span class="operator">a</span> <span class="number">4</span>-minute walk down <span class="operator">the</span> hall <span class="built_in">to</span> buy <span class="operator">a</span> Twix bar.
+
+点评：
+    了解各个部件之间的latency概况，算是一个*专业人士*的必备知识吧，哈哈
+    本文写的非常的生动，解释访问速度时都有非常智能能理解的例子做对比。
+    既然如此，那就再贴张文章中的图.
+</code></pre><p><img src="/resources/latencyAndThroughputFull.png" alt="latency and throughput">  </p>
+<hr>
+<h3 id="我是如何从3亿IP中找到CISCO后门路由器的"><a href="http://www.tuicool.com/articles/BFZj6nA" target="_blank" rel="external">我是如何从3亿IP中找到CISCO后门路由器的</a></h3>
+<pre><code>点评：再开开脑洞<span class="keyword">...</span>  
+不过freebuf的原文被删了，吓得我赶紧备份了网页原文。  
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h3 id="使用HTTP/2提升性能的7个建议"><a href="http://toutiao.com/i6214953977478382082/" target="_blank" rel="external">使用HTTP/2提升性能的7个建议</a></h3>
+<pre><code>摘要：
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
+点评：
+    HTTP/2仅使用一个连接是一个重要的改变，对于客户端可以省去多次建连时间，
+    对于服务器端能少建立和维护大量的连接(尤其是HTTP/1中那些什么数据也没传过的流)
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="http2" scheme="http://perthcharles.github.com/tags/http2/"/>
+    
+      <category term="fastopen" scheme="http://perthcharles.github.com/tags/fastopen/"/>
+    
+      <category term="redis" scheme="http://perthcharles.github.com/tags/redis/"/>
+    
+      <category term="cpu" scheme="http://perthcharles.github.com/tags/cpu/"/>
+    
+      <category term="security" scheme="http://perthcharles.github.com/tags/security/"/>
+    
+      <category term="wiki-阅读周记" scheme="http://perthcharles.github.com/categories/wiki-%E9%98%85%E8%AF%BB%E5%91%A8%E8%AE%B0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[wiki-tool-iptraf]]></title>
+    <link href="http://perthcharles.github.com/2015/11/10/wiki-tool-iptraf/"/>
+    <id>http://perthcharles.github.com/2015/11/10/wiki-tool-iptraf/</id>
+    <published>2015-11-10T15:30:05.000Z</published>
+    <updated>2015-11-11T02:25:56.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>本文介绍一个实时监控网络流量的工具iptraf。</p>
+<a id="more"></a>  
+
+<hr>
+<h3 id="基本功能分析">基本功能分析</h3>
+<pre><code><span class="number">1</span>. Configure...能够设置是否开启日志文件，以及屏幕数据的刷新周期、日志数据的统计周期
+    一般可以将屏幕数据的刷新间隔拉长一点，减小开销
+<span class="number">2</span>. Filters...能够用于配置统计的一些过滤器，可以用tcpdump的filter来类比理解
+    这个功能属于iptraf监控设备的一大优点，具体filter设置方法可参考：http://iptraf.seul.org/<span class="number">2.7</span>/manual.html
+<span class="number">3</span>. <span class="number">5</span>种监控与统计数据可供选择
+        <span class="literal">IP</span> traffic <span class="keyword">monitor</span>
+        General interface statistics
+        Detailed interface statistics
+        Statistical breakdowns...
+        LAN station <span class="keyword">monitor</span>
+    一般看看<span class="literal">IP</span> traffic <span class="keyword">monitor</span>，Statistical breakdowns就好了
+</code></pre><hr>
+<h3 id="filter使用经验">filter使用经验</h3>
+<p>这部分等这个工具用的熟练了再来总结  </p>
+<hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://iptraf.seul.org/2.7/manual.html" target="_blank" rel="external">IPTraf User’s Manual</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>本文介绍一个实时监控网络流量的工具iptraf。</p>
+]]>
+    
+    </summary>
+    
+      <category term="iptraf" scheme="http://perthcharles.github.com/tags/iptraf/"/>
+    
+      <category term="tools" scheme="http://perthcharles.github.com/tags/tools/"/>
+    
+      <category term="net" scheme="http://perthcharles.github.com/tags/net/"/>
+    
+      <category term="wiki-tools" scheme="http://perthcharles.github.com/categories/wiki-tools/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[netstat -st输出解析(二)]]></title>
+    <link href="http://perthcharles.github.com/2015/11/10/wiki-netstat-proc/"/>
+    <id>http://perthcharles.github.com/2015/11/10/wiki-netstat-proc/</id>
+    <published>2015-11-10T02:30:40.000Z</published>
+    <updated>2015-11-15T05:56:08.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>netstat -st输出的两个重要信息来源分别是/proc/net/snmp和/proc/net/netstat<br>本文将分类整理这些counterd的含义以及一些注意事项。</p>
+<p><a id="more"></a><br>在整理的过程中，发现<a href="http://blog.chinaunix.net/uid/20043340.html" target="_blank" rel="external">Rover Yu</a>前辈已经<br>对这些counter做过详细的整理。关于Rover Yu前辈的整理请查看参考资料中的前三篇。<br>本着不重复造轮子的原则。本文将尽量遵循以下原则，以期从不同的角度呈现对这些counter的理解。  </p>
+<pre><code>a. 分类整理：根据涉及的不同<span class="type">TCP</span>细节，对counter做更细致的分类
+b. 结合sysctl配置：强调sysctl配置与counter之间的关联
+<span class="built_in">c</span>. 强调异常：哪些counter出现非零值，往往就意味着出现了值得关注的问题
+d. 信息抽取： 如何从counter中获取有价值的信息
+e. 仅关注<span class="type">TCP</span>相关计数器
+</code></pre><hr>
+<h3 id="计数器分类">计数器分类</h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>涉及counters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常量</td>
+<td>RtoAlgorithm、RtoMin、RtoMax、MaxConn</td>
+</tr>
+<tr>
+<td>建连统计</td>
+<td>ActiveOpens、PassiveOpens、AttemptFails、CurrEstab、EstabResets</td>
+</tr>
+<tr>
+<td>数据包统计</td>
+<td>InSegs、OutSegs、RetransSegs、InErrs、OutRsts、InCsumErrors、EmbryonicRsts</td>
+</tr>
+<tr>
+<td>syncookies功能</td>
+<td>SyncookiesSent、SyncookiesRecv、SyncookiesFailed</td>
+</tr>
+<tr>
+<td>TIME_WAIT回收</td>
+<td>TW、TWRecycled、TWKilled、TCPTimeWaitOverflow</td>
+</tr>
+<tr>
+<td>RTO次数</td>
+<td>TCPTimeouts、TCPSpuriousRTOs、TCPLossProbes、TCPLossProbeRecovery、<br>TCPRenoRecoveryFail、TCPSackRecoveryFail、<br>TCPRenoFailures、TCPSackFailures、<br>TCPLossFailures</td>
+</tr>
+<tr>
+<td>Retrans数量</td>
+<td>TCPFastRetrans、TCPForwardRetrans、<br>TCPSlowStartRetrans、TCPLostRetransmit、<br>TCPRetransFail</td>
+</tr>
+<tr>
+<td>FastOpen</td>
+<td>TCPFastOpenActive、TCPFastOpenPassive、<br>TCPFastOpenPassiveFail、TCPFastOpenListenOverflow、<br>TCPFastOpenCookieReqd</td>
+</tr>
+<tr>
+<td>MD5</td>
+<td>TCPMD5NotFound、TCPMD5Unexpected</td>
+</tr>
+<tr>
+<td>DelayedACK</td>
+<td>DelayedACKs、DelayedACKLocked、DelayedACKLost、<br>TCPSchedulerFailed</td>
+</tr>
+<tr>
+<td>DSACK</td>
+<td>TCPDSACKOldSent、TCPDSACKOfoSent、<br>TCPDSACKRecv、TCPDSACKOfoRecv、<br>TCPDSACKIgnoredOld、TCPDSACKIgnoredNoUndo</td>
+</tr>
+<tr>
+<td>Reorder</td>
+<td>TCPFACKReorder、TCPSACKReorder、<br>TCPRenoReorder、TCPTSReorder</td>
+</tr>
+<tr>
+<td>Recovery</td>
+<td>TCPRenoRecovery、TCPSackRecovery、<br>TCPRenoRecoveryFail、TCPSackRecoveryFail</td>
+</tr>
+<tr>
+<td>Abort</td>
+<td>TCPAbortOnData、TCPAbortOnClose、<br>TCPAbortOnMemory、TCPAbortOnTimeout、<br>TCPAbortOnLingerTCPAbortFailed</td>
+</tr>
+</tbody>
+</table>
+<p>|reset相关          | |<br>|内存prune          | PruneCalled、RcvPruned、OfoPruned、<br>TCPMemoryPressures |<br>|PAWS相关           | PAWSPassive、PAWSActive、PAWSEstab                |<br>|Listen相关         | ListenOverflows、ListenDrops                      |<br>|undo相关           | TCPFullUndo、TCPPartialUndo、<br>TCPDSACKUndo、TCPLossUndo |<br>|快速路径与慢速路径 | TCPHPHits、TCPHPHitsToUser、<br>TCPPureAcks、TCPHPAcks |</p>
+<hr>
+<hr>
+<h4 id="常量">常量</h4>
+<p>这些常量是Linux3.10中的默认值，仅在升级了内核版本时才需要关心一下这些值的变化。  </p>
+<pre><code><span class="label">RtoAlgorithm:</span>
+    默认为<span class="number">1</span>，RTO算法与RFC2698一致
+<span class="label">RtoMin:</span>
+    默认值为HZ/<span class="number">5</span>，即<span class="number">200</span>ms
+<span class="label">RtoMax:</span>
+    默认值为<span class="number">120</span>HZ，即<span class="number">120</span>s
+<span class="label">MaxConn:</span>
+    协议栈本身并不会限制TCP连接总数，默认值为-<span class="number">1.</span>
+</code></pre><hr>
+<h4 id="建连统计">建连统计</h4>
+<p>这些统计值中，只有CurrEstab反应的是系统当前状态，而其他值则是反应的历史状态<br>同时需要注意的是，这些计数器将ESTABLISHED和CLOSE-WAIT状态都作为当前连接数。<br>可以这么理解：这两个状态都以为这local=&gt;peer方向的连接未被关闭  </p>
+<pre><code>ActiveOpen<span class="variable">s:</span>
+    主动建连次数，CLOSE =&gt; SYN-SENT次数
+PassiveOpen<span class="variable">s:</span>
+    被动建连次数，RFC原意是LISTEN =&gt; SYN-RECV次数，但Linux选择在三次握手成功后才加<span class="number">1</span>
+AttemptFail<span class="variable">s:</span>
+    建连失败次数
+EstabReset<span class="variable">s:</span>
+    连接被reset次数，ESTABLISHED =&gt; CLOSE次数 + CLOSE-WAIT =&gt; CLOSE次数
+CurrEsta<span class="variable">b:</span>
+    当前TCP连接数，ESTABLISHED个数 + CLOSE-WAIT个数
+</code></pre><hr>
+<h4 id="数据包统计">数据包统计</h4>
+<p>这些统计值也是历史值，独立的来看意义并不大。一般可统计一段时间内的变化，关注以下几个指标<br>a. TCP层的重传率: ΔRetransSegs / ΔOutSegs — 越小越好，如果超过20%(这个值根据实际情况而定)则应该引起注意<br>b. Reset发送频率: ΔOutRsts / ΔOutSegs     — 越小越好，一般应该在1%以内<br>c. 错误包占比:    ΔInErrs / ΔInSegs       — 越小越好，一般应该在1%以内，同时由checksum导致的问题包应该更低</p>
+<pre><code>InSeg<span class="variable">s:</span>
+    收到的数据包个数，包括有错误的包个数
+OutSeg<span class="variable">s:</span>
+    发送的数据包个数
+RetransSeg<span class="variable">s:</span>
+    重传的包个数
+InErr<span class="variable">s:</span>
+    收到的有问题的包个数
+OutRst<span class="variable">s:</span>
+    发送的带reset标记的包个数
+InCsumError<span class="variable">s:</span>
+    收到的checksum有问题的包个数，InErrs中应该只有*小部分*属于该类型
+EmbryonicRst<span class="variable">s:</span>
+    在SYN-RECV状态收到带RST/SYN标记的包个数
+</code></pre><hr>
+<h4 id="syncookies功能">syncookies功能</h4>
+<p>syncookies一般不会被触发，只有在tcp_max_syn_backlog队列被占满时才会被触发<br>因此SyncookiesSent和SyncookiesRecv一般应该是0。<br>但是SyncookiesFailed值即使syncookies机制没有被触发，也很可能不为0。<br>这是因为一个处于LISTEN状态的socket收到一个不带SYN标记的数据包时，就会调<br>用cookie_v4_check()尝试验证cookie信息。而如果验证失败，Failed次数就加1。</p>
+<pre><code>SyncookiesSen<span class="variable">t:</span>
+    使用syncookie技术发送的syn/ack包个数
+SyncookiesRecv
+    收到携带有效syncookie信息包个数
+SyncookiesFailed
+    收到携带无效syncookie信息包个数
+</code></pre><p>注: syncookies机制是为应对synflood攻击而被提出来的。</p>
+<hr>
+<h4 id="TIME-WAIT回收">TIME-WAIT回收</h4>
+<p>TIME-WAIT状态是TCP协议状态机中的重要一环，服务器设备一般都有非常多处于TIME-WAIT状态的socket<br>如果是在主要提供HTTP服务的设备上，TW值应该接近TcpPassiveOpens值。<br>一般情况下，sysctl_tcp_tw_reuse和sysctl_tcp_tw_recycle都是不推荐开启的。<a href="http://perthcharles.github.io/2015/08/27/timestamp-NAT/" target="_blank" rel="external">这里解释了为什么</a>。<br>所以TWKilled和TWRecycled都应该是0。<br>同时TCPTimeWaitOverflow也应该是0，否则就意味着内存使用方面出了大问题。  </p>
+<pre><code>TW:
+    经过正常的TCP_TIMEWAIT_LEN(60s)结束TW状态的socket数量
+TWKilled:
+    经过更短的时间结束TW状态的socket数量。
+    只有在net.ipv4.tcp_tw_recycle开启时，调度TW timer时才可能用更短的timeout值。
+TWRecycled:
+    Port从TIMEWAIT socket中复用的次数。
+    只有在sysctl_tcp_tw_reuse开启时，才可能加<span class="number">1</span>
+    郁闷的是上面两个counter的命名与sysctl的命名真是超级不一致啊。囧<span class="keyword">...</span>
+TCPTimeWaitOverflow:
+    如果没有内存分配TIME-WAIT结构体，则加<span class="number">1</span>
+</code></pre><hr>
+<h4 id="RTO次数">RTO次数</h4>
+<p>RTO超时对TCP性能的影响是巨大的，因此关心RTO超时的次数也非常必要。<br>当然3.10中的TLP机制能够减少一定量的TCPTimeouts数，将其转换为快速重传。<br>关于TLP的原理部分，可参考<a href="http://perthcharles.github.io/2015/10/31/wiki-network-tcp-tlp/" target="_blank" rel="external">我的这篇wiki</a>。</p>
+<pre><code><span class="label">TCPTimeouts:</span>
+    RTO timer第一次超时的次数，仅包含直接超时的情况
+<span class="label">TCPSpuriousRTOs:</span>
+    通过F-RTO机制发现的虚假超时个数
+<span class="label">TCPLossProbes:</span>
+    Probe Timeout(PTO)导致发送Tail Loss Probe (TLP)包的次数
+<span class="label">TCPLossProbeRecovery:</span>
+    丢失包刚好被TLP探测包修复的次数
+
+<span class="comment">/* 由以下计数器可以看出，进入RTO被触发时，TCP是可能处于多种不同状态的 */</span>
+<span class="label">TCPRenoRecoveryFail:</span> (也放到了Recovery类别)
+    先进入Recovery阶段，然后又RTO的次数，对端不支持SACK选项
+<span class="label">TCPSackRecoveryFail:</span>(也放到了Recovery类别)
+    先进入Recovery阶段，然后又RTO的次数，对端支持SACK选项
+<span class="label">TCPRenoFailures:</span>
+    先进TCP_CA_Disorder阶段，然后又RTO超时的次数，对端不支持SACK选项
+<span class="label">TCPSackFailures:</span>
+    先进TCP_CA_Disorder阶段，然后又RTO超时的次数，对端支持SACK选项
+<span class="label">TCPLossFailures:</span>
+    先进TCP_CA_Loss阶段，然后又RTO超时的次数
+</code></pre><hr>
+<h4 id="Retrans数量">Retrans数量</h4>
+<p>这些计数器统计的重传包，都不是由于RTO超时导致进行的重传<br>如果结合RetransSegs统计来看，如果这些非RTO导致的重传占比较大的话，也算是不幸中的万幸。<br>另外LostRetransmit的数量应该偏低比较好，重传包如果都大量被丢弃，则真的要注意了。  </p>
+<pre><code><span class="label">TCPLostRetransmit:</span>
+    丢失的重传SBK数量，没有TSO时，等于丢失的重传包数量
+<span class="label">TCPFastRetrans:</span>
+    成功快速重传的SKB数量
+<span class="label">TCPForwardRetrans:</span>
+    成功ForwardRetrans的SKB数量，Forward Retrans重传的序号高于retransmit_high的数据
+    TODO: retransmit_high目前的理解是被标记为lost的SKB中，最大的end_seq值
+<span class="label">TCPSlowStartRetrans:</span>
+    成功在Loss状态发送的重传SKB数量，而且这里仅记录非RTO超时进入Loss状态下的重传数量
+    目前找到的一种非RTO进入Loss状态的情况就是：tcp_check_sack_reneging()函数发现
+    接收端违反(renege)了之前的SACK信息时，会进入Loss状态
+<span class="label">TCPRetransFail:</span>
+    尝试FastRetrans、ForwardRetrans、SlowStartRetrans重传失败的次数
+</code></pre><hr>
+<h4 id="FastOpen">FastOpen</h4>
+<p><a href="https://tools.ietf.org/html/rfc7413" target="_blank" rel="external">TCP FastOpen(TFO)技术</a>是Google提出来减少三次握手开销的技术，<br>核心原理就是在第一次建连时server计算一个cookies发给client，之后client向<br>server再次发起建连请求时就可以携带cookies信息验明正身。如果cookies验证通过，<br>server可以不等三次握手的最后一个ACK包就将client放在SYN包里面的数据传递给application layer。</p>
+<p>在3.10内核中，TFO由sysctl_tcp_fastopen开关控制，默认值为0(关闭)。<br>而且sysctl_tcp_fastopen目前也是推荐关闭的，因为网络中有些middlebox会丢弃那些带有不认识的option的SYN包.<br>所以正常情况下这些值也应该都是0，当然如果收到过某些不怀好意带TFO cookies信息的SYN包，<br>TCPFastOpenPassive计数器就可能不为0。</p>
+<pre><code><span class="label">TCPFastOpenActive:</span>
+    发送的带TFO cookie的SYN包个数
+<span class="label">TCPFastOpenPassive:</span>
+    收到的带TFO cookie的SYN包个数
+<span class="label">TCPFastOpenPassiveFail:</span>
+    使用TFO技术建连失败的次数
+<span class="label">TCPFastOpenListenOverflow:</span>
+    TFO请求数超过listener queue设置的上限则加<span class="number">1</span>
+<span class="label">TCPFastOpenCookieReqd:</span>
+    收到一个请求TFO cookies的SYN包时加<span class="number">1</span>
+</code></pre><hr>
+<h4 id="MD5">MD5</h4>
+<p>TCP MD5 Signature选项是为提高BGP Session的安全性而提出的，<a href="https://tools.ietf.org/html/rfc2385" target="_blank" rel="external">详见RFC 2385</a>。<br>因此内核中是以编译选项，而不是sysctl接口来配置是否使用该功能的。<br>如果内核编译是的CONFIG_TCP_MD5SIG选项未配置，则不会支持TCPMD5Sig，下面两个计数器也就只能是0  </p>
+<pre><code><span class="label">TCPMD5NotFound:</span>
+    希望收到带MD5选项的包，但是包里面没有MD5选项
+<span class="label">TCPMD5Unexpected:</span>
+    不希望收到带MD5选项的包，但是包里面有MD5选项
+</code></pre><hr>
+<h4 id="DelayedACK">DelayedACK</h4>
+<p>DelayedACK是内核中默认支持的，但即使使用DelayedACKs，每收到两个数据包也<br>必须发送一个ACK。所以DelayedACKs可以估算为发送出去的ACK数量的一半。<br>同时DelayedACKLocked反应的是应用与内核争抢socket的次数，<br>如果占DelayedACKs比例过大可能就需要看看应用程序是否有问题了。  </p>
+<pre><code><span class="label">DelayedACKs:</span>
+    尝试发送delayed ack的次数，包括未成功发送的次数
+<span class="label">DelayedACKLocked:</span>
+    由于usr锁住了sock，而无法发送delayed ack的次数
+<span class="label">DelayedACKLost:</span>
+    TODO 暂时不理解准确含义
+<span class="label">TCPSchedulerFailed:</span>
+    如果在delay ack处理函数中发现prequeue还有数据，就加<span class="number">1</span>。
+    数据放到prequeue，就是想user能尽快处理。如果任由数据，
+    则可能user行为调度效果不好
+    这个值应该非常接近于零才正常
+</code></pre><hr>
+<h4 id="DSACK">DSACK</h4>
+<p>该类型计数器统计的是收/发DSACK信息次数。<br>DSACKOldSent + DSACKOfoSent可以当做是发送出的DSACK信息的次数，而且概率上来讲<br>OldSent应该占比更大。<br>同理DSACKRecv的数量也应该远多于DSACKOfoRecv的数量。<br>另外DSACK信息的发送是需要sysctl_tcp_dsack开启的，如果发现sent两个计数器为零，则要检查一下了。<br>一般还是建议开启dsack选项  </p>
+<pre><code><span class="label">TCPDSACKOldSent:</span>
+    如果收到的重复数据包序号比rcv_nxt(接收端想收到的下一个序号)小，则增加oldsent
+<span class="label">TCPDSACKOfoSent:</span>
+    如果收到的重复数据包序号比rcv_nxt大，则是一个乱序的重复数据包，增加ofosent
+<span class="label">TCPDSACKRecv:</span>
+    收到的old dsack信息次数，判断old的方法：dsack序号小于ACK号
+<span class="label">TCPDSACKOfoRecv:</span>
+    收到的Ofo dsack信息次数
+<span class="label">TCPDSACKIgnoredOld:</span>
+    当一个dsack block被判定为无效，且设置过undo_marker，则加<span class="number">1</span>
+<span class="label">TCPDSACKIgnoredNoUndo:</span>
+    当一个dsack block被判定为无效，且未设置undo_marker，则加<span class="number">1</span>
+</code></pre><hr>
+<h4 id="Reorder">Reorder</h4>
+<p>当发现了需要更新某条TCP流的reordering值(乱序值)时，以下计数器可能被使用到。<br>不过下面四个计数器为互斥关系，最少见的应该是TCPRenoReorder，毕竟sack已经被<br>广泛部署使用了。<br>TODO: 什么情况下能准确的判断出要更新reorder值呢？  </p>
+<pre><code><span class="label">TCPTSReorder:</span>
+    如果是被一个partial ack确认后需要更新reorder值，则加<span class="number">1</span>
+    这个地方取个TS的名字，还真是费解。不知道是什么的缩写表示了partial ack的含义。
+<span class="label">TCPRenoReorder:</span>
+    如果被不支持SACK的dupack确认后，需要更新reorder值，则加<span class="number">1</span>
+<span class="label">TCPFACKReorder:</span>
+    如果在需要更新时判断支持FACK，则加<span class="number">1</span>
+<span class="label">TCPSACKReorder:</span>
+    如果仅支持SACK，则该计数器加<span class="number">1</span>
+</code></pre><p>关于partial ack的完整内容可参考<a href="https://tools.ietf.org/html/rfc6582" target="_blank" rel="external">RFC6582</a>，这里摘要定义部分  </p>
+<pre><code>In <span class="operator">the</span> <span class="keyword">case</span> <span class="operator">of</span> multiple packets dropped <span class="built_in">from</span> <span class="operator">a</span> single window <span class="operator">of</span> data,
+<span class="operator">the</span> <span class="keyword">first</span> <span class="built_in">new</span> information available <span class="built_in">to</span> <span class="operator">the</span> sender comes when <span class="operator">the</span>
+sender receives <span class="operator">an</span> acknowledgment <span class="keyword">for</span> <span class="operator">the</span> retransmitted packet (that
+is, <span class="operator">the</span> packet retransmitted when fast retransmit was <span class="keyword">first</span> entered).
+If there is <span class="operator">a</span> single packet drop <span class="operator">and</span> no reordering, <span class="keyword">then</span> <span class="operator">the</span>
+acknowledgment <span class="keyword">for</span> this packet will acknowledge all <span class="operator">of</span> <span class="operator">the</span> packets
+transmitted <span class="keyword">before</span> fast retransmit was entered.  However, <span class="keyword">if</span> there
+are multiple packet drops, <span class="keyword">then</span> <span class="operator">the</span> acknowledgment <span class="keyword">for</span> <span class="operator">the</span>
+retransmitted packet will acknowledge some but <span class="operator">not</span> all <span class="operator">of</span> <span class="operator">the</span> packets
+transmitted <span class="keyword">before</span> <span class="operator">the</span> fast retransmit.  We call this acknowledgment
+<span class="operator">a</span> partial acknowledgment.
+</code></pre><hr>
+<h4 id="Recovery">Recovery</h4>
+<p>该类型计数器统计的进入快速重传阶段的总次数及失败次数，失败次数是指先进入了<br>recovery阶段，然后有RTO超时了。Fast Recovery没有成功。<br>首先由于SACK选项已经大面积使用，RenoRecovery的次数应该远小于SackRecovery的次数<br>另外fail的次数应该比例较小才比较理想</p>
+<pre><code><span class="label">TCPRenoRecovery:</span>
+    进入Recovery阶段的次数，对端不支持SACK选项
+<span class="label">TCPSackRecovery:</span>
+    进入Recovery阶段的次数，对端支持SACK选项
+<span class="label">TCPRenoRecoveryFail:</span> (也放到了RTO次数类别)
+    先进入Recovery阶段，然后又RTO的次数，对端不支持SACK选项
+<span class="label">TCPSackRecoveryFail:</span>(也放到了RTO次数类别)
+    先进入Recovery阶段，然后又RTO的次数，对端支持SACK选项
+</code></pre><hr>
+<h4 id="Abort">Abort</h4>
+<p>abort本身是一种很严重的问题，因此是否有必要关心这些计数器<br>后三个计数器如果不为0，则往往意味着系统发生了较为严重的问题，需要格外注意  </p>
+<pre><code><span class="label">TCPAbortOnClose:</span>
+    如果调用tcp_close()关闭socket时，recv buffer中还有数据，则加<span class="number">1</span>
+    此时会主动发送一个reset包给对端
+<span class="label">TCPAbortOnData:</span>
+    如果在FIN_WAIT_1和FIN_WAIT_2状态下收到后续数据，或TCP_LINGER2设置小于<span class="number">0</span>，则计数器加<span class="number">1</span>
+<span class="label">TCPAbortOnTimeout:</span>
+    因各种计时器(RTO/PTO/keepalive)的重传次数超过上限，而关闭连接时，计数器加<span class="number">1</span>
+<span class="label">TCPAbortOnMemory:</span>
+    如果orphan socket数量或者tcp_memory_allocated超过上限，则加<span class="number">1</span>
+    一般值为<span class="number">0</span>
+<span class="label">TCPAbortOnLinger:</span>
+    tcp_close()中，因tp-&gt;linger2被设置小于<span class="number">0</span>，导致FIN_WAIT_2立即切换到CLOSE状态的次数
+    一般值为<span class="number">0</span>
+<span class="label">TCPAbortFailed:</span>
+    如果在准备发送reset时，分配SKB或者发送SKB失败，则加<span class="number">1</span>
+    一般值为<span class="number">0</span>
+</code></pre><hr>
+<pre><code><span class="built_in">c</span>. 当rcv_buf不足时可能需要prune ofo queue, 这种情况就会导致<span class="type">PruneCalled</span>计数器增加；
+   当一般都应该通过collapse节省内存就可以了，并不需要真正的prune掉被<span class="type">SACK</span>的数据。
+   所以<span class="type">OfoPruned</span>和更严重的<span class="type">RcvPruned</span>都应该计数为<span class="number">0</span>。
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://blog.chinaunix.net/uid-20043340-id-2984198.html" target="_blank" rel="external">TCP SNMP counters一</a><br><a href="http://blog.chinaunix.net/uid-20043340-id-3016560.html" target="_blank" rel="external">TCP SNMP counters二</a><br><a href="http://blog.chinaunix.net/uid-20043340-id-3017972.html" target="_blank" rel="external">TCP SNMP counters三</a><br><a href="http://tools.ietf.org/html/rfc2012" target="_blank" rel="external">RFC 2012:  SNMPv2 Management Information Base for the Transmission Control Protocol using SMIv2</a><br><a href="https://lwn.net/Articles/508865/" target="_blank" rel="external">TCP Fast Open: expediting web services</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>netstat -st输出的两个重要信息来源分别是/proc/net/snmp和/proc/net/netstat<br>本文将分类整理这些counterd的含义以及一些注意事项。</p>
+<p>]]>
+    
+    </summary>
+    
+      <category term="snmp" scheme="http://perthcharles.github.com/tags/snmp/"/>
+    
+      <category term="tcp" scheme="http://perthcharles.github.com/tags/tcp/"/>
+    
+      <category term="netstat" scheme="http://perthcharles.github.com/tags/netstat/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[netstat -s输出解析(一)]]></title>
+    <link href="http://perthcharles.github.com/2015/11/09/wiki-rfc2012-snmp-proc/"/>
+    <id>http://perthcharles.github.com/2015/11/09/wiki-rfc2012-snmp-proc/</id>
+    <published>2015-11-09T05:31:40.000Z</published>
+    <updated>2015-11-10T02:48:13.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<p>当执行以下命令查看netstat统计信息来源时，发现一个重要的来源是/proc/net/snmp接口的输出信息<br>因此在刨根问底分析源码的过程中，找到了这个接口对应的RFC2012文档。本wiki就记录下<br>相关的解读，以便后续更加透彻的立即netstat的统计信息。  </p>
+<pre><code><span class="preprocessor"># strace -e open netstat -s</span>
+</code></pre><p>注：netstat -s的另一个重要的数据来源是/proc/net/netstat下的信息，但鉴于<br>该接口信息量较大，因此会单独独立整理。<br><a id="more"></a>  </p>
+<hr>
+<h3 id="snmp4_tcp_list数组元素解析">snmp4_tcp_list数组元素解析</h3>
+<p>netstat -s的Tcp类选的数据均来自内核中定义的snmp4_tcp_list数组。<br>snmp4_tcp_list数组的每一个成员都是一个snmp_mib结构体  </p>
+<pre><code><span class="keyword">struct</span> snmp_mib {
+    <span class="keyword">const</span> <span class="keyword">char</span> *name;
+    <span class="keyword">int</span> entry;
+};
+</code></pre><p>snmp4_tcp_list数组就是/proc/net/snmp接口输出的TCP部分内容  </p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>描述</th>
+<th>Linux 3.10实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RtoAlgorithm</td>
+<td>用于计算RTO的算法</td>
+<td>RTO算法遵循RFC2698，对应值为1.</td>
+</tr>
+<tr>
+<td>RtoMin</td>
+<td>限定RTO的最小值</td>
+<td>使用常量HZ/5限定，即200ms</td>
+</tr>
+<tr>
+<td>RtoMax</td>
+<td>限定RTO的最大值</td>
+<td>使用常量120HZ限定，即120s</td>
+</tr>
+<tr>
+<td>MaxConn</td>
+<td>TCP流数量的上限</td>
+<td>并不会在协议栈层限制，默认值为-1</td>
+</tr>
+<tr>
+<td>ActiveOpens</td>
+<td>CLOSE =&gt; SYN-SENT次数<br>可理解为主动建联数</td>
+<td>在tcp_connect()函数中计数<br>相当于SYN包的发送次数(但不包含重传次数)</td>
+</tr>
+<tr>
+<td>PassiveOpens</td>
+<td>LISTEN =&gt; SYN-RECV次数<br>可理解为被动建联数</td>
+<td>实现上则是在三次握手成功后，<br>建立tcp_sock结构体后才加1  <br> 在tcp_create_openreq_child()函数中调用</td>
+</tr>
+<tr>
+<td>AttemptFails</td>
+<td>SYN-SENT =&gt; CLOSE次数 <br> 加上SYN-RECV =&gt; CLOSE次数 <br> 加上SYN-RECV =&gt; LISTEN次数<br> 建联失败的次数</td>
+<td>回CLOSE部分在tcp_done()函数中计数，<br>回LISTEN部分在tcp_check_req()中计数</td>
+</tr>
+<tr>
+<td>EstabResets</td>
+<td>ESTABLISHED =&gt; CLOSE次数<br> 加上CLOSE-WAIT =&gt; CLOSE次数 <br> 这些情况，基本都是reset导致的</td>
+<td>在tcp_set_state()函数中，如果之前的状态是<br>TCP_CLOSE_WAIT或TCP_ESTABLISHED就加1</td>
+</tr>
+<tr>
+<td>CurrEstab</td>
+<td>ESTABLISHED和CLOSE-WAIT<br>状态的TCP流数</td>
+<td>在tcp_set_state()中处理 <br>实现体现的是进入ESTABLISHED之后<br>进入CLOSE之前的TCP流数</td>
+</tr>
+<tr>
+<td>InSegs</td>
+<td>所有收到的TCP包<br>即使是个错误包</td>
+<td>在tcp_v4_rcv()和tcp_v6_rcv()中计数</td>
+</tr>
+<tr>
+<td>OutSegs</td>
+<td>所有发送出去的TCP包<br>包括新数据包、重传数据包<br>、syn包、synack包和reset包</td>
+<td>tcp_v4_send_reset()中统计reset包<br>tcp_v4_send_ack()中统计SYN-RECV和TIME-WAIT状态下发送的ACK包<br>tcp_v6_send_response()中统计ipv6相应数据<br>tcp_make_synack()中统计发送的SYNACK包<br><br>tcp_transmit_skb()中统计所有的其他包</td>
+</tr>
+<tr>
+<td>RetransSegs</td>
+<td>所有重传出去的TCP包</td>
+<td>tcp_v4_rtx_synack()和tcp_v6_rtx_synack()中<br>统计重传的SYNACK包，<br>tcp_retransmit_skb()中统计其他重传包</td>
+</tr>
+<tr>
+<td>InErrs</td>
+<td>所有收到的有问题的TCP包数量<br>比如checksum有问题</td>
+<td>tcp_validate_incoming()中统计seq有问题的包<br>tcp_rcv_established()、tcp_v4_do_rcv()、tcp_v4_rcv()、<br>tcp_v6_do_rcv()、tcp_v6_rcv()中根据checksum来判断出错误包</td>
+</tr>
+<tr>
+<td>OutRsts</td>
+<td>发送的带RST标记的TCP包数量</td>
+<td>在tcp_v4_send_reset()、tcp_send_active_reset()、<br>tcp_v6_send_response()中统计</td>
+</tr>
+<tr>
+<td>InCsumErrors</td>
+<td>checksum有问题的数据包数量</td>
+<td>是3.10相对于2.6.32新增的内容，算是细化InErrs统计</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="snmp4_tcp_list统计结果实例一则">snmp4_tcp_list统计结果实例一则</h3>
+<pre><code><span class="preprocessor"># cat /proc/net/snmp |grep Tcp  /* 适当调整了输个格式，以增加可读性 */</span>
+<span class="label">Tcp:</span> RtoAlgorithm RtoMin RtoMax MaxConn ActiveOpens PassiveOpens AttemptFails
+<span class="label">Tcp:</span> <span class="number">1</span>            <span class="number">200</span>    <span class="number">120000</span> -<span class="number">1</span>      <span class="number">818674494</span>   <span class="number">564859834</span>    <span class="number">83498657</span>
+
+EstabResets CurrEstab InSegs       OutSegs      RetransSegs InErrs   OutRsts   InCsumErrors
+<span class="number">38663863</span>    <span class="number">4790</span>      <span class="number">213696000469</span> <span class="number">253602471635</span> <span class="number">2134386615</span>  <span class="number">18675977</span> <span class="number">171550781</span> <span class="number">125433</span>
+</code></pre><hr>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="http://tools.ietf.org/html/rfc2012" target="_blank" rel="external">RFC 2012:  SNMPv2 Management Information Base for the Transmission Control Protocol using SMIv2</a>  </p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<p>当执行以下命令查看netstat统计信息来源时，发现一个重要的来源是/proc/net/snmp接口的输出信息<br>因此在刨根问底分析源码的过程中，找到了这个接口对应的RFC2012文档。本wiki就记录下<br>相关的解读，以便后续更加透彻的立即netstat的统计信息。  </p>
+<pre><code><span class="preprocessor"># strace -e open netstat -s</span>
+</code></pre><p>注：netstat -s的另一个重要的数据来源是/proc/net/netstat下的信息，但鉴于<br>该接口信息量较大，因此会单独独立整理。<br>]]>
+    
+    </summary>
+    
+      <category term="snmp" scheme="http://perthcharles.github.com/tags/snmp/"/>
+    
+      <category term="tcp" scheme="http://perthcharles.github.com/tags/tcp/"/>
+    
+      <category term="netstat" scheme="http://perthcharles.github.com/tags/netstat/"/>
+    
+      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[阅读周记(第四期)]]></title>
+    <link href="http://perthcharles.github.com/2015/11/03/wiki-weekly-readlist-20151103/"/>
+    <id>http://perthcharles.github.com/2015/11/03/wiki-weekly-readlist-20151103/</id>
+    <published>2015-11-03T01:46:38.000Z</published>
+    <updated>2015-11-06T10:46:33.000Z</updated>
+    <content type="html"><![CDATA[<hr>
+<h2 id="Wireshark网络分析就这么简单"><a href="http://book.douban.com/subject/26268767/" target="_blank" rel="external">Wireshark网络分析就这么简单</a></h2>
+<pre><code>点评：
+    这本书比较短小精悍，断断续续花几个小时就看完了。通过介绍一些使用wireshark分析网络
+    问题的实例，展现了wireshark工具的强大。但可能是由于篇幅所限，难免有些技术
+    细节没有更多的介绍。整体来看，更像是几篇博客的一个小集合，不过作为介绍wireshark
+    的入门图书，还是非常值得一看的。  
+    尤其是要细细体会作者在面对实际问题时使用wireshark工具辅助分析的思路。
+</code></pre><a id="more"></a>          
+
+<hr>
+<h2 id="被人遗忘的Memcached内存注射"><a href="http://drops.wooyun.org/web/8987" target="_blank" rel="external">被人遗忘的Memcached内存注射</a></h2>
+<pre><code>点评:
+    对网络攻击还是纯小白，看看这种简单的实例还是挺有意思的。
+    攻击者确实要脑洞大开才行啊，哈哈
+</code></pre><hr>
+<h2 id="HTTP_archive"><a href="http://httparchive.org/index.php" target="_blank" rel="external">HTTP archive</a></h2>
+<pre><code>点评：
+    这个网站太有意思了，而且<span class="tag">code</span>和data都开源了。
+    作为路过的过客，看看一些图像化的统计数据就很有意思。图也真的是好多。  
+    下面列举一些个人比较感兴趣的，数据是发博文这天看到的统计数据：
+        <span class="tag">a</span>. 网页的平均大小为2191KB，其中最大的是<span class="function">images</span>(1399KB，好看)，
+           其次是<span class="function">scripts</span>(353KB, 动画，本地执行)，第三名是<span class="function">video</span>(186KB，平均后的结果，因为77%的网页没有视频)
+        <span class="tag">b</span>. pages with <span class="function">errors</span>(4xx,5xx)占比36%  -- 不低啊
+        c. HTTPS占比只有23%  -- 绝大多数还是HTTP的啊  
+        d. 网页中图片格式使用最多的是<span class="function">JPG</span>(45%)，其次是<span class="function">PNG</span>(30%)和<span class="function">GIF</span>(23%)
+        e. 网页中使用Google API的占比达到了51%   -- 膜拜
+        f. 84%的网页建立的连接数(connections)超过10  -- 真的不知道是该笑还是哭
+
+    其实这个网站更值得关注的是trend这项和具体网页的相应数据(这个具体有什么用，就不解释了)
+    要不是httparchive这个网页本身访问有点问题(哎)，这个网站绝对是测试某个网站加载速度的最佳工具！  
+</code></pre><hr>
+<h2 id="接着过QCon的PPT">接着过QCon的PPT</h2>
+]]></content>
+    <summary type="html">
+    <![CDATA[<hr>
+<h2 id="Wireshark网络分析就这么简单"><a href="http://book.douban.com/subject/26268767/" target="_blank" rel="external">Wireshark网络分析就这么简单</a></h2>
+<pre><code>点评：
+    这本书比较短小精悍，断断续续花几个小时就看完了。通过介绍一些使用wireshark分析网络
+    问题的实例，展现了wireshark工具的强大。但可能是由于篇幅所限，难免有些技术
+    细节没有更多的介绍。整体来看，更像是几篇博客的一个小集合，不过作为介绍wireshark
+    的入门图书，还是非常值得一看的。  
+    尤其是要细细体会作者在面对实际问题时使用wireshark工具辅助分析的思路。
+</code></pre>]]>
+    
+    </summary>
+    
+      <category term="wireshark" scheme="http://perthcharles.github.com/tags/wireshark/"/>
+    
+      <category term="memcached" scheme="http://perthcharles.github.com/tags/memcached/"/>
+    
+      <category term="http archive" scheme="http://perthcharles.github.com/tags/http-archive/"/>
+    
+      <category term="wiki-阅读周记" scheme="http://perthcharles.github.com/categories/wiki-%E9%98%85%E8%AF%BB%E5%91%A8%E8%AE%B0/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[TCP Tail Loss Probe(TLP)]]></title>
@@ -1810,825 +2589,6 @@ inet_csk_reset_xmit_timer(sk, ICSK_TIME_RETRANS, icsk-&gt;icsk_rto, TCP_RTO_MAX)
       <category term="rfc6298" scheme="http://perthcharles.github.com/tags/rfc6298/"/>
     
       <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[TCP timestamp]]></title>
-    <link href="http://perthcharles.github.com/2015/08/27/timestamp-intro/"/>
-    <id>http://perthcharles.github.com/2015/08/27/timestamp-intro/</id>
-    <published>2015-08-27T13:00:35.000Z</published>
-    <updated>2015-08-30T13:31:14.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>tcp_timestamps是在<a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323</a>中定义的一个TCP选项。<br>这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。<br><a id="more"></a>  </p>
-<hr>
-<h3 id="关于RFC1323">关于RFC1323</h3>
-<p>这是一篇介绍针对High-bandwidth, Long delay链路设计的一些TCP扩展选项的资料。强烈推荐阅读！<br>但这篇RFC其实已经被<a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC7323</a>所取代，不过RFC1323对于了解timestamp相关的基本概念来说还是足够了的。关于RFC7323也会在后续的wiki中详细的介绍。  </p>
-<p>High-bandiwidth, Long delay链路面临的性能问题  </p>
-<pre><code>a. Window Size limit  
-TCP头部仅16字节用于存放receive window，这在高BDP的链路中往往是不够用的  
-解决办法就是引入window scale选项，然后real<span class="emphasis">_rcv_</span>wnd = rcv<span class="emphasis">_wnd_</span>in<span class="emphasis">_tcp_</span>header * (2^win_scale)  
-
-b. Recovery from Losses  
-当BDP很大时，意味着需要更大的cwnd来充分利用带宽。如果发生网络丢包，则对这类链路的影响是巨大的。  
-优化办法(真的不能说解决T_T)就是引入[<span class="link_label">SACK</span>](<span class="link_url">https://tools.ietf.org/html/rfc2018</span>)机制，来为发送方重传提供更加准确的信息。  
-
-c. Round-Trip Measurement  
-TCP作为可靠的传输协议，一个重要的机制就是超时重传。因此如何计算一个准确(合适)的
-RTO对于TCP性能有着重要的影响。而tcp_timestamp选项正是<span class="emphasis">*主要*</span>为此而设计的。  
-</code></pre><p>上一句话强调”主要”是因为tcp_timestamp还被用于PAWS机制，而这一重要用途却时常被忽略。<br>作为一个可靠的传输协议，TCP除了考虑如何应对性能问题，还需要考虑可靠性问题。<br>即使这些问题发生的概率较低，PAWS就是其中一个例子。<br>PAWS(Protect Against Wrapped Sequence numbers)一句话解释如下，后面会详细介绍  </p>
-<pre><code>在高带宽下，TCP序列号可能在较短的时间内就被重复使用(recycle/wrapped)
-就可能导致同一条TCP流在短时间内出现序号一样的两个合法的数据包及其确认包！
-</code></pre><p>补充一句：什么用wrapped形容序列号被重复使用？因为压圈了呀 :)  </p>
-<hr>
-<h3 id="tcp_timestamps_的设计">tcp_timestamps 的设计</h3>
-<p>tcp_timestamps的本质是记录数据包的发送时间。基本的步骤如下  </p>
-<pre><code><span class="bullet">1. </span>发送方在发送数据时，将一个timestamp(表示发送时间)放在包里面
-<span class="bullet">2. </span>接收方在收到数据包后，在对应的ACK包中将收到的timestamp返回给发送方(echo back)
-<span class="bullet">3. </span>发送发收到ACK包后，用当前时刻now - ACK包中的timestamp就能得到准确的RTT
-</code></pre><p>当然实际运用中要考虑到RTT的波动，因此有了后续的(Round-Trip Time Measurement)RTTM机制</p>
-<p>TCP Timestamps Option (TSopt)具体设计如下  </p>
-<pre><code>Kind: 8             // 标记唯一的选项类型，比如window scale是3
-<span class="header">Length: 10 bytes    // 标记Timestamps选项的字节数
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span>
-<span class="header">| Kind=8 | Length=10 | TS Value (TSval) | TS ECho Reply (TSecr) |
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span>
-<span class="code">    1          1             4                       4</span>
-</code></pre><p>timestamps一个双向的选项，当一方不开启时，两方都将停用timestamps。<br>比如client端发送的SYN包中带有timestamp选项，但server端并没有开启该选项。<br>则回复的SYN-ACK将不带timestamp选项，同时client后续回复的ACK也不会带有timestamp选项。<br>当然，如果client发送的SYN包中就不带timestamp，双向都将停用timestamp。  </p>
-<hr>
-<h3 id="为什么需要timestamp">为什么需要timestamp</h3>
-<p>如果没有timestamp，RTT的计算会怎样？  </p>
-<pre><code><span class="number">1</span>. <span class="constant">TCP层</span>在发送出一个<span class="constant">SKB时</span>，使用skb-&gt;<span class="keyword">when</span>记录发送出去的时间
-<span class="number">2</span>. <span class="constant">TCP层</span>在收到<span class="constant">SKB数</span>据包的确认时，使用now - skb-&gt;<span class="keyword">when</span>来计算<span class="constant">RTT</span>
-</code></pre><p>但上面的机制在丢包发生时会有问题，比如</p>
-<pre><code><span class="bullet">1. </span>TCP层第一次发送SKB的时间是send<span class="emphasis">_time1, TCP层重传一个数据包的时间是send_</span>time2
-<span class="bullet">2. </span>当TCP层收到SKB的确认包的时间是recv_time
-</code></pre><p>但是RTT应该是 (recv_time - send_time1)呢，还是(recv_time - send_time2)呢？  </p>
-<p>以上两种方式都不可取！因为无法判断出recv_time对应的ACK是确认第一次数据包的发送还是确认<br>重传数据包。因此TCP协议栈只能选择非重传数据包进行RTT采样。但是当出现严重丢包(比如整个窗口全部丢失)时，就完全没有数据包可以用于RTT采样。这样后续计算SRTT和RTO就会出现较大的偏差。  </p>
-<p>timestamp选项很好的解决了上述问题，因为ACK包里面带的TSecr值，一定是触发这个ACK的数据包在发送端发送的时间。不管数据包是否重传都能准确的计算RTT(前提是TSecr遵循RTTM中的计算原则)。  </p>
-<p>当然timestamp不仅解决了RTT计算的问题，还很好的为PAWS机制提供的信息依据。  </p>
-<hr>
-<h3 id="开启timestamp会有什么负面影响?">开启timestamp会有什么负面影响?</h3>
-<p>这部分内容以后会根据更多的实际经验来补充。目前列举一些找到的分析。  </p>
-<pre><code><span class="number">1.</span> <span class="number">10</span>字节的TCP header开销
-
-<span class="number">2.</span> The TCP Timestamp when enabled will allow you <span class="built_in">to</span> guess <span class="operator">the</span> uptime
-   <span class="operator">of</span> <span class="operator">a</span> target <span class="keyword">system</span> (nmap v -O . Knowing how <span class="keyword">long</span> <span class="operator">a</span> <span class="keyword">system</span> has been
-   up will enable you <span class="built_in">to</span> determine whether security patches that <span class="built_in">require</span>
-   reboot has been applied <span class="operator">or</span> <span class="operator">not</span>.
-        引自：<span class="keyword">http</span>://stackoverflow.com/questions/<span class="number">7880383</span>/what-benefit-is-conferred-<span class="keyword">by</span>-tcp-timestamp
-        注：如果通过热补丁修复bug，是否就能够避免这个问题？  
-</code></pre><hr>
-<h3 id="什么是RTTM">什么是RTTM</h3>
-<p>RTTM规定了一些使用TSecr计算RTT的原则，具体如下<br>(英文水平有限，为保持原意就使用RFC中的原话了)  </p>
-<pre><code><span class="operator">a</span>.  A TSecr <span class="built_in">value</span> received <span class="operator">in</span> <span class="operator">a</span> segment is used <span class="built_in">to</span> update <span class="operator">the</span>
-    averaged RTT measurement only <span class="keyword">if</span> <span class="operator">the</span> segment acknowledges
-    some <span class="built_in">new</span> data
-b.  The data-sender TCP must measure <span class="operator">the</span> <span class="keyword">effective</span> RTT, including <span class="operator">the</span> additional
-    <span class="built_in">time</span> due <span class="built_in">to</span> delayed ACKs. Thus, when delayed ACKs are <span class="operator">in</span> use, <span class="operator">the</span> receiver should
-    reply <span class="operator">with</span> <span class="operator">the</span> TSval field <span class="built_in">from</span> <span class="operator">the</span> earliest
-c.  An ACK <span class="keyword">for</span> <span class="operator">an</span> out-<span class="operator">of</span>-order segment should therefore contain <span class="operator">the</span> 
-    timestamp <span class="built_in">from</span> <span class="operator">the</span> most recent segment that advanced <span class="operator">the</span> window
-d.  The timestamp <span class="built_in">from</span> <span class="operator">the</span> latest segment (which filled <span class="operator">the</span> hole) must be echoed
-        在ACK被重传的数据时，应该使用重传数据包中的TSval进行回复
-</code></pre><p>如果对以上的特殊情况有疑问，还请直接去看RFC，里面有example解释。  </p>
-<p>最后，实际上计算RTO除了以上使用TSecr的原则外，还有一些更复杂的计算方法<a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC 7323</a>。<br>比如对于每一个RTT采样R，  </p>
-<pre><code><span class="constant">RTTVAR</span> = (<span class="number">1</span> - beta) * RTTVAR + beta * |SRTT - R|
-<span class="constant">SRTT</span> = (<span class="number">1</span> - alpha) * SRTT + alpha * R
-</code></pre><hr>
-<h3 id="什么是PAWS">什么是PAWS</h3>
-<p>PAWS — Protect Againest Wrapped Sequence numbers<br>目的是解决在高带宽下，TCP序号可能被重复使用而带来的问题。  </p>
-<p>PAWS同样依赖于timestamp，并且假设在一个TCP流中，<em>按序</em>收到的所有TCP包的timestamp值<br>都是线性递增的。而在正常情况下，每条TCP流<em>按序</em>发送的数据包所带的timestamp值<br>也确实是线性增加的。<br>至于为什么要强调<em>按序</em>，请先自行思考。:)  </p>
-<p>首先给出几个变量的定义，之后具体介绍PAWS的工作过程  </p>
-<pre><code>Per-Connection State Variables
-<span class="label">    TS.Recent:</span>       Latest received Timestamp
-<span class="label">    Last.ACK.sent:</span>   Last ACK field sent
-
-<span class="preprocessor">Option</span> Fields <span class="keyword">in</span> Current <span class="built_in">Segment</span>
-<span class="label">    SEG.TSval:</span>   TSval field from TSopt <span class="keyword">in</span> current <span class="built_in">segment</span>.
-<span class="label">    SEG.TSecr:</span>   TSecr field from TSopt <span class="keyword">in</span> current <span class="built_in">segment</span>.
-</code></pre><p>TS.Recent存放着<em>按序</em>达到的所有TCP数据包的最晚的一个时间戳，即只有在<br><code>SEG.SEQ &lt;= Last.ACK.sent &lt; SEG.SEG + SEG.LEN</code>(有新的数据被按序确认了)时，<br>才会去更新TS.Recent的值。  </p>
-<pre><code>假设三个数据包的*第一次*发送时间分别是<span class="literal">A</span>，B和C(<span class="literal">A</span> &lt; B &lt; C)，但<span class="literal">A</span>和C含有相同的序列号。
-而<span class="literal">A</span>数据包由于某种原因，在阻塞在了网络中，因此发送方进行了重传，重传时间为A2
-
-PAWS要解决的主要问题就是：
-    当接收端在接收到A2后，又接着确认到了数据包B，下一个想接收的数据是数据包C
-    此时如果收到了数据包<span class="literal">A</span>(<span class="literal">A</span>从阻塞中恢复过来了，但并未真的丢失)，
-    由于<span class="literal">A</span>与C的序列号是相同的。如果没有别的保护措施就会出现数据紊乱，没有做到可靠传输
-
-PAWS的做法就是，如果收到的一个TCP数据包的timestamp值小于TS.Recnt，则会丢弃该数据包。  
-因此数据包<span class="literal">A</span>到达接收方后，接收方的TS.Recent应该是数据包B中的timestamp
-而<span class="literal">A</span> &lt; B，故<span class="literal">A</span>包就会被丢弃。而真正有效的数据C到达接收后，由于B &lt; C，因此能被正常接收
-</code></pre><p>PAWS的更多细节  </p>
-<pre><code><span class="number">1.</span> It is recommended that RST segments NOT carry timestamps, <span class="operator">and</span> that
-RST segments be acceptable regardless <span class="operator">of</span> their timestamp.
-
-<span class="number">2.</span> PAWS is defined strictly <span class="operator">within</span> <span class="operator">a</span> single connection; <span class="operator">the</span> <span class="keyword">last</span> timestamp is
-TS.Recent is kept <span class="operator">in</span> <span class="operator">the</span> connection control block, <span class="operator">and</span>
-discarded when <span class="operator">a</span> connection is closed.
-
-<span class="number">3.</span> An additional mechanism could be added <span class="built_in">to</span> <span class="operator">the</span> TCP, <span class="operator">a</span> per-host
-cache <span class="operator">of</span> <span class="operator">the</span> <span class="keyword">last</span> timestamp received <span class="built_in">from</span> <span class="keyword">any</span> connection.
-This <span class="built_in">value</span> could <span class="keyword">then</span> be used <span class="operator">in</span> <span class="operator">the</span> PAWS mechanism <span class="built_in">to</span> reject
-old duplicate segments <span class="built_in">from</span> earlier incarnations <span class="operator">of</span> <span class="operator">the</span>
-connection, <span class="keyword">if</span> <span class="operator">the</span> timestamp clock can be guaranteed <span class="built_in">to</span> have
-ticked <span class="keyword">at</span> least once since <span class="operator">the</span> old connection was <span class="built_in">open</span>.
-</code></pre><p>从第三点可以看到，如果针对per-host的使用PAWS中的机制，则会解决TIME-WAIT中考虑的上一个流<br>的数据包在下一条流中被当做有效数据包的情况，这样就没有必要等待2*MSL来结束TIME-WAIT了。<br>只要等待足够的RTO，解决好需要重传最后一个ACK的情况就可以了。<br>因此Linux就实现了这样一种机制：</p>
-<pre><code>当timestamp和tw_recycle两个选项同时开启的情况下，开启per-host的PAWS机制。
-从而能快速回收处于<span class="typename">TIME</span>-<span class="keyword">WAIT</span>状态的TCP流。
-</code></pre><p>但这样真的就能完美的解决令无数人头疼的TIME-WAIT吗？答案是否定的！<br>因为公网中存在太多的NAT设置，当使用per-host的PAWS机制时，是无法保证timestamp是线性递增这一假设的。因为使用同一个NAT地址的两个真实的机器，他们的timestamp是不能保证同步的(其实一致也没有用，NAT就是per-host PAWS机制的死敌)。<br>关于这个问题也会在以后的一篇介绍TIME-WAIT的wiki中进一步详细介绍。  </p>
-<hr>
-<h3 id="总结">总结</h3>
-<pre><code>timestamp为TCP/IP协议栈提供了两个功能：  
-    <span class="operator">a</span>. 更加准确的RTT测量数据，尤其是有丢包时  <span class="comment">-- RTTM  </span>
-    b. 保证了在极端情况下，TCP的可靠性        <span class="comment">-- PAWS  </span>
-</code></pre><hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt" target="_blank" rel="external">Documentation: ip-sysctl.txt</a><br><a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323: TCP Extensions for High Performance</a><br><a href="http://tools.ietf.org/html/rfc7323" target="_blank" rel="external">RFC 7323: TCP Extensions for High Performance</a><br><a href="https://tools.ietf.org/html/rfc2018" target="_blank" rel="external">SACK</a><br><a href="http://stackoverflow.com/questions/7880383/what-benefit-is-conferred-by-tcp-timestamp" target="_blank" rel="external">What benefit is conferred by TCP timestamp?</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>tcp_timestamps是在<a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323</a>中定义的一个TCP选项。<br>这篇wiki介绍一下timestamps的设计目的和相关原理，尤其强调一些比较tricky的地方。<br>]]>
-    
-    </summary>
-    
-      <category term="timestamp" scheme="http://perthcharles.github.com/tags/timestamp/"/>
-    
-      <category term="RTTM" scheme="http://perthcharles.github.com/tags/RTTM/"/>
-    
-      <category term="PAWS" scheme="http://perthcharles.github.com/tags/PAWS/"/>
-    
-      <category term="wiki-network" scheme="http://perthcharles.github.com/categories/wiki-network/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[一个NAT问题引起的思考]]></title>
-    <link href="http://perthcharles.github.com/2015/08/27/timestamp-NAT/"/>
-    <id>http://perthcharles.github.com/2015/08/27/timestamp-NAT/</id>
-    <published>2015-08-27T12:45:17.000Z</published>
-    <updated>2015-08-31T08:11:07.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<h3 id="问题">问题</h3>
-<p>当服务器同时开启tcp_timestamps和tcp_tw_recycle选项时，会导致客户反馈连接成功率降低的情况。<br>but why ???<br><a id="more"></a>  </p>
-<hr>
-<h3 id="公网NAT的存在">公网NAT的存在</h3>
-<p>NAT的全称是：<a href="https://en.wikipedia.org/wiki/Network_address_translation" target="_blank" rel="external">Network Address Translation</a>。<br>一个具体的例子就是家用的局域网络。<br>当使用一台无线路由器进行上网拨号后，其他的终端设备只要连接进入该无线路由器的WiFi<br>网络内就可以访问外网了。此时正是NAT在发挥作用。<br>每一台终端设备在接入无线路由器后，只是获得一个局域网IP地址，而当你在百度输入我的IP的时候<br>你看到的IP地址则是你无线路由器的公网IP地址。家用无线路由器完成的一个主要工作正是将终端<br>的局域网IP地址进行NAT转换为公网IP地址。  </p>
-<p>从上面这个简单的例子可以看到NAT在真实的互联网中是普遍存在的，比如你所在学校，单位都会一定程度上的使用NAT机制。  </p>
-<hr>
-<h3 id="Per-host_PAWS机制">Per-host PAWS机制</h3>
-<p>在<a href="http://perthcharles.github.io/2015/08/27/timestamp-intro/" target="_blank" rel="external">这篇介绍TCP timestamp</a><br>的文章中提到了一种针对per-host的PAWS机制。这种机制要求所有来个同一个host IP的TCP数据包的<br>timestamp值是递增的。当收到一个timestamp值，小于服务端记录的对应值后，则会认为这是一个过期的数据包，然后会将其丢弃。  </p>
-<hr>
-<h3 id="解答问题">解答问题</h3>
-<p>至此就不难解释为什么在同时开启tcp_timestamp和tcp_tw_recycle时，会遇到客户反馈连接成功率降低的情况了，基本的逻辑如下：  </p>
-<pre><code><span class="bullet">1. </span>同时开启tcp<span class="emphasis">_timestamp和tcp_</span>tw_recycle会启用TCP/IP协议栈的per-host的PAWS机制
-<span class="bullet">2. </span>经过同一NAT转换后的来自不同真实client的数据流，在服务端看来是于同一host打交道
-<span class="bullet">3. </span>虽然经过同一NAT转化，但由于不同真实client会携带各自的timestamp值
-因而无法保证整过NAT转化后的数据包携带的timestamp值严格递增
-<span class="bullet">4. </span>当服务器的per-host PAWS机制被触发后，会丢弃timestamp值不符合递增条件的数据包
-</code></pre><p>解决办法就是不建议同时开启tcp_timestamp和tcp_tw_recycle。<br>那到底怎么配置？  </p>
-<pre><code>开启tcp_timestamp，但不要开tcp_tw_recycle  
-开启tcp_timestamp，但不要开tcp_tw_recycle  
-开启tcp_timestamp，但不要开tcp_tw_recycle  
-</code></pre><p>因为timestamp有更多其他的作用，而tcp_tw_recycle本身就是依赖于timestamp的。在不开启timestamp的情况下，单独开启tcp_tw_recycle并没有什么用<br>其实上述强调三遍的配置，正是目前Linux的默认配置。所以说啊，不真正搞懂内核的参数选项，就不要盲目修改。尤其是在官方文档对tcp_tw_recycle已经强调了不要盲目修改的情况下  </p>
-<pre><code>那为什么有人推荐同时开启tcp_timestamp和tcp_tw_recycle呢？
-因为同时开启后，能够更快的回收<span class="typename">TIME</span>-<span class="keyword">WAIT</span>状态的socket    &lt;== 这也正是PAWS从per-conn在配置后扩展到per-host的目的  
-只可惜逻辑是对的，但是没有考虑到公网广泛存在的NAT机制可能带来的问题。  
-</code></pre><hr>
-<h3 id="源码细节分析">源码细节分析</h3>
-<p>这部分是linux 3.10源码部分的分析，算是对于以上理论分析提供的依据，不关系细节的话可以忽略本节  </p>
-<pre><code><span class="comment">// tcp_v4_conn_request(), net/ipv4/tcp_ipv4.c line 1551</span>
-<span class="keyword">if</span> (tmp_opt.saw_tstamp &amp;&amp;      <span class="comment">// 是否见到过tcp_timestamp选项</span>
-    tcp_death_row.sysctl_tw_recycle &amp;&amp;   <span class="comment">// 接着判断是否开启recycle</span>
-    (dst = inet_csk_route_req(sk, &amp;fl4, req)) != NULL &amp;&amp;    <span class="comment">// 最终判断saddr是否有相关记录在route表中</span>
-    fl4.daddr == saffr) {
-    <span class="keyword">if</span> (!tcp_peer_is_proven(req, dst, <span class="keyword">true</span>)) {  <span class="comment">// 如果这个建连请求不能被proven，则会被丢弃</span>
-        NET_INC_STATS_BH(sock_net(sk), LINUX_MIB_PAWSPASSIVEREJECTED);
-        goto drop_and_release;
-    }
-}
-
-<span class="comment">// tcp_peer_is_proven() net/ipv4/tcp_metrics.c line 536</span>
-<span class="comment">// 负责判断接收到的request请求的timestamp是否符合要求，最重要的一段代码如下</span>
-<span class="keyword">if</span> (tm &amp;&amp;
-    <span class="comment">// 判断保存tcpm_ts_stamp值是否有效，TCP_PAWS_MSL=60</span>
-    (<span class="keyword">u32</span>)get_seconds() - tm-&gt;tcpm_ts_stamp &lt; TCP_PAWS_MSL &amp;&amp;
-    <span class="comment">// 如果记录值大于当前收到的req中的timestamp值，则丢弃。TCP_PAWS_WINDOW=1</span>
-    (<span class="keyword">u32</span>)(tm-&gt;tcpm_ts - req-&gt;ts_recent) &gt; TCP_PAWS_WINDOW) {
-        ret = <span class="keyword">false</span>;
-}
-</code></pre><p>至此可以看到：在tcp_timestamp和tcp_tw_recycle同时开启时，会触发Linux的per-host的PAWS机制  </p>
-<p>接下来分析开启tcp_tw_recycle和tcp_timestamp时，是怎么快速回收TIME-WAIT的  </p>
-<pre><code>// tcp_time_wait() net/ipv4/tcp_minisocks.c  line <span class="number">267</span>
-<span class="keyword">...</span>
-// ts_recent_stamp依赖于timestamp选项的开启，可进tcp_minisocks.c验证  
-<span class="keyword">if</span> (tcp_death_row.sysctl_tw_recycle &amp;&amp; tp-&gt;rx_opt.ts_recent_stamp)
-    recycle_ok = tcp_remember_stamp(s);
-<span class="keyword">...</span>
-// 如果能够recycle，则使用更短的rto作为timeout，从而更快回收TIME-WAIT
-<span class="keyword">if</span> (timeo &lt; rto)
-    timeo = rto;
-<span class="keyword">if</span> (recycle_ok) {
-    tw-&gt;tw_timeout = rto;
-} <span class="keyword">else</span> {
-    tw-&gt;tw_timeout = TCP_TIMEWAIT_LEN;
-    <span class="keyword">if</span> (state == TCP_TIME_WAIT) 
-        timeo = TCP_TIMEWAIT_LEN;    
-}
-inet_twsh_schedule(tw, &amp;tcp_death_row, timeo, TCP_TIMEWAIT_LEN);
-
-// tcp_timewait_state_process() net/ipv4/tcp_minisocks.c line <span class="number">94</span>
-// 另一条进入time-wait的路线有类似的代码
-<span class="keyword">if</span> (tcp_death_row.sysctl_tw_recycle &amp;&amp;
-    tcptw-&gt;tw_ts_recent_stamp &amp;&amp;
-    tcp_tw_remember_stamp(tw))
-        inet_twsk_schedule(tw, &amp;tcp_death_row, tw-&gt;tw_timeout,
-                           TCP_TIMEWAIT_LEN);
-<span class="keyword">else</span>
-        inet_twsk_schedule(tw, &amp;tcp_death_row, TCP_TIMEWAIT_LEN,
-                           TCP_TIMEWAIT_LEN);
-</code></pre><hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt" target="_blank" rel="external">Documentation: ip-sysctl.txt</a><br><a href="http://tools.ietf.org/html/rfc1323" target="_blank" rel="external">RFC 1323:  TCP Extensions for High Performance</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<h3 id="问题">问题</h3>
-<p>当服务器同时开启tcp_timestamps和tcp_tw_recycle选项时，会导致客户反馈连接成功率降低的情况。<br>but why ???<br>]]>
-    
-    </summary>
-    
-      <category term="tcp" scheme="http://perthcharles.github.com/tags/tcp/"/>
-    
-      <category term="NAT" scheme="http://perthcharles.github.com/tags/NAT/"/>
-    
-      <category term="time_wait" scheme="http://perthcharles.github.com/tags/time-wait/"/>
-    
-      <category term="Networking" scheme="http://perthcharles.github.com/categories/Networking/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[GIT系列五：小知识点及FAQ]]></title>
-    <link href="http://perthcharles.github.com/2015/08/25/git-faq/"/>
-    <id>http://perthcharles.github.com/2015/08/25/git-faq/</id>
-    <published>2015-08-25T07:38:40.000Z</published>
-    <updated>2015-08-31T14:20:20.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>git作为一个强大的工具，也就意味着它也同样的复杂。<br>长期使用下来难免会遇到很多奇奇怪怪的问题和一些小的知识点，<br>这个帖子就用来记录一下那些年某人踩过的的坑T_T  </p>
-<p>这篇会慢慢更新，当某个点内容较多后，会独立出去成为一篇独立的wiki<br><a id="more"></a>  </p>
-<hr>
-<h3 id="小知识点">小知识点</h3>
-<hr>
-<h4 id="Fast_forward_merge">Fast forward merge</h4>
-<p>直接上图例，不多解释  </p>
-<pre><code>            <span class="comment">master</span>
-               <span class="comment">↓</span>
-<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span>        <span class="comment">issue03</span>
-                <span class="comment">\</span>          <span class="comment">↓</span>
-                 <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span>
-
-                            <span class="comment">master</span>
-                              <span class="comment">↓</span>
-<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span>
-                              <span class="comment">↑</span>
-                            <span class="comment">issue03</span>
-</code></pre><p>以上就是一个fast forward merge，那什么不是fast forward merge呢？请看下图  </p>
-<pre><code>            <span class="comment">master</span>
-               <span class="comment">↓</span>
-<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span>        <span class="comment">issue03</span>
-           <span class="comment">\</span>               <span class="comment">↓</span>
-            <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">H</span>
-
-                              <span class="comment">master</span>
-                              <span class="comment">↓</span>
-<span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">D</span> <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">I</span>
-           <span class="comment">\</span>                <span class="comment">/</span> <span class="comment">↑</span>
-            <span class="comment">E</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">F</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">G</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">H</span>  <span class="comment">issue03</span>
-</code></pre><h4 id="Three-way_merge">Three-way merge</h4>
-<p>two-way merge只用两个档案进行合并(svn默认是 two-way merge)<br>three-way merge 处理要合并的两个档案，还会奖赏两个档案的共同祖先。如此可大大减少人为处理conflict的情况。<br>为什么能减少人为处理conflict的情况呢？一图胜千言。<br><img src="/resources/three-way-merge.png" alt="Three-way merge">  </p>
-<h4 id="实用alias">实用alias</h4>
-<pre><code>// 每个commit显示一行，显示图形化的commit history，显示简短的SHA1
-alias <span class="keyword">log</span>=<span class="string">"git log --oneline --graph --decorate --color=always"</span>
-// 显示所有branch的commit history
-alias logg=<span class="string">"git log --graph --all --format=format:'<span class="variable">%C</span>(bold blue)<span class="variable">%h</span><span class="variable">%C</span>(reset) - <span class="variable">%C</span>(bold green)(<span class="variable">%ar</span>)<span class="variable">%C</span>(reset) <span class="variable">%C</span>(white)<span class="variable">%s</span><span class="variable">%C</span>(reset) <span class="variable">%C</span>(bold white)—     <span class="variable">%an</span><span class="variable">%C</span>(reset)<span class="variable">%C</span>(bold yellow)<span class="variable">%d</span><span class="variable">%C</span>(reset)' --abbrev-commit --date=relative"</span>
-</code></pre><h4 id="坚持新开branch进行开发需要遵循的原则">坚持新开branch进行开发需要遵循的原则</h4>
-<pre><code>1. 不要直接在任何已经与远端建立track关系的branch中进行修改  
-    目的：便于维护整洁的<span class="operator"><span class="keyword">commit</span> history
-
-<span class="number">2.</span> feature branch的周期越短越好，不要同时开太多feature branch
-
-<span class="number">3.</span> 在push之前先将本地分支与远端分支同步，推荐使用rebase的方式<span class="keyword">merge</span>
-
-<span class="number">4.</span> 只有在需要push时（如，完成一个功能开发），才将开发分支与主干分支进行合并  
-    目的：便于识别<span class="keyword">commit</span>是否push到远端，便于维护整洁的主干<span class="keyword">commit</span> history
-
-<span class="number">5.</span> 分支命名规则
-    与远端同步的分支，名字与远端分支一样。如dev -&gt; origin/dev
-    进行开发的分支命名不严格限制，但不得与上一类分支重名。
-        通过git <span class="keyword">log</span> <span class="comment">--graph即可看出开发分支与主干分支的关系</span></span>
-</code></pre><hr>
-<h3 id="FAQ">FAQ</h3>
-<hr>
-<h4 id="如何在git中添加空文件夹">如何在git中添加空文件夹</h4>
-<p>git木人的情况下空目录是不会commit出去的，这在某些情况下会遇到问题（比如Rails如果少了log或tmp目录会不能启动）。<br>解决办法就是在空目录下面touch一个空的档案，一般是.gitkeep。  </p>
-<h4 id="为什么说懂图论对理解git很有帮助">为什么说懂图论对理解git很有帮助</h4>
-<p>理解Git最好的办法，就是用图论中的节点和指针来思考，所有的git的指令操作，<br>都是操作这些节点，新增、修改、删除、变更。<br>首先Git对于所有的内容管理可以理解为一张有向无环图，<a href="https://codewords.recurse.com/issues/two/git-from-the-inside-out" target="_blank" rel="external">这是一篇很好解释文章</a>。<br>同时就自身体会而言，rebase中的base可以理解为两个branch的最小公共祖先。<br>而Fast forward merge可以理解为两个branch合并时，有一个branch是指向这个<br>base节点的。  </p>
-<h4 id="如何撤销merge操作">如何撤销merge操作</h4>
-<p>如果是刚刚merge完，则可以直接<code>git reset --hard HEAD~</code><br>如果已经添加了很多commit后，才想起来撤销merge，那就该好好反省了。  </p>
-<h4 id="如何合理的操作处理分支">如何合理的操作处理分支</h4>
-<pre><code><span class="comment">// push 操作</span>
-<span class="array"># git push origin b</span>1:rb1    <span class="comment">// 将本地的b1分支推送到远端分支rb1，当前分支不需要一定是b1</span>
-<span class="array"># git push origin b</span>1        <span class="comment">// 将本地的b1分支推送到远端分支b1，如果远端不存在b1则新建一个</span>
-<span class="array"># git push </span>-u origin b1     <span class="comment">// 第一次push时指定好track，之后就可以直接git push了</span>
-<span class="array"># git push                  </span><span class="comment">// 如果是在一个已经建立了track关系的local branch，则可直接push</span>
-<span class="array"># git push origin </span>:rb1      <span class="comment">// 删除远端分支rb1</span>
-
-<span class="comment">// fetch 操作</span>
-<span class="array"># git fetch </span>-a                  <span class="comment">// 获取远端所有分支</span>
-<span class="array"># git fetch origin b</span>2           <span class="comment">// 获取远端分支b2</span>
-<span class="array"># git branch b</span>2 origin/b2       <span class="comment">// 随后创建一个本地的b2分支与远端分支建立联系，最好名字一样，否则push时要手动指定</span>
-<span class="array"># git checkout </span>--track -b b2 origin/b2  <span class="comment">// 或者直接checkout到一个新建的b2分支   </span>
-
-<span class="comment">// merge 操作</span>
-<span class="array"># git cherry</span>-pick <span class="number">332</span>sd3f3      <span class="comment">// 仅将选定的commit apply/patch进入当前分支，相当于首先将332sd3fs打包成一个git格式的patch，然后apply进来。很干净的一种用法</span>
-<span class="array"># git merge b</span>1                  <span class="comment">// 将b1分支与current分支合并</span>
-
-<span class="comment">// pull 操作 = fetch + merge</span>
-<span class="array"># git pull origin b</span>10   <span class="comment">// 将远端的b10分支与当前分支进行合并，等价于下面两句</span>
-    <span class="array"># git fetch origin b</span>10
-    <span class="array"># git merge origin</span>/b10
-<span class="array"># git pull </span>--rebase origin b10  <span class="comment">// 推荐使用rebase方式合并：本地分支及它track的远端分支</span>
-
-<span class="comment">// remote 操作</span>
-<span class="array"># git remote prune origin   </span><span class="comment">// 删除不存在远端仓库的分支</span>
-</code></pre><h4 id="如何为一个新建的git添加remote">如何为一个新建的git添加remote</h4>
-<pre><code><span class="comment">// 添加remote的仓库地址，origin是名字</span>
-<span class="array"># git remote add origin git</span>:<span class="comment">//example.com/a.git    </span>
-</code></pre><h4 id="如何恢复某个被修改过的文件">如何恢复某个被修改过的文件</h4>
-<pre><code><span class="preprocessor"># git checkout file-name    </span>
-</code></pre><h4 id="如何整理git_working_area文件">如何整理git working area文件</h4>
-<pre><code><span class="array"># git clean </span>-f          <span class="comment">// 删除未被git管理的文件</span>
-<span class="array"># git clean </span>-f -d       <span class="comment">// 同时将未被git管理的目录也删除</span>
-<span class="array"># git clean </span>-f -X       <span class="comment">// 仅删除被.gitignore忽略的文件</span>
-<span class="array"># git clean </span>-f -x       <span class="comment">// 同时删除被.gitignore忽略的文件和未被管理的文件</span>
-<span class="array"># git clean </span>-f -x -d    <span class="comment">// 删除所有未被git管理的文件和目录</span>
-</code></pre><h4 id="如何创建一个独立的分支？">如何创建一个独立的分支？</h4>
-<pre><code><span class="array"># git checkout </span>--orphan newbranch  <span class="comment">// git v1.7.2</span>
-</code></pre><h4 id="有哪些经典的git_workflow可以参考学习？">有哪些经典的git workflow可以参考学习？</h4>
-<p><a href="https://guides.github.com/introduction/flow/index.html" target="_blank" rel="external">1. Github Flow</a><br><a href="http://nvie.com/posts/a-successful-git-branching-model/" target="_blank" rel="external">2. GitFlow</a>  </p>
-<hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://liujin.me/blog/2015/05/25/Git-%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" target="_blank" rel="external">Git 常用命令</a><br><a href="http://www.slideshare.net/epatey/perforce-convergence-vs-divergence/10" target="_blank" rel="external">The essence of a three-way merge</a><br><a href="https://ihower.tw/blog/archives/2620" target="_blank" rel="external">開branch 分支和操作遠端repo</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>git作为一个强大的工具，也就意味着它也同样的复杂。<br>长期使用下来难免会遇到很多奇奇怪怪的问题和一些小的知识点，<br>这个帖子就用来记录一下那些年某人踩过的的坑T_T  </p>
-<p>这篇会慢慢更新，当某个点内容较多后，会独立出去成为一篇独立的wiki<br>]]>
-    
-    </summary>
-    
-      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
-    
-      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[GIT系列四：在push之前对本地commit进行整理]]></title>
-    <link href="http://perthcharles.github.com/2015/08/25/clean-commit-log-before-push/"/>
-    <id>http://perthcharles.github.com/2015/08/25/clean-commit-log-before-push/</id>
-    <published>2015-08-25T03:58:42.000Z</published>
-    <updated>2015-08-25T08:12:34.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>在系列三中描述了commit消息的规范，但在实际操作中很难时刻做到那么严格的<br>控制，尤其是在本地做一些实验性的工作的时候。<br>但是如果需要push到远端去，则就必须保证commit消息的规范和commit的独立性。<br>因此就有了这样一个需求：在执行git push之前对本地的commit日志进行整理。<br><a id="more"></a>  </p>
-<hr>
-<h3 id="一个好习惯">一个好习惯</h3>
-<p>本文讨论的一个重要前提是在执行git push之前，对于在本地还未提交commit进行整理！！！<br>本文讨论的一个重要前提是在执行git push之前，对于在本地还未提交commit进行整理！！！<br>本文讨论的一个重要前提是在执行git push之前，对于在本地还未提交commit进行整理！！！<br>重要的事情说三遍。<br>那为什么在git push之后不宜使用这些命令呢？<br>主要是因为本文设计到的命令都会重新提交commit，尽管有commit msg有时候不会变，但commit对应的SHA1哈希值会被改变。如果是已经push了的commit被改变了SHA1，则会造成比较严重的混乱。    </p>
-<p>所以这里推荐一个好习惯  </p>
-<pre><code>保持重要分支(如master)与远端的同步，开发一定要新开分支。  
-</code></pre><p>这样一来就能够快速的识别那些属于还未push的本地commit。<br>接下来就详细介绍整理本地commit的几个重要命令：amemd, reset和rebase  </p>
-<hr>
-<h3 id="amend">amend</h3>
-<p>amend会使用一个新的commit去替换最近的一次commit。<br>amend适用于：<br>a. 在提交commit后，才发现漏掉了某些修改，文件的情况<br>b. 修正一些typo  </p>
-<pre><code><span class="comment">// 先进行一些修改，然后使用--amend选项重新提交一次commit</span>
-<span class="array"># git commit </span>-a --amend             <span class="comment">// 弹出编辑窗口，重新提交新commit</span>
-<span class="array"># git commit </span>-a --amend -C HEAD     <span class="comment">// 直接上一个commit消息</span>
-</code></pre><hr>
-<h3 id="reset">reset</h3>
-<p>amend仅能替换最近一次commit，功能不够强大。比如想要快速的将working tree的修改和最近的两次commit合并得到一个新的commit则需要用到reset啦。<br>reset适用于：<br>a. 需要修改多个commit的情况，但也受限于修改从HEAD~开始连续的多个commit<br>b. 完全的删除前几个commit  </p>
-<pre><code><span class="array"># git reset </span>--soft HEAD~<span class="number">2</span>       <span class="comment">// 删掉前两个commit，并保留文件更改</span>
-<span class="array"># git reset </span>--hard HEAD~<span class="number">2</span>       <span class="comment">// 删掉前两个commit，并删除文件更改</span>
-</code></pre><p>另外，万一如果需要修改的commit已经push出去了（是否应该避免？），又最好不要reset，那么该怎么做呢？<br>那就需要使用revert命令，revert命令会接着重新提交一个新的commit，用以回滚上一个commit的修改。有点负负得正的感觉。  </p>
-<hr>
-<h3 id="rebase">rebase</h3>
-<p>reset受限于只能将从HEAD~开始的连续多个commit删除或(人工)合并。也还是不够强大。比如想要合并HEAD~2到HEAD~3的commit，删除HEAD~4的commit，则需要使用到rebase命令。<br>那到底什么是rebase呢？  </p>
-<pre><code>rebase的核心含义就是重新设定基准！  
-</code></pre><p>什么意思呢？<br>git对于commit的管理可以理解为一个有向无环图，你的某个branch一定是从另一个分支的某个节点开始分离出来的。比如下面情况下的dev分支的base就可以理解是B节点。<br>更专业的说法应该是：B是E(dev)和C(master)的最小公共祖先。    </p>
-<pre><code><span class="comment">A</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">B</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">C</span>   &lt;<span class="comment">=</span> <span class="comment">master</span>
-      <span class="comment">\</span>
-       <span class="comment">D</span> <span class="literal">-</span><span class="literal">-</span> <span class="comment">E</span> &lt;<span class="comment">=</span> <span class="comment">dev</span>
-</code></pre><p>rebase可以用于干什么？<br>a. 仅修改某些commit的msg<br>b. 变更commit顺序<br>c. 删掉某一个commit<br>d. 修改某一个commit对应的内容</p>
-<p>rebase的基本命令就是<code>git rebase -i HEAD~n</code>啦，具体的操作流程在执行的时候都有详细的引导，这里就不再重复。想了解细节的推荐看<a href="https://help.github.com/articles/using-git-rebase/" target="_blank" rel="external">这篇tutorial</a> — 其实更推荐找个git仓库实践一把。</p>
-<p>下面来介绍一下怎样处理常见的rebas冲突，至于rebase进阶用法，将在后续的wiki上介绍。  </p>
-<h4 id="解决rebase冲突">解决rebase冲突</h4>
-<p>当发生rebase无法顺利进行的时候，有以下几种选择：  </p>
-<pre><code><span class="comment">// a. 放弃rebase  </span>
-<span class="preprocessor"># git rebase --abort</span>
-<span class="comment">// b. 忽视冲突  -- 一般很少用</span>
-<span class="preprocessor"># git rebase --skip</span>
-
-<span class="comment">// c. 解决冲突</span>
-<span class="preprocessor"># git status                // 查看冲突类型，常见的是编辑冲突</span>
-<span class="preprocessor"># vim conflict-file.md      // 编辑冲突文件</span>
-<span class="preprocessor"># git add conflict-file.md  // 重新添加冲突文件</span>
-<span class="preprocessor"># git rebase --continue     // 继续rebase</span>
-</code></pre><hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://gitready.com/intermediate/2009/03/16/rolling-back-changes-with-revert.html" target="_blank" rel="external">rolling back changes with revert</a><br><a href="https://ihower.tw/blog/archives/2622" target="_blank" rel="external">Git 版本控制系統3 - 還沒 push 前可以做的事</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>在系列三中描述了commit消息的规范，但在实际操作中很难时刻做到那么严格的<br>控制，尤其是在本地做一些实验性的工作的时候。<br>但是如果需要push到远端去，则就必须保证commit消息的规范和commit的独立性。<br>因此就有了这样一个需求：在执行git push之前对本地的commit日志进行整理。<br>]]>
-    
-    </summary>
-    
-      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
-    
-      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[GIT系列三：commit消息规范]]></title>
-    <link href="http://perthcharles.github.com/2015/08/25/git-commit-log-format/"/>
-    <id>http://perthcharles.github.com/2015/08/25/git-commit-log-format/</id>
-    <published>2015-08-25T03:24:27.000Z</published>
-    <updated>2015-08-25T03:52:57.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>维护一个良好的commit消息格式和规范，是一个优秀项目的重要前提。<br>本文就先来谈谈commit消息到底该怎么提交。<br><a id="more"></a>  </p>
-<hr>
-<h3 id="提交commit的基本原则">提交commit的基本原则</h3>
-<pre><code><span class="bullet">1. </span>以一个小功能、小改进或一个bug fixed为单位
-<span class="bullet">2. </span>对应的unit test 程序放在同一个commit中
-<span class="bullet">3. </span>不相关的代码修改不要放在同一个commit
-<span class="bullet">4. </span>语法错误的半成品程序不能commit
-</code></pre><hr>
-<h3 id="commit消息格式">commit消息格式</h3>
-<p>这部分内容已经在具体的例子：<a href="http://perthcharles.github.io/2015/08/14/manage-project-code-like-linux-kernel/" target="_blank" rel="external">像linux kernel一样管理你的项目</a>描述过。<br>这里算是正式的整理进入wiki页面了。<br>至于如何保证做到这么干净利落的commit消息日志，则请移步后续对于rebase等命令的分析。commit的消息格式如下  </p>
-<pre><code>第一行用一句简短的话总结这个<span class="operator"><span class="keyword">commit</span>  
-
-第一行最好用一个描述性的前缀开始，比如  
-  <span class="string">"net:"</span>表示针对net子系统的修改  
-  <span class="string">"fix:"</span>表示这是一个bug fix  
-
-第二行为空行
-
-最后可以增加一些详细的描述，用以解释<span class="keyword">commit</span>具体干了什么，为什么这么干  </span>
-</code></pre><p>commit message格式的一个模板如下，为保持原文含义，直接贴上英文版。  </p>
-<pre><code>Short (<span class="number">50</span> <span class="keyword">chars</span> <span class="operator">or</span> less) summary <span class="operator">of</span> changes
-
-More <span class="keyword">detailed</span> explanatory <span class="keyword">text</span>, <span class="keyword">if</span> necessary.  Wrap <span class="keyword">it</span> <span class="built_in">to</span>
-about <span class="number">72</span> <span class="keyword">characters</span> <span class="operator">or</span> so.  In some contexts, <span class="operator">the</span> <span class="keyword">first</span>
-<span class="built_in">line</span> is treated <span class="keyword">as</span> <span class="operator">the</span> subject <span class="operator">of</span> <span class="operator">an</span> email <span class="operator">and</span> <span class="operator">the</span> rest <span class="operator">of</span>
-<span class="operator">the</span> <span class="keyword">text</span> <span class="keyword">as</span> <span class="operator">the</span> body.  The blank <span class="built_in">line</span> separating <span class="operator">the</span>
-summary <span class="built_in">from</span> <span class="operator">the</span> body is critical (unless you omit <span class="operator">the</span> body
-entirely); tools like rebase can <span class="built_in">get</span> confused <span class="keyword">if</span> you run
-<span class="operator">the</span> <span class="constant">two</span> together.
-
-Further paragraphs come <span class="keyword">after</span> blank <span class="keyword">lines</span>.
-
-  - Bullet points are okay, too
-
-  - Typically <span class="operator">a</span> hyphen <span class="operator">or</span> asterisk is used <span class="keyword">for</span> <span class="operator">the</span> bullet,
-    preceded <span class="keyword">by</span> <span class="operator">a</span> single <span class="constant">space</span>, <span class="operator">with</span> blank <span class="keyword">lines</span> <span class="operator">in</span>
-    between, but conventions vary here
-</code></pre>]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>维护一个良好的commit消息格式和规范，是一个优秀项目的重要前提。<br>本文就先来谈谈commit消息到底该怎么提交。<br>]]>
-    
-    </summary>
-    
-      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
-    
-      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[GIT系列二：手动提交一个commit]]></title>
-    <link href="http://perthcharles.github.com/2015/08/24/commit-a-simple-manually/"/>
-    <id>http://perthcharles.github.com/2015/08/24/commit-a-simple-manually/</id>
-    <published>2015-08-24T13:04:02.000Z</published>
-    <updated>2015-08-25T03:01:40.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>想要深入的了解一个工具，就必须完一些比较hack的用法。<br>为了更好的了解git内部的工作机制，本文就试图通过手动的编辑.git目录下的<br>文件，来完成一次commit的提交。  </p>
-<a id="more"></a>  
-
-<hr>
-<h3 id="-git目录下面的文件">.git目录下面的文件</h3>
-<pre><code><span class="comment"># git --version  // 当前git版本</span>
-    git version 2.3.2 (Apple Git-55)
-<span class="comment"># ls -1 .git</span>
-<span class="constant">objects</span>     &lt;= 
-branches    description info    refs
-
-<span class="constant">HEAD</span>            &lt;= 存放当前branch的HEAD指针
-<span class="constant">branches</span>        &lt;= 新版git没有使用该目录
-<span class="constant">config</span>          &lt;= 本地git仓库的配置文件
-<span class="constant">description</span>     &lt;= 仅用于gitweb程序
-<span class="constant">hooks</span>           &lt;= 一定在特定时间发生后被调用的脚本，可理解为钩子函数
-<span class="constant">index</span>           &lt;= 文件暂存区信息
-info/exclude    &lt;= 功能类似.gitignore的全局性排除文件
-<span class="constant">objects</span>         &lt;= 存放真实的数据文件的地方，文件名是SHA1哈希值
-refs/heads      &lt;= 存放各个分支的HEAD指针
-refs/tags       &lt;= 存放各个tag的commit指针
-refs/remotes    &lt;= 存放remote分支的HEAD指针
-</code></pre><p>通过分析可以看到，对于一个普通的commit而言，比较相关的应该是objects和HEAD指针  </p>
-<hr>
-<h3 id="正常的commit过程">正常的commit过程</h3>
-<pre><code><span class="preprocessor"># echo "hello world" &gt; hello</span>
-<span class="preprocessor"># git add hello</span>
-<span class="preprocessor"># git commit -am "add file"</span>
-</code></pre><p>在接下来的内容中，将介绍如何在直接编辑.git目录文件的情况下达到与上面命令一样的效果。  </p>
-<hr>
-<h3 id="手动提交一个commit的步骤">手动提交一个commit的步骤</h3>
-<p>git存储内容时，会有一个头部信息一并被保存。<br>比如如果是要存储”hello world\n”字符串，可以通过以下ruby脚本得到  </p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/ruby</span></div><div class="line"></div><div class="line"><span class="built_in">require</span> <span class="string">'digest/sha1'</span></div><div class="line"><span class="built_in">require</span> <span class="string">'zlib'</span></div><div class="line"><span class="built_in">require</span> <span class="string">'fileutils'</span></div><div class="line"></div><div class="line">content = <span class="string">"hello world\n"</span></div><div class="line">header = <span class="string">"blob #{content.length}\0"</span></div><div class="line">store = header + content</div><div class="line"></div><div class="line">sha1 = Digest::SHA1.hexdigest(store)</div><div class="line">puts <span class="string">"sha1:"</span> + sha1</div><div class="line"></div><div class="line">zlib_content = Zlib::Deflate.deflate(store)</div><div class="line">puts <span class="string">"zlib_contet:"</span> + zlib_content</div><div class="line"></div><div class="line">path = <span class="string">'.git/objects/'</span> + sha1[<span class="number">0</span>,<span class="number">2</span>] + <span class="string">'/'</span> + sha1[<span class="number">2</span>,<span class="number">38</span>]</div><div class="line">FileUtils.mkdir_p(File.dirname(path))</div><div class="line">File.<span class="built_in">open</span>(path, <span class="string">'w'</span>) { |f| f.<span class="built_in">write</span> zlib_content}</div></pre></td></tr></table></figure>
-
-
-
-<p>由于hello文件的内容是”hello world\n”，因此可以通过以上脚本首先生成<br>hello文件内容对应的object文件，文件类型是blob。可以通过一下命令判断生成的文件内容是否正确  </p>
-<pre><code># git <span class="keyword">cat</span>-<span class="keyword">file</span> -<span class="keyword">p</span> <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad  
-# git <span class="keyword">cat</span>-<span class="keyword">file</span> -<span class="keyword">t</span> <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad
-</code></pre><p>以上的object也可以通过一下一条命令得到  </p>
-<pre><code># echo <span class="string">"hello world"</span> | git hash-<span class="class"><span class="keyword">object</span> -<span class="title">w</span> --<span class="title">stdin</span></span>
-</code></pre><p>随后更新生成.git/index文件  </p>
-<pre><code># git <span class="keyword">update</span>-<span class="built_in">index</span> --<span class="built_in">add</span> --cacheinfo <span class="number">100644</span> <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad hello
-</code></pre><p>以上步骤仅是生成了”hello world” 对应的blob文件，但并没有制定这个内容对应的<br>文件名叫什么，也就是少了tree类型的object。接着执行一下命令  </p>
-<pre><code><span class="preprocessor"># git write-tree        // 生成指向3b18e5的tree文件，可以用下面两条命令验证</span>
-<span class="preprocessor"># git cat-file -p 7604755fe13e27f5327d6d13dc6663d44847562d</span>
-<span class="preprocessor"># git cat-file -t 7604755fe13e27f5327d6d13dc6663d44847562d</span>
-</code></pre><p>一个真正的commit还需要创建一个commit类型的object指向一个特定的tree节点  </p>
-<pre><code><span class="preprocessor"># git commit-tree 7604755fe -m "add file"</span>
-<span class="preprocessor"># git cat-file -p df36f6b4884ecf2ec519ddec85f959a83b4adec8</span>
-<span class="preprocessor"># git cat-file -t df36f6b4884ecf2ec519ddec85f959a83b4adec8</span>
-</code></pre><p>接着更新master的HEAD指针  </p>
-<pre><code># git <span class="operator"><span class="keyword">update</span>-ref refs/heads/<span class="keyword">master</span> df36f6b4884ecf2ec519ddec85f959a83b4adec8
-# git <span class="keyword">log</span>  &lt;= 至此就能看到一个完整的<span class="keyword">commit</span> <span class="keyword">log</span>
-# git checkout hello  &lt;= 将hello文件从.git库checkout出来，就算彻底的完成了一个<span class="keyword">commit</span>了</span>
-</code></pre><hr>
-<h3 id="总的来说">总的来说</h3>
-<pre><code><span class="comment">// 第一部分是完成git add的操作  </span>
-<span class="preprocessor"># echo "hello world" | git hash-object -w --stdin</span>
-    <span class="number">3</span>b18e512dba79e4c8300dd08aeb37f8e728b8dad    <span class="comment">// 生成blob文件</span>
-<span class="preprocessor"># git update-index --add --cacheinfo 100644 3b18e512dba79e4c8300dd08aeb37f8e728b8dad hello</span>
-
-<span class="comment">// 第二部分是完成git  commit的操作</span>
-<span class="preprocessor"># git write-tree</span>
-    <span class="number">7604755</span>fe13e27f5327d6d13dc6663d44847562d    <span class="comment">// 生成tree文件</span>
-<span class="preprocessor"># git commit-tree 7604755fe -m "add file"</span>
-    df36f6b4884ecf2ec519ddec85f959a83b4adec8    <span class="comment">// 生成commit</span>
-</code></pre><p>可以看出一个commit对应会有三种object文件生成，每种object文件的命名都是以sha1哈希值为依据的。<br>除了commit文件由于带有日期信息所以hash值会变化之外，其他两个文件的hash值都是固定不变的。  </p>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="https://ihower.tw/git/files/ihower-git-internal.pdf" target="_blank" rel="external">Git internal</a><br><a href="http://git-scm.com/book/zh/v2/Git-%E5%86%85%E9%83%A8%E5%8E%9F%E7%90%86-Git-%E5%AF%B9%E8%B1%A1" target="_blank" rel="external">Git 内部原理 - Git 对象</a><br><a href="https://gist.github.com/ihower/6132576" target="_blank" rel="external">Git commit without commit</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>想要深入的了解一个工具，就必须完一些比较hack的用法。<br>为了更好的了解git内部的工作机制，本文就试图通过手动的编辑.git目录下的<br>文件，来完成一次commit的提交。  </p>
-]]>
-    
-    </summary>
-    
-      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
-    
-      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[GIT系列一：使用gitolite搭建git仓库管理服务]]></title>
-    <link href="http://perthcharles.github.com/2015/08/24/setup-gitolite-service-git-1/"/>
-    <id>http://perthcharles.github.com/2015/08/24/setup-gitolite-service-git-1/</id>
-    <published>2015-08-24T01:40:40.000Z</published>
-    <updated>2015-08-25T03:55:11.000Z</updated>
-    <content type="html"><![CDATA[<hr>
-<p>当在工程实践中需要频繁使用git后发现，要达到真正的熟练掌握git并不是学会几个简单的git commit, git push 就能搞得定的。<br>因此开了这样一个系列，来集中梳理各种正确运用git及相关服务的要点。<br>不过既然是梳理，像那种直接man就能查到的简单用法就不会再赘述。重点在于梳理那些在使用git时会遇到的坑。<br>作为git工程实践系列的开篇，则是介绍如何使用gitolite在自己的机器上搭建git仓库管理服务。<br>只有在搭建好了一个良好的后台管理服务，才能为后续的git使用保驾护航。  </p>
-<pre><code>如果是想了解git基本操作，这是一个不错的开始：[<span class="link_label">Try git</span>](<span class="link_url">https://www.codeschool.com/courses/try-git</span>)  
-</code></pre><a id="more"></a>  
-
-<hr>
-<h3 id="安装gitolite">安装gitolite</h3>
-<pre><code><span class="comment">// 创建专用账号</span>
-@<span class="keyword">server</span> <span class="preprocessor"># adduser -m git -s /bin/bash</span>
-
-<span class="comment">// 将客户端公钥上传服务器</span>
-@admin-<span class="keyword">client</span> <span class="preprocessor"># scp ~/.ssh/id_ras.pub git@gitolite-server-ip:/home/git/admin.pub</span>
-
-<span class="comment">// 切换到专用账号git，然后安装gitolite</span>
-<span class="preprocessor"># sudo su git</span>
-$ mkdir -p ~/bin
-$ cd /home/git
-$ git clone git:<span class="comment">//github.com/sitaramc/gitolite    // 获取gitolite</span>
-$ git checkout -b newest-release v3<span class="number">.6</span><span class="number">.3</span>           <span class="comment">// 换到最新的一次release</span>
-$ gitolite/install -ln ~/bin             <span class="comment">// 安装gitolite到指定目录</span>
-
-<span class="comment">// 配置管理员公钥</span>
-$ bin/gitolite setup -pk admin.pub
-</code></pre><hr>
-<h3 id="克隆gitolite">克隆gitolite</h3>
-<p>至此可在admin-client克隆gitolite管理仓库</p>
-<pre><code>@admin-<span class="keyword">client</span> <span class="preprocessor"># git clone git@gitolite-server-ip:gitolite-admin</span>
-
-    <span class="comment">// MAC电脑下如果是新生成的id_ras.pub，则需要添加管理</span>
-    @admin-<span class="keyword">client</span> <span class="preprocessor"># ssh-add -K ~/.ssh/id_ras.pub</span>
-
-<span class="preprocessor"># cd gitolite-admin</span>
-<span class="preprocessor"># ls</span>
-conf    keydir        <span class="comment">// conf用于配置git项目权限，keydir用于存放git用户公钥</span>
-</code></pre><hr>
-<h3 id="新建GIT项目">新建GIT项目</h3>
-<pre><code><span class="comment">// 回到客户端，在gitolite的配置中，增加project项目，并设置admin访问权限</span>
-<span class="preprocessor"># cat conf/gitolite.conf</span>
-repo gitolite-admin
-    RW+     =   admin
-
-repo testing
-    RW+     =   @all
-
-repo git-learning
-    RW+     =   admin
-
-<span class="preprocessor"># 提交对gitolite配置文件的修改</span>
-<span class="preprocessor"># git commit -am 'add git project'</span>
-<span class="preprocessor"># git push origin master    // 至此，管理员可在客户端克隆git@gitolite-server-ip:project</span>
-
-<span class="comment">// 新的project.git会在执行git push自动创建，默认的目录是：/home/git/repositories</span>
-</code></pre><hr>
-<h3 id="新增GIT用户">新增GIT用户</h3>
-<pre><code>// 将要添加的用户的公钥上传到gitolite-admin/kerdir目录下
-$ <span class="keyword">ls</span> kerdir/
-admin.pub <span class="keyword">new</span>.pub
-
-// 配置用户<span class="keyword">new</span>的权限
-$ <span class="keyword">cat</span> <span class="keyword">conf</span>/gitolite.<span class="keyword">conf</span>
-repo gitolite-admin
-    RW+     =   admin
-
-repo testing
-    RW+     =   @all
-
-repo git-learning
-    RW+     =   admin
-    RW        =    <span class="keyword">new</span>
-
-// 然后提交
-$ git <span class="built_in">add</span> kerdir/<span class="keyword">new</span>.pub
-$ git commit -<span class="keyword">am</span> <span class="string">'add user new for project'</span>
-$ git push origin master
-</code></pre><hr>
-<h3 id="权限控制管理">权限控制管理</h3>
-<pre><code><span class="comment">/* 实例1 */</span>  
-repo project
-    RW+        =    admin    <span class="comment">// admin 有读，写，强制写的权限</span>
-    R        =    <span class="keyword">new</span>        <span class="comment">// new 仅有读权限，如果尝试提交会报错</span>
-
-<span class="comment">/* 实例2 */</span> 
-repo project
-    RW+            =    admin    <span class="comment">// admin 有读，写，强制写的权限</span>
-    <span class="comment">// new 对所有以dev开始的分支都有读写权限。即可以新建dev3，修改dev2分支 </span>
-    RW    dev        =    <span class="keyword">new</span>        
-
-<span class="comment">/* 实例3 */</span>
-repo project
-    RW+            =    admin
-    <span class="comment">// new 仅对dev分支有写权限，$表示精确匹配</span>
-    RW    dev$    =    <span class="keyword">new</span>
-
-<span class="comment">/* 实例4 */</span>
-repo project
-    ...
-    -    refs/tags/v[<span class="number">0</span>-<span class="number">9</span>]    = <span class="keyword">new</span>    <span class="comment">// new用户仅能创建除了以v加上数字开头之外的其他tag</span>
-
-<span class="comment">/* 实例5 */</span>
-repo project
-    ...
-    <span class="comment">// 除了根目录的Makefile文件外，new对其他文件都具有写权限</span>
-    -    NAME/Makefile    = <span class="keyword">new</span>
-    RW    Name/            = <span class="keyword">new</span>
-
-<span class="comment">/* 推荐用法 */</span>
-repo project
-    <span class="comment">// 有效防止误操作：</span>
-    <span class="comment">//     指定admin对branch的读写权限，防止误操作将本地的临时性branch推送到服务器端</span>
-    <span class="comment">//     如果确定需要新增一个branch，则在下面新增一行，例如新增dev分支</span>
-    RW+ master$     =   admin   <span class="comment">// admin 有读，写，强制写master分支的权限</span>
-    RW+ dev$        =   admin   <span class="comment">// admin 有读，写，强制写dev分支的权限</span>
-
-    RW  dev$             =  dev1 dev2     <span class="comment">// 普通developer仅能读写dev分支，且不能强制写</span>
-    -   refs/tags/v[<span class="number">0</span>-<span class="number">9</span>] =  dev2 dev2     <span class="comment">// 限制普通用户不能创建以v加上数字开头的release tag</span>
-    <span class="comment">// 如果不同的用户(组)分别负责完全独立的两个子系统，则可通过类似以下这种方式排除互相干扰</span>
-    -   NAME/net/        =  dev1    <span class="comment">// dev1 不能修改net子系统下的文件</span>
-    -   NAME/arch/       =  dev2    <span class="comment">// dev2 不能修改arch子系统下的文件</span>
-</code></pre><hr>
-<h3 id="配置gitweb">配置gitweb</h3>
-<p>本节主要参考<a href="http://zodiacg.net/2014/05/gitolite_gitweb_nginx/" target="_blank" rel="external">配置Gitolite+Gitweb+Nginx</a>  </p>
-<pre><code><span class="comment">// 安装gitweb 和用于代码高亮的highlight</span>
-$ sudo apt-get install -y gitweb highlight
-
-<span class="comment">// 修改文件权限，用于gitweb读取</span>
-$ chmod <span class="number">0027</span> /home/git.gitolite.rc
-$ sudo usermod -a -G git www-data   <span class="comment">// www-data 是运行nginx服务的用户</span>
-$ sudo chmod g+r    /home/git/projects.<span class="keyword">list</span>
-$ sudo chmod -R g+rx /home/git/repositories
-
-<span class="comment">// 将要显示的repo写入projects.list文件</span>
-$ cat projects.<span class="keyword">list</span>
-    testing.git
-
-<span class="comment">// 修改/etc/gitweb.conf，修改以下几个关键值</span>
-$ cat /etc/gitweb.conf
-    <span class="comment"># path to git projects (&lt;project&gt;.git)</span>
-    <span class="variable">$projectroot</span> = <span class="string">"/home/git/repositories/"</span>;
-
-    <span class="comment"># directory to use for temp files</span>
-    <span class="variable">$git_temp</span> = <span class="string">"/tmp"</span>;
-
-    <span class="comment"># target of the home link on top of all pages</span>
-    <span class="comment">#$home_link = $my_uri || "/";</span>
-
-    <span class="comment"># html text to include at home page</span>
-    <span class="comment">#$home_text = "indextext.html";</span>
-
-    <span class="comment"># file with project list; by default, simply scan the projectroot dir.</span>
-    <span class="variable">$projects_list</span> = <span class="string">"/home/git/projects.list"</span>;
-    <span class="variable">$strict_export</span> = <span class="number">1</span>;
-
-    <span class="comment"># stylesheet to use</span>
-    <span class="comment">#@stylesheets = ("static/gitweb.css");</span>
-
-    <span class="comment"># javascript code for gitweb</span>
-    <span class="variable">$javascript</span> = <span class="string">"static/gitweb.js"</span>;
-
-    <span class="comment"># logo to use</span>
-    <span class="variable">$logo</span> = <span class="string">"static/git-logo.png"</span>;
-
-    <span class="comment"># the 'favicon'</span>
-    <span class="comment">#$favicon = "static/git-favicon.png";</span>
-
-    <span class="comment"># git-diff-tree(1) options to use for generated patches</span>
-    <span class="comment">#@diff_opts = ("-M");</span>
-    @diff_opts = ();
-
-    <span class="variable">$feature</span> {<span class="string">'blame'</span>}{<span class="string">'default'</span>} = [<span class="number">1</span>];
-    <span class="variable">$feature</span> {<span class="string">'blame'</span>}{<span class="string">'override'</span>} = <span class="number">1</span>;
-
-    <span class="variable">$feature</span> {<span class="string">'snapshot'</span>}{<span class="string">'default'</span>} = [<span class="string">'zip'</span>, <span class="string">'tgz'</span>];
-    <span class="variable">$feature</span> {<span class="string">'snapshot'</span>}{<span class="string">'override'</span>} = <span class="number">1</span>;
-
-    <span class="variable">$feature</span>{<span class="string">'highlight'</span>}{<span class="string">'default'</span>} = [<span class="number">1</span>];
-
-<span class="comment">// 配置nginx</span>
-$ sudo apt-get install spawn-fcgi fcgiwrap
-<span class="comment">// 修改/etc/init/d/fcgi.fcgiwrap,将FCGI_USER FCGI_GROUP FCGI_SOCKET_OWNER FCGI_SOCKET_GROUP 都修改为运行web服务的用户</span>
-<span class="comment">// 在nginx的配置文件中添加一个新的server段</span>
-    server {
-        listen <span class="number">80</span>;
-        server_name gitweb.example.com;
-        access_log  /home/wwwlogs/access.log  main;
-
-        location / {
-            root /usr/share/gitweb;
-            index index.cgi;
-            <span class="keyword">include</span> fastcgi_params;
-            gzip off;
-            fastcgi_param GITWEB_CONFIG /etc/gitweb.conf;
-
-            <span class="keyword">if</span> (<span class="variable">$uri</span> ~ <span class="string">"/index.cgi"</span>) {
-                fastcgi_pass unix:/<span class="keyword">var</span>/run/fcgiwrap.socket;
-            }
-        }
-    }
-
-<span class="comment">// 重启fcgiwrap和nginx</span>
-$ sudo service fcgiwrap restart
-$ sudo nginx -s reload
-</code></pre><hr>
-<h3 id="参考资料">参考资料</h3>
-<p><a href="http://www.ossxp.com/doc/git/gitolite.html" target="_blank" rel="external">Gitolite 构建 Git 服务器</a><br><a href="http://zodiacg.net/2014/05/gitolite_gitweb_nginx/" target="_blank" rel="external">配置Gitolite+Gitweb+Nginx</a><br><a href="http://gitolite.com/gitolite/gitolite.html" target="_blank" rel="external">gitolite all-in-one page</a>  </p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<hr>
-<p>当在工程实践中需要频繁使用git后发现，要达到真正的熟练掌握git并不是学会几个简单的git commit, git push 就能搞得定的。<br>因此开了这样一个系列，来集中梳理各种正确运用git及相关服务的要点。<br>不过既然是梳理，像那种直接man就能查到的简单用法就不会再赘述。重点在于梳理那些在使用git时会遇到的坑。<br>作为git工程实践系列的开篇，则是介绍如何使用gitolite在自己的机器上搭建git仓库管理服务。<br>只有在搭建好了一个良好的后台管理服务，才能为后续的git使用保驾护航。  </p>
-<pre><code>如果是想了解git基本操作，这是一个不错的开始：[<span class="link_label">Try git</span>](<span class="link_url">https://www.codeschool.com/courses/try-git</span>)  
-</code></pre>]]>
-    
-    </summary>
-    
-      <category term="git" scheme="http://perthcharles.github.com/tags/git/"/>
-    
-      <category term="wiki-GIT" scheme="http://perthcharles.github.com/categories/wiki-GIT/"/>
     
   </entry>
   

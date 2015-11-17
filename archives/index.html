@@ -71,14 +71,14 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-wiki-network-tcp-tlp" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-wiki-tool-ntopng" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2015/10/31/wiki-network-tcp-tlp/" class="article-date">
-  <time datetime="2015-10-31T11:01:45.000Z" itemprop="datePublished">10月 31 2015</time>
+    <a href="/2015/11/15/wiki-tool-ntopng/" class="article-date">
+  <time datetime="2015-11-15T10:43:43.000Z" itemprop="datePublished">11月 15 2015</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+    <a class="article-category-link" href="/categories/wiki-tools/">wiki-tools</a>
   </div>
 
   </div>
@@ -89,7 +89,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/31/wiki-network-tcp-tlp/">TCP Tail Loss Probe(TLP)</a>
+      <a class="article-title" href="/2015/11/15/wiki-tool-ntopng/">使用ntopng监控网络信息</a>
     </h1>
   
 
@@ -98,22 +98,22 @@
     <div class="article-entry" itemprop="articleBody">
       
         <hr>
-<p>Early Retransmit机制解决了dupack较少，无法触发快速重传的问题。<br>但是如果发生了尾丢包，由于尾包后面没有更多的数据包，也就没有办法触发任何的dupack。<br>为解决这种尾丢包的问题，Google的几位大神提出了TLP算法。通过TLP算法，发送一个loss probe包，来产生足够的SACK/FACK的信息来触发RF。根据Google的测试，TLP能够有效的避免较长的RTO超时，进而提高TCP性能。  </p>
+<p>ntopng(ntop next generation)能够有效的监控网络信息，<br>即使是free版本功能也十分强大。  </p>
 
         
           <p class="article-more-link">
-            <a href="/2015/10/31/wiki-network-tcp-tlp/#more">Read More</a>
+            <a href="/2015/11/15/wiki-tool-ntopng/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/" data-id="np6sn9pdy4spel24" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2015/11/15/wiki-tool-ntopng/" data-id="mmw39z32bn5kuaah" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-tlp/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2015/11/15/wiki-tool-ntopng/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rfc/">rfc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tlp/">tlp</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ntopng/">ntopng</a></li></ul>
 
     </footer>
   </div>
@@ -123,16 +123,12 @@
 
 
   
-    <article id="post-wiki-network-tcp-early-retrans" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-apnic-ip-list" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2015/10/31/wiki-network-tcp-early-retrans/" class="article-date">
-  <time datetime="2015-10-31T02:00:21.000Z" itemprop="datePublished">10月 31 2015</time>
+    <a href="/2015/11/15/apnic-ip-list/" class="article-date">
+  <time datetime="2015-11-15T08:11:36.000Z" itemprop="datePublished">11月 15 2015</time>
 </a>
     
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
-  </div>
-
   </div>
   <div class="article-inner">
     
@@ -141,7 +137,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/31/wiki-network-tcp-early-retrans/">Early Retransmit for TCP</a>
+      <a class="article-title" href="/2015/11/15/apnic-ip-list/">获取亚太地区IP库</a>
     </h1>
   
 
@@ -150,22 +146,22 @@
     <div class="article-entry" itemprop="articleBody">
       
         <hr>
-<p>Early Retransmit(ER)机制的提出主要解决的是在某些特定场景下，没有足够的<br>dupack触发fast retransmit造成的问题。<br>本质上就是通过检测出某些考虑到的特定场景，然后降低触发FR的dupack threshold值。<br>具体需要考虑那些特定场景后续后详细介绍。  </p>
+<p>想要玩转网络，当然得要有一些基本的数据来源，这篇就先介绍一下如何获得某地区的IP库  </p>
 
         
           <p class="article-more-link">
-            <a href="/2015/10/31/wiki-network-tcp-early-retrans/#more">Read More</a>
+            <a href="/2015/11/15/apnic-ip-list/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/" data-id="927qo0pfwvjlgcl4" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2015/11/15/apnic-ip-list/" data-id="rjlcpyb0j6ryefd9" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2015/10/31/wiki-network-tcp-early-retrans/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2015/11/15/apnic-ip-list/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rfc/">rfc</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tcp/">tcp</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/apnic/">apnic</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ip/">ip</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/zmap/">zmap</a></li></ul>
 
     </footer>
   </div>
@@ -175,60 +171,10 @@
 
 
   
-    <article id="post-inspecting-internal-tcp-state" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-wiki-weekly-readlist-20151110" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2015/10/28/inspecting-internal-tcp-state/" class="article-date">
-  <time datetime="2015-10-28T13:28:11.000Z" itemprop="datePublished">10月 28 2015</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/networking/">networking</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/28/inspecting-internal-tcp-state/">在Linux上探测TCP的内部状态</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>发现一篇使用ss获取TCP内部状态信息的好文，不由的记录一笔。<br>并结合之前会的方法适当总结总结。<br>
-        
-          <p class="article-more-link">
-            <a href="/2015/10/28/inspecting-internal-tcp-state/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2015/10/28/inspecting-internal-tcp-state/" data-id="mayw0e006nwlbkwb" class="article-share-link">Share</a>
-      
-        <a href="http://perthcharles.github.com/2015/10/28/inspecting-internal-tcp-state/#disqus_thread" class="article-comment-link">Comments</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/crash/">crash</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ss/">ss</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-wiki-weekly-readlist-20151026" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2015/10/26/wiki-weekly-readlist-20151026/" class="article-date">
-  <time datetime="2015-10-26T13:30:23.000Z" itemprop="datePublished">10月 26 2015</time>
+    <a href="/2015/11/10/wiki-weekly-readlist-20151110/" class="article-date">
+  <time datetime="2015-11-10T15:56:22.000Z" itemprop="datePublished">11月 10 2015</time>
 </a>
     
   <div class="article-category">
@@ -243,7 +189,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/26/wiki-weekly-readlist-20151026/">阅读周记(第三期)</a>
+      <a class="article-title" href="/2015/11/10/wiki-weekly-readlist-20151110/">阅读周记(第五期)</a>
     </h1>
   
 
@@ -252,36 +198,30 @@
     <div class="article-entry" itemprop="articleBody">
       
         <hr>
-<h2 id="DigitalOcean如何在红海市场做用户增长"><a href="https://strace.co/cn/post/growth-hacking-digitalocean.html" target="_blank" rel="external">DigitalOcean如何在红海市场做用户增长</a></h2>
+<h3 id="使用HTTP/2提升性能的7个建议"><a href="http://toutiao.com/i6214953977478382082/" target="_blank" rel="external">使用HTTP/2提升性能的7个建议</a></h3>
 <pre><code>摘要：
-    1. 先确立独特点，研究增长计划  
-    2. 做产品而非服务，产品更容易扩张  
-    3. 加入创业加速器，获得初期用户和商业关系网络  
-    4. 漂亮的增长数字和对未来清晰的定位，是打动顶级风投的亮点
-    5. Freemium模式
-    6. 获取并了解前100个客户(找一个高水准的技术聚会是一个很好的切入点)
-    7. 针对高智商的开发者用户的口碑营销和社区营销
-    8. 测量各个推广渠道的转化率
+    1. HTTP/2是二进制协议，因此更简洁高效
+    2. 它针对每个域只使用一个多路复用的连接，而不是每个文件一个连接
+    3. 首部使用特制的HPACK协议压缩
+    4. HTTP/2设计了复杂的优先级排定规则，帮助浏览器首先请求最急需的文件，而NGINX已经支持
 点评：
-    1. 学到一个新词：<span class="function">freemium</span>(免费增值),即通过为少部分有更高需求的用户提供增值服务赢利
-    2. digitalocean在linode已经拥有大量客户的时候，才进入VPS服务器这个红海市场，
-       依然能做起来。至今成为行业第二，足以说明它的战术和战略都是很成功的。
-       找机会得去体验一把digitalocean。
+    HTTP/2仅使用一个连接是一个重要的改变，对于客户端可以省去多次建连时间，
+    对于服务器端能少建立和维护大量的连接(尤其是HTTP/1中那些什么数据也没传过的流)
 </code></pre>
         
           <p class="article-more-link">
-            <a href="/2015/10/26/wiki-weekly-readlist-20151026/#more">Read More</a>
+            <a href="/2015/11/10/wiki-weekly-readlist-20151110/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2015/10/26/wiki-weekly-readlist-20151026/" data-id="xgm2r5h8n9mz1c0s" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/" data-id="xs1ntuvzzj280b1i" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2015/10/26/wiki-weekly-readlist-20151026/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2015/11/10/wiki-weekly-readlist-20151110/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/digitalocean/">digitalocean</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/cpu/">cpu</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/fastopen/">fastopen</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/http2/">http2</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/security/">security</a></li></ul>
 
     </footer>
   </div>
@@ -291,14 +231,14 @@
 
 
   
-    <article id="post-wiki-weekly-readlist-20151019" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-wiki-tool-iptraf" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2015/10/19/wiki-weekly-readlist-20151019/" class="article-date">
-  <time datetime="2015-10-19T02:57:45.000Z" itemprop="datePublished">10月 19 2015</time>
+    <a href="/2015/11/10/wiki-tool-iptraf/" class="article-date">
+  <time datetime="2015-11-10T15:30:05.000Z" itemprop="datePublished">11月 10 2015</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a>
+    <a class="article-category-link" href="/categories/wiki-tools/">wiki-tools</a>
   </div>
 
   </div>
@@ -309,7 +249,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/19/wiki-weekly-readlist-20151019/">阅读周记(第二期)</a>
+      <a class="article-title" href="/2015/11/10/wiki-tool-iptraf/">wiki-tool-iptraf</a>
     </h1>
   
 
@@ -318,28 +258,74 @@
     <div class="article-entry" itemprop="articleBody">
       
         <hr>
-<h2 id="从学渣到学霸_-_我的100天阅读简史"><a href="http://mp.weixin.qq.com/s?__biz=MjM5OTA3MjUwMA==&amp;mid=400032224&amp;idx=1&amp;sn=335f870597a6f888d219daf687357fdd&amp;scene=2&amp;srcid=1018D0eWR4z8X0yo9xV2Gg0s&amp;from=timeline&amp;isappinstalled=0#rd" target="_blank" rel="external">从学渣到学霸 - 我的100天阅读简史</a></h2>
-<pre><code>点评：
-    1. 行动力是第一的，有想法就要去实际动手。作者就是一个行动派，敬佩！  
-    2. 每天早上起床后的时间，也是可以利用的。对我个人而言，早睡一会，早起一个小时。然后利用这一个小时，花几个番茄钟去读书！
-    3. 对于不同的性质的书，要采用不同的方式阅读  
-    4. 自己能够成为一个行动派？真正成为一个爱读书的人？纸上得来终觉浅，绝知此事要躬行。  
-    5. 每读完一段书，写一个短评(如125字)去总结，是一个便于梳理知识的好方法。  
-</code></pre>
+<p>本文介绍一个实时监控网络流量的工具iptraf。</p>
+
         
           <p class="article-more-link">
-            <a href="/2015/10/19/wiki-weekly-readlist-20151019/#more">Read More</a>
+            <a href="/2015/11/10/wiki-tool-iptraf/#more">Read More</a>
           </p>
         
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://perthcharles.github.com/2015/10/19/wiki-weekly-readlist-20151019/" data-id="ecbhh2t38ul03v43" class="article-share-link">Share</a>
+      <a data-url="http://perthcharles.github.com/2015/11/10/wiki-tool-iptraf/" data-id="sje0xhu2b6andlzf" class="article-share-link">Share</a>
       
-        <a href="http://perthcharles.github.com/2015/10/19/wiki-weekly-readlist-20151019/#disqus_thread" class="article-comment-link">Comments</a>
+        <a href="http://perthcharles.github.com/2015/11/10/wiki-tool-iptraf/#disqus_thread" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CPU/">CPU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/strace/">strace</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/读书/">读书</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iptraf/">iptraf</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/net/">net</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/">tools</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-wiki-netstat-proc" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/11/10/wiki-netstat-proc/" class="article-date">
+  <time datetime="2015-11-10T02:30:40.000Z" itemprop="datePublished">11月 10 2015</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wiki-network/">wiki-network</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/11/10/wiki-netstat-proc/">netstat -st输出解析(二)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <hr>
+<p>netstat -st输出的两个重要信息来源分别是/proc/net/snmp和/proc/net/netstat<br>本文将分类整理这些counterd的含义以及一些注意事项。</p>
+<p>
+        
+          <p class="article-more-link">
+            <a href="/2015/11/10/wiki-netstat-proc/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://perthcharles.github.com/2015/11/10/wiki-netstat-proc/" data-id="eovy0dzdncl2viem" class="article-share-link">Share</a>
+      
+        <a href="http://perthcharles.github.com/2015/11/10/wiki-netstat-proc/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netstat/">netstat</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/snmp/">snmp</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tcp/">tcp</a></li></ul>
 
     </footer>
   </div>
@@ -351,7 +337,7 @@
   
   
     <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="page-number" href="/archives/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/23/">23</a><a class="extend next" rel="next" href="/archives/page/2/">Next &raquo;</a>
+      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="page-number" href="/archives/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/archives/page/25/">25</a><a class="extend next" rel="next" href="/archives/page/2/">Next &raquo;</a>
     </nav>
   
 
@@ -363,7 +349,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/networking/">networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Networking/">Networking</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Shell/">Shell</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/networking/">networking</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-GIT/">wiki-GIT</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-network/">wiki-network</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-paper/">wiki-paper</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-tools/">wiki-tools</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-好文共享/">wiki-好文共享</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-编程技艺/">wiki-编程技艺</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/wiki-阅读周记/">wiki-阅读周记</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/博客搭建/">博客搭建</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/读书笔记/">读书笔记</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/面试题/">面试题</a><span class="category-list-count">7</span></li></ul>
     </div>
   </div>
 
@@ -373,6 +359,34 @@
     <h3 class="widget-title">Recents</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2015/11/15/wiki-tool-ntopng/">使用ntopng监控网络信息</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/15/apnic-ip-list/">获取亚太地区IP库</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-weekly-readlist-20151110/">阅读周记(第五期)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-tool-iptraf/">wiki-tool-iptraf</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/10/wiki-netstat-proc/">netstat -st输出解析(二)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/09/wiki-rfc2012-snmp-proc/">netstat -s输出解析(一)</a>
+          </li>
+        
+          <li>
+            <a href="/2015/11/03/wiki-weekly-readlist-20151103/">阅读周记(第四期)</a>
+          </li>
         
           <li>
             <a href="/2015/10/31/wiki-network-tcp-tlp/">TCP Tail Loss Probe(TLP)</a>
@@ -406,34 +420,6 @@
             <a href="/2015/09/28/wiki-tool-free/">剖析free命令</a>
           </li>
         
-          <li>
-            <a href="/2015/09/22/ssh-forward/">使用ssh forward跨局域网访问</a>
-          </li>
-        
-          <li>
-            <a href="/2015/09/15/wiki-hybird-slow-start/">Taming the Elephants -- New TCP Slow Start</a>
-          </li>
-        
-          <li>
-            <a href="/2015/09/14/ip-route-initcwnd/">使用ip命令修改初始拥塞窗口和接收窗口</a>
-          </li>
-        
-          <li>
-            <a href="/2015/09/07/wiki-tcp-retries/">聊一聊重传次数</a>
-          </li>
-        
-          <li>
-            <a href="/2015/09/06/wiki-rtt-estimator/">RTO的计算方法(基于RFC6298和Linux 3.10)</a>
-          </li>
-        
-          <li>
-            <a href="/2015/08/27/timestamp-intro/">TCP timestamp</a>
-          </li>
-        
-          <li>
-            <a href="/2015/08/27/timestamp-NAT/">一个NAT问题引起的思考</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -465,7 +451,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/CPU/" style="font-size: 10.00px;">CPU</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KCon/" style="font-size: 10.00px;">KCon</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/crash/" style="font-size: 10.00px;">crash</a><a href="/tags/devops/" style="font-size: 10.00px;">devops</a><a href="/tags/digitalocean/" style="font-size: 10.00px;">digitalocean</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a><a href="/tags/ip/" style="font-size: 10.00px;">ip</a><a href="/tags/javascript/" style="font-size: 10.00px;">javascript</a><a href="/tags/latex/" style="font-size: 11.67px;">latex</a><a href="/tags/linux/" style="font-size: 10.00px;">linux</a><a href="/tags/mapreduce/" style="font-size: 10.00px;">mapreduce</a>
+      <a href="/tags/BFS/" style="font-size: 10.00px;">BFS</a><a href="/tags/C-C/" style="font-size: 16.67px;">C/C++</a><a href="/tags/CPU/" style="font-size: 10.00px;">CPU</a><a href="/tags/DFS/" style="font-size: 10.00px;">DFS</a><a href="/tags/EasyBCD/" style="font-size: 10.00px;">EasyBCD</a><a href="/tags/Git/" style="font-size: 15.00px;">Git</a><a href="/tags/Jekyll/" style="font-size: 10.00px;">Jekyll</a><a href="/tags/KCon/" style="font-size: 10.00px;">KCon</a><a href="/tags/KVM/" style="font-size: 13.33px;">KVM</a><a href="/tags/Linux/" style="font-size: 20.00px;">Linux</a><a href="/tags/MST/" style="font-size: 10.00px;">MST</a><a href="/tags/Mapreduce/" style="font-size: 10.00px;">Mapreduce</a><a href="/tags/NAT/" style="font-size: 10.00px;">NAT</a><a href="/tags/NTP/" style="font-size: 10.00px;">NTP</a><a href="/tags/OProfile/" style="font-size: 10.00px;">OProfile</a><a href="/tags/PAWS/" style="font-size: 10.00px;">PAWS</a><a href="/tags/PTP/" style="font-size: 10.00px;">PTP</a><a href="/tags/RTTM/" style="font-size: 10.00px;">RTTM</a><a href="/tags/SACK/" style="font-size: 10.00px;">SACK</a><a href="/tags/TCP/" style="font-size: 18.33px;">TCP</a><a href="/tags/Tools/" style="font-size: 11.67px;">Tools</a><a href="/tags/X11/" style="font-size: 11.67px;">X11</a><a href="/tags/YQL/" style="font-size: 10.00px;">YQL</a><a href="/tags/YUI/" style="font-size: 10.00px;">YUI</a><a href="/tags/apnic/" style="font-size: 10.00px;">apnic</a><a href="/tags/assembly/" style="font-size: 11.67px;">assembly</a><a href="/tags/chrome/" style="font-size: 10.00px;">chrome</a><a href="/tags/cpu/" style="font-size: 10.00px;">cpu</a><a href="/tags/crash/" style="font-size: 10.00px;">crash</a><a href="/tags/devops/" style="font-size: 10.00px;">devops</a><a href="/tags/digitalocean/" style="font-size: 10.00px;">digitalocean</a><a href="/tags/excel/" style="font-size: 11.67px;">excel</a><a href="/tags/fastopen/" style="font-size: 10.00px;">fastopen</a><a href="/tags/free/" style="font-size: 10.00px;">free</a><a href="/tags/git/" style="font-size: 15.00px;">git</a><a href="/tags/google/" style="font-size: 10.00px;">google</a><a href="/tags/hexo/" style="font-size: 11.67px;">hexo</a><a href="/tags/http-archive/" style="font-size: 10.00px;">http archive</a><a href="/tags/http2/" style="font-size: 10.00px;">http2</a><a href="/tags/http-load/" style="font-size: 10.00px;">http_load</a>
     </div>
   </div>
 
@@ -474,7 +460,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/11/">November 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/08/">August 2015</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/07/">July 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/06/">June 2015</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/05/">May 2015</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/03/">March 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/02/">February 2015</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">January 2015</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/12/">December 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/11/">November 2014</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/10/">October 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/06/">June 2014</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/04/">April 2014</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/12/">December 2013</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/10/">October 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/09/">September 2013</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/08/">August 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/07/">July 2013</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/06/">June 2013</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/05/">May 2013</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/04/">April 2013</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/03/">March 2013</a><span class="archive-list-count">18</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/02/">February 2013</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 

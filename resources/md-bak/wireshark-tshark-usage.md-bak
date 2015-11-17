@@ -1,0 +1,57 @@
+title: wireshark和tshark实用技巧
+toc: true
+date: 2015-11-06 10:43:40
+categories: wiki-tools
+tags: [wireshark, tshark]
+---
+
+***  
+本文记录日常使用过程中使用的wireshark和tshark相关技巧  
+<!--more-->  
+
+***  
+### 分析pcap抓包数据概况  
+
+    /* 了解pcap文件的整体信息，在我的MAC电脑上分析1.5GBpcap文件用时1min
+     * 可关心的输出信息有: 
+     *      Capture duration
+     *      Data byte rate
+     *      Average packet size
+     *      Average packet rate
+     */
+    # capinfos example.pcap
+
+    /* 获取io统计数据，统计间隔为10s，得到的数据可导入EXCEL绘图，也可用gunplot绘图。
+     * 1.5GB文件耗时约21s */
+    # tshark -nqr example.pcap -z "io,stat,10"
+
+    /* 同时统计重传数据包，然后可进一步用awk等工具计算得到重传率。其他filter的用法类似 */
+    # tshark -nqr example.pcap -z "io,stat,10, , tcp.analysis.retransmission"
+    /* 尤其关注重传包时 */
+    # tshark -nqr example.pcap -z "io,stat,10,,tcp.analysis.retransmission,tcp.analysis.fast_retransmission,tcp.analysis.rto"
+
+    /* 获取ip层conversation的统计，相当于得到那些节点参与了数据交互 */
+    # tshark -nqr example.pcap -z "conv,ip"
+
+    /* 获取tcp层conversation的统计，相当于看有哪些tcp流。
+     * 能看到上行和下行分开的数据量统计，tcp流持续时间统计。
+     * 如果pcap文件较大，想查分pcap文件然后放到wireshark里面分析，
+     * 这里的duration信息可以帮助设置editcap中的interval */
+    # tshark -nqr example.pcap -z "conv,tcp"
+
+    /* 如果pcap文件过大，直接放到wireshark里面进行图形化分析会很慢，需要拆分 */
+    # editcap -i 30 big.pcap small-prefix.pcap  // editcap功能远不止如此，看名字就知道了
+    
+    /* 反之可合并多个pcap文件 */
+    # mergecap -w output.pcap a.pcap b.pcap
+
+***  
+### wireshark常用filter  
+
+    /* 获取三次握手的第一个包，同理根据flags过滤其他类型 */    
+    tcp.flags.syn==1 && tcp.flags.ack==0
+
+
+***  
+### 参考资料  
+[Linux下如何过滤、分割以及合并 pcap 文件](https://linux.cn/article-4762-1.html)  
